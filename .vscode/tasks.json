@@ -1,0 +1,41 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "🚀 Run TeamSeat App (Build + Install + Launch)",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/.vscode/run-app.ps1"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "📋 View Android Logcat (TeamSeat Errors & Logs)",
+            "type": "shell",
+            "command": "$env:LOCALAPPDATA\\Android\\Sdk\\platform-tools\\adb.exe",
+            "args": [
+                "logcat",
+                "*:E",
+                "AndroidRuntime:E",
+                "TeamSeat:D"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            },
+            "problemMatcher": []
+        }
+    ]
+}
