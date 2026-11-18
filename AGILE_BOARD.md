@@ -1,80 +1,53 @@
-# 📋 TeamSeat (StackMates) — Agile Task Board (توزيع الـ 6 أعضاء بالتساوي)
+# 📋 TeamSeat (StackMates) — لوحة الـ Agile الرسمية (4 شاشات لكل عضو = 24 شاشة)
 
-> **تشكيل التيم الكامل (6 أفراد):**
-> * **فريق الـ UI (5 مطورين أندرويد Jetpack Compose — كل واحد 5 ملفات في فولدر مستقل تماماً):**
->   1. 🌸 **نُهى** (`Screens/auth_noha`)
->   2. 🔍 **خالد** (`Screens/explore_khaled`)
->   3. ⚡ **حسام** (`Screens/requests_hossam`)
->   4. 💺 **إسراء** (`Screens/seatmap_esraa`)
->   5. 📑 **آلاء** (`Screens/workspace_alaa`)
-> * **الباك إند والربط (1 Backend & Team Lead):**
->   6. 💻 **أنت (يوسف)** (`data/repository`, `navigation`, `Firebase Auth & Firestore Batch Writes`, `PdfExporter`)
+> **قاعدة العمل الموحدة:**
+> كل عضو في الفريق مسؤول عن **4 شاشات في فولدره الخاص** بنظام Jetpack Compose مع `@Preview`.
+> لا يوجد أي كود سيرفر أو فايربيز داخل شاشات الـ UI، والبيانات التجريبية جاهزة في `MockDataProvider.kt`.
 
 ---
 
-## 🔄 أعمدة لوحة الـ Agile (على Trello)
-
-1. 📌 **To Do:** الشاشات الجاهزة كملفات فاضية في المشروع بانتظار التصميم.
-2. ⏳ **In Progress:** الشاشة التي يصممها العضو حالياً.
-3. 👁️ **In Review / Preview:** تم الانتهاء من تصميم الشاشة ورفع Push على الـ Branch.
-4. ✅ **Done:** تمت المراجعة والربط في `AppNavGraph.kt`.
-
----
-
-## 🌸 1. مهام نُهى (Noha) — فولدر `Screens/auth_noha` (5 شاشات)
-
-* [ ] **[NOHA-1] `SplashScreen.kt` (1 pt):** شاشة البداية واللوجو واسم التطبيق.
-* [ ] **[NOHA-2] `LoginScreen.kt` (2 pts):** حقل الإيميل/الرقم الجامعي + كلمة المرور + زر الدخول.
-* [ ] **[NOHA-3] `RegisterScreen.kt` (3 pts):** استمارة تسجيل طالب جديد (الاسم، الرقم الجامعي، الإيميل، الباسورد).
-* [ ] **[NOHA-4] `SetupProfileScreen.kt` (2 pts):** اختيار التخصص التقني عبر `FilterChips` + رابط GitHub.
-* [ ] **[NOHA-5] `OnboardingScreen.kt` (3 pts):** سلايدر ترحيبي `HorizontalPager` من 3 صفحات يشرح فكرة حجز المقاعد.
+## 💻 1. مهام يوسف (Youssef - Team Lead & Backend) — `Screens/admin_youssef`
+* [ ] **[YOU-1] `TASheetPreviewScreen.kt` (3 pts):** كشف التسليم الرسمي بنظام ورقة A4 بيضاء أنيقة بأسماء المشرفين (د. محمد كاظم وم. شهد أحمد).
+* [ ] **[YOU-2] `LockTeamDialog.kt` (1 pt):** نافذة تحذيرية لاعتماد وإغلاق التيم نهائياً لمنع أي تعديل أو انسحاب.
+* [ ] **[YOU-3] `DemoControlCenterScreen.kt` (2 pts):** لوحة تحكم سريعة للتبديل بين الحسابات وإعادة ضبط الكراسي للمناقشة.
+* [ ] **[YOU-4] `EditTeamSeatsScreen.kt` (2 pts):** شاشة تمكن القائد من تعديل مسميات المقاعد المتاحة أو حذف كرسي فارغ.
 
 ---
 
-## 🔍 2. مهام خالد (Khaled) — فولدر `Screens/explore_khaled` (5 شاشات)
-
-* [ ] **[KHALED-1] `DemoSwitcherBar.kt` (1 pt):** شريط التبديل اللحظي وقت المناقشة بين (أحمد - ليدر) و(سارة - طالبة).
-* [ ] **[KHALED-2] `CourseHubScreen.kt` (2 pts):** صفحة المادة الدراسية وعرض التيمات المسجلة تحتها.
-* [ ] **[KHALED-3] `TeamDetailsOverviewScreen.kt` (3 pts):** شاشة تفاصيل وفكرة المشروع الشاملة مع زر فتح خريطة الكراسي.
-* [ ] **[KHALED-4] `HomeScreen.kt` (3 pts):** الشاشة الرئيسية وتصفح التيمات المفتوحة والمقاعد العاجلة.
-* [ ] **[KHALED-5] `SearchAndFilterScreen.kt` (3 pts):** البحث والفلترة حسب التخصص الشاغر أو اسم المادة.
+## 🌸 2. مهام نُهى (Noha) — `Screens/auth_noha`
+* [ ] **[NOHA-1] `SplashScreen.kt` (1 pt):** شاشة البداية واللوجو واسم التطبيق وعبارة ترحيبية.
+* [ ] **[NOHA-2] `OnboardingScreen.kt` (3 pts):** سلايدر ترحيبي `HorizontalPager` من 3 صفحات لشرح فكرة حجز المقاعد.
+* [ ] **[NOHA-3] `LoginScreen.kt` (2 pts):** فورم تسجيل الدخول (الإيميل/الرقم الجامعي + الباسورد + زر الدخول).
+* [ ] **[NOHA-4] `RegisterScreen.kt` (3 pts):** استمارة تسجيل طالب جديد (الاسم، الكود، الإيميل، الباسورد، واختيار المهارات).
 
 ---
 
-## ⚡ 3. مهام حسام (Hossam) — فولدر `Screens/requests_hossam` (5 شاشات)
-
-* [ ] **[HOSSAM-1] `MyProfileScreen.kt` (2 pts):** شاشة ملفي الشخصي، بياناتي الجامعية، وتعديل المهارات وروابط الأعمال.
-* [ ] **[HOSSAM-2] `StudentPublicProfileSheet.kt` (2 pts):** بطاقة منبثقة لمعاينة بروفايل أي طالب متقدم.
-* [ ] **[HOSSAM-3] `MyApplicationsScreen.kt` (3 pts):** متابعة طلباتي المعلقة (الحد الأقصى 3 طلبات) مع عداد الـ 48 ساعة وسحب الطلب.
-* [ ] **[HOSSAM-4] `NotificationsScreen.kt` (2 pts):** مركز الإشعارات الفورية الملونة (قبول، طلب معلق، إغلاق التيم).
-* [ ] **[HOSSAM-5] `ReviewApplicationsScreen.kt` (3 pts):** شاشة القائد لمراجعة المتقدمين لكل مقعد مع زري (قبول ✅ / رفض ❌).
+## 🔍 3. مهام خالد (Khaled) — `Screens/explore_khaled`
+* [ ] **[KHALED-1] `HomeScreen.kt` (3 pts):** الصفحة الرئيسية واستعراض كروت التيمات والمقاعد العاجلة.
+* [ ] **[KHALED-2] `SearchAndFilterScreen.kt` (3 pts):** شريط البحث وفلاتر التخصصات (Android, UI/UX...).
+* [ ] **[KHALED-3] `CourseHubScreen.kt` (2 pts):** صفحة المادة الدراسية وتيماتها ونسب الاكتمال.
+* [ ] **[KHALED-4] `TeamDetailsOverviewScreen.kt` (3 pts):** شاشة تفاصيل المشروع ووصف الفكرة قبل فتح خريطة الكراسي.
 
 ---
 
-## 💺 4. مهام إسراء (Esraa) — فولدر `Screens/seatmap_esraa` (5 شاشات)
-
-* [ ] **[ESRAA-1] `SeatBookingBottomSheet.kt` (1 pt):** نافذة حجز المقعد المتاح وكتابة رسالة التقديم للقائد.
-* [ ] **[ESRAA-2] `CreateTeamInfoScreen.kt` (2 pts):** الخطوة 1 لإنشاء التيم (بيانات المشروع واختيار عدد المقاعد 2–8).
-* [ ] **[ESRAA-3] `CreateTeamSeatsScreen.kt` (3 pts):** الخطوة 2 لتخصيص مسمى وتخصص كل كرسي في التيم.
-* [ ] **[ESRAA-4] `EditTeamSeatsScreen.kt` (2 pts):** تعديل مسميات المقاعد الفارغة قبل إغلاق التيم.
-* [ ] **[ESRAA-5] `InteractiveSeatMapScreen.kt` (5 pts):** خريطة المقاعد التفاعلية بنظام السينما (كارت القائد بتاج 👑 + شبكة عمودين بألوان الحالات).
+## ⚡ 4. مهام حسام (Hossam) — `Screens/requests_hossam`
+* [ ] **[HOSSAM-1] `MyProfileScreen.kt` (2 pts):** شاشة ملفي الشخصي وتعديل المهارات ورابط GitHub وحالة الانضمام.
+* [ ] **[HOSSAM-2] `StudentPublicProfileSheet.kt` (2 pts):** بطاقة منبثقة لمعاينة بروفايل أي طالب متقدم قبل قبوله.
+* [ ] **[HOSSAM-3] `MyApplicationsScreen.kt` (3 pts):** متابعة طلباتي المعلقة (حد أقصى 3) مع عداد الـ 48 ساعة وسحب الطلب.
+* [ ] **[HOSSAM-4] `NotificationsScreen.kt` (2 pts):** سجل الإشعارات الفورية الملونة (قبول، رفض، تنبيه).
 
 ---
 
-## 📑 5. مهام آلاء (Alaa) — فولدر `Screens/workspace_alaa` (5 شاشات)
-
-* [ ] **[ALAA-1] `LockTeamDialog.kt` (1 pt):** نافذة تأكيد إغلاق واعتماد التيم نهائياً قبل تسليم الكشف.
-* [ ] **[ALAA-2] `TeamCalendarScreen.kt` (2 pts):** جدول مواعيد التسليمات والمناقشات مع د. محمد كاظم وم. شهد.
-* [ ] **[ALAA-3] `TeamGroupChatScreen.kt` (3 pts):** شاشة المحادثة الجماعية الداخلية لأعضاء التيم المعتمدين.
-* [ ] **[ALAA-4] `TeamWorkspaceScreen.kt` (3 pts):** لوحة تحكم التيم المعتمد وروابط المشروع والأعضاء.
-* [ ] **[ALAA-5] `TASheetPreviewScreen.kt` (3 pts):** تصميم ورقة A4 الرسمية لكشف تسليم التيم وتصدير PDF.
+## 💺 5. مهام إسراء (Esraa) — `Screens/seatmap_esraa`
+* [ ] **[ESRAA-1] `InteractiveSeatMapScreen.kt` (5 pts):** خريطة المقاعد التفاعلية (كارت القائد 👑 + شبكة عمودين بالألوان 🟢🟡🔵).
+* [ ] **[ESRAA-2] `CreateTeamInfoScreen.kt` (2 pts):** إنشاء تيم خطوة 1 (اسم المشروع والمادة والوصف وتحديد عدد المقاعد).
+* [ ] **[ESRAA-3] `CreateTeamSeatsScreen.kt` (3 pts):** إنشاء تيم خطوة 2 (تخصيص مسمى وتخصص كل كرسي).
+* [ ] **[ESRAA-4] `SeatBookingBottomSheet.kt` (1 pt):** نافذة حجز المقعد المتاح وكتابة رسالة سريعة للقائد.
 
 ---
 
-## 💻 6. مهامك أنت (Backend, Firebase & Integration) — فولدر `data` & `navigation`
-
-* [x] **[BACKEND-1] إنشاء استراكشر المشروع والـ Models والـ `MockDataProvider` والـ `AppNavGraph`.**
-* [ ] **[BACKEND-2] ربط `AuthRepository.kt` مع Firebase Auth.**
-* [ ] **[BACKEND-3] ربط `TeamSeatRepository.kt` مع Cloud Firestore وتنفيذ الـ Batch Write للقبول وإلغاء باقي الطلبات.**
-* [ ] **[BACKEND-4] كتابة قواعد حماية الـ Firestore Security Rules وفحص مهلة الـ 48 ساعة.**
-* [ ] **[BACKEND-5] ربط `PdfExporter.kt` ومراجعة ودمج Pull Requests الفريق.**
+## 📑 6. مهام آلاء (Alaa) — `Screens/workspace_alaa`
+* [ ] **[ALAA-1] `TeamWorkspaceScreen.kt` (3 pts):** لوحة تحكم التيم المعتمد: كروت الأعضاء ونسبة الإنجاز وروابط GitHub و Drive.
+* [ ] **[ALAA-2] `TeamGroupChatScreen.kt` (3 pts):** شاشة المحادثة الجماعية الداخلية للتيم.
+* [ ] **[ALAA-3] `TeamCalendarScreen.kt` (2 pts):** جدول مواعيد التسليمات والمناقشات مع د. محمد كاظم وم. شهد.
+* [ ] **[ALAA-4] `ReviewApplicationsScreen.kt` (3 pts):** شاشة القائد لمراجعة المتقدمين مع أزرار (قبول ✅ / رفض ❌).

@@ -11,8 +11,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.SeatStatus
+import com.stackmates.teamseat.core.utils.PdfExporter
 import com.stackmates.teamseat.data.repository.FakeAuthRepository
 import com.stackmates.teamseat.data.repository.FakeTeamSeatRepository
+import com.stackmates.teamseat.Screens.admin_youssef.*
 import com.stackmates.teamseat.Screens.auth_noha.*
 import com.stackmates.teamseat.Screens.explore_khaled.*
 import com.stackmates.teamseat.Screens.requests_hossam.*
@@ -21,8 +23,8 @@ import com.stackmates.teamseat.Screens.workspace_alaa.*
 import kotlinx.coroutines.launch
 
 /**
- * 🔗 شبكة الربط المركزية (AppNavGraph) — خاصة بك أنت (الـ Team Lead & Backend)!
- * كل فرد من الـ 5 فرونت إند يدخل يشتغل في فولدره فقط، ولما يعمل Push تلاقي شغله مربوط هنا جاهز!
+ * 🔗 شبكة الربط المركزية (AppNavGraph)
+ * تربط شاشات الفريق الـ 6 بالتساوي (24 شاشة)
  */
 @Composable
 fun AppNavGraph(
@@ -34,6 +36,7 @@ fun AppNavGraph(
     val scope = rememberCoroutineScope()
 
     val currentUser by authRepository.currentUser.collectAsState()
+    val activePersona by authRepository.activePersona.collectAsState()
     val teams by teamRepository.observeTeams().collectAsState(initial = MockDataProvider.sampleTeamsList)
     val seats by teamRepository.observeTeamSeats(MockDataProvider.sampleTeam.teamId)
         .collectAsState(initial = MockDataProvider.sampleSeats)
@@ -42,12 +45,56 @@ fun AppNavGraph(
         navController = navController,
         startDestination = startDestination
     ) {
+        // شاشة لوحة التطوير المركزية
         composable(ScreenRoutes.DEV_HUB) {
             DevHubScreen(onNavigate = { route -> navController.navigate(route) })
         }
 
         // =====================================================================
-        // 🌸 1. شاشات نُهى (Auth & Onboarding)
+        // 💻 1. شاشات يوسف (Admin, TA Sheet, Lock & Demo Control)
+        // =====================================================================
+        composable(ScreenRoutes.TA_SHEET_PREVIEW) {
+            TASheetPreviewScreen(
+                team = teams.firstOrNull() ?: MockDataProvider.sampleTeam,
+                seats = seats,
+                onLockTeamClick = { navController.navigate(ScreenRoutes.LOCK_TEAM) },
+                onExportPdfClick = { /* استدعاء PdfExporter */ },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(ScreenRoutes.LOCK_TEAM) {
+            LockTeamDialog(
+                onConfirmLock = {
+                    scope.launch {
+                        teamRepository.lockTeam(MockDataProvider.sampleTeam.teamId)
+                        navController.popBackStack()
+                    }
+                },
+                onDismiss = { navController.popBackStack() }
+            )
+        }
+
+        composable(ScreenRoutes.DEMO_CONTROL_CENTER) {
+            DemoControlCenterScreen(
+                currentPersona = activePersona,
+                currentUser = currentUser ?: MockDataProvider.ahmedLeader,
+                onTogglePersonaClick = { authRepository.switchDemoPersona() },
+                onResetMockDataClick = { /* إعادة ضبط البيانات */ },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(ScreenRoutes.EDIT_TEAM_SEATS) {
+            EditTeamSeatsScreen(
+                seats = seats,
+                onSaveSeatsClick = { navController.popBackStack() },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // =====================================================================
+        // 🌸 2. شاشات نُهى (Auth & Onboarding)
         // =====================================================================
         composable(ScreenRoutes.SPLASH) {
             SplashScreen(
@@ -78,22 +125,15 @@ fun AppNavGraph(
                 onRegisterClick = { name, studentId, email, password ->
                     scope.launch {
                         authRepository.register(name, studentId, email, password)
-                        navController.navigate(ScreenRoutes.SETUP_PROFILE)
+                        navController.navigate(ScreenRoutes.HOME)
                     }
                 },
                 onBackToLogin = { navController.popBackStack() }
             )
         }
 
-        composable(ScreenRoutes.SETUP_PROFILE) {
-            SetupProfileScreen(
-                onSaveProfileClick = { _, _ -> navController.navigate(ScreenRoutes.HOME) },
-                onBackClick = { navController.popBackStack() }
-            )
-        }
-
         // =====================================================================
-        // 🔍 2. شاشات خالد (Explore, Search, Course Hub, Team Overview)
+        // 🔍 3. شاشات خالد (Explore, Search, Course Hub & Team Overview)
         // =====================================================================
         composable(ScreenRoutes.HOME) {
             HomeScreen(
@@ -134,13 +174,20 @@ fun AppNavGraph(
         }
 
         // =====================================================================
-        // ⚡ 3. شاشات حسام (My Profile, My Applications, Notifications, Review)
+        // ⚡ 4. شاشات حسام (Profile, Requests & Notifications)
         // =====================================================================
         composable(ScreenRoutes.MY_PROFILE) {
             MyProfileScreen(
                 user = currentUser ?: MockDataProvider.saraStudent,
                 onLogoutClick = { navController.navigate(ScreenRoutes.LOGIN) },
                 onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(ScreenRoutes.STUDENT_PUBLIC_PROFILE) {
+            StudentPublicProfileSheet(
+                student = currentUser ?: MockDataProvider.saraStudent,
+                onDismiss = { navController.popBackStack() }
             )
         }
 
@@ -160,31 +207,15 @@ fun AppNavGraph(
             )
         }
 
-        composable(ScreenRoutes.REVIEW_APPLICATIONS) {
-            ReviewApplicationsScreen(
-                pendingSeats = seats.filter { it.status == SeatStatus.PENDING },
-                onAcceptApplicantClick = { seat ->
-                    scope.launch {
-                        seat.applicantId?.let { applicantId ->
-                            teamRepository.acceptApplicantBatch(seat.id, applicantId)
-                        }
-                    }
-                },
-                onRejectApplicantClick = { seat ->
-                    scope.launch { teamRepository.rejectOrCancelSeat(seat.id) }
-                },
-                onBackClick = { navController.popBackStack() }
-            )
-        }
-
         // =====================================================================
-        // 💺 4. شاشات إسراء (Interactive Seat Map & Team Creation)
+        // 💺 5. شاشات إسراء (Seat Map Engine & Creation Flow)
         // =====================================================================
         composable(ScreenRoutes.SEAT_MAP) {
             InteractiveSeatMapScreen(
                 team = teams.firstOrNull() ?: MockDataProvider.sampleTeam,
                 seats = seats,
                 isCurrentUserLeader = currentUser?.isLeader == true,
+                onSeatClick = { navController.navigate(ScreenRoutes.SEAT_BOOKING) },
                 onOpenWorkspaceClick = { navController.navigate(ScreenRoutes.TEAM_WORKSPACE) },
                 onReviewRequestsClick = { navController.navigate(ScreenRoutes.REVIEW_APPLICATIONS) },
                 onBackClick = { navController.popBackStack() }
@@ -207,15 +238,20 @@ fun AppNavGraph(
             )
         }
 
-        composable(ScreenRoutes.EDIT_TEAM_SEATS) {
-            EditTeamSeatsScreen(
-                seats = seats,
-                onBackClick = { navController.popBackStack() }
+        composable(ScreenRoutes.SEAT_BOOKING) {
+            SeatBookingBottomSheetContent(
+                onConfirmBookingClick = { note ->
+                    scope.launch {
+                        teamRepository.requestSeatBooking("seat_4", currentUser?.uid ?: "user_sara", currentUser?.name ?: "سارة", note)
+                        navController.popBackStack()
+                    }
+                },
+                onDismiss = { navController.popBackStack() }
             )
         }
 
         // =====================================================================
-        // 📑 5. شاشات آلاء (Workspace, Group Chat, Calendar & TA Sheet)
+        // 📑 6. شاشات آلاء (Workspace, Chat, Calendar & Review)
         // =====================================================================
         composable(ScreenRoutes.TEAM_WORKSPACE) {
             TeamWorkspaceScreen(
@@ -240,14 +276,18 @@ fun AppNavGraph(
             )
         }
 
-        composable(ScreenRoutes.TA_SHEET_PREVIEW) {
-            TASheetPreviewScreen(
-                team = teams.firstOrNull() ?: MockDataProvider.sampleTeam,
-                seats = seats,
-                onLockTeamClick = {
+        composable(ScreenRoutes.REVIEW_APPLICATIONS) {
+            ReviewApplicationsScreen(
+                pendingSeats = seats.filter { it.status == SeatStatus.PENDING },
+                onAcceptApplicantClick = { seat ->
                     scope.launch {
-                        teamRepository.lockTeam(MockDataProvider.sampleTeam.teamId)
+                        seat.applicantId?.let { applicantId ->
+                            teamRepository.acceptApplicantBatch(seat.id, applicantId)
+                        }
                     }
+                },
+                onRejectApplicantClick = { seat ->
+                    scope.launch { teamRepository.rejectOrCancelSeat(seat.id) }
                 },
                 onBackClick = { navController.popBackStack() }
             )

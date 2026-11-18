@@ -9,8 +9,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /**
- * 🛠️ لوحة معاينة الفريق الكاملة (Developer Hub)
- * تعرض شاشات الـ 5 مطورين UI (نُهى، خالد، حسام، إسراء، آلاء) لتجربة أي شاشة بضغطة زر!
+ * 🛠️ لوحة تحكم الفريق (Developer Hub)
+ * تعرض شاشات الـ 6 أفراد بالتساوي (4 شاشات لكل عضو = 24 شاشة)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -18,43 +18,48 @@ fun DevHubScreen(
     onNavigate: (String) -> Unit
 ) {
     val sections = listOf(
-        "🌸 1. شاشات نُهى (Auth & Onboarding)" to listOf(
+        "💻 1. شاشاتك أنت (يوسف - Leader, TA Sheet & Demo)" to listOf(
+            "كشف المعيدة الرسمي (TA Sheet A4)" to ScreenRoutes.TA_SHEET_PREVIEW,
+            "نافذة قفل واعتماد التيم (Lock Dialog)" to ScreenRoutes.LOCK_TEAM,
+            "مركز تحكم المناقشة (Live Demo Center)" to ScreenRoutes.DEMO_CONTROL_CENTER,
+            "تعديل مقاعد التيم (Edit Seats)" to ScreenRoutes.EDIT_TEAM_SEATS
+        ),
+        "🌸 2. شاشات نُهى (Auth & Onboarding)" to listOf(
             "Splash Screen" to ScreenRoutes.SPLASH,
-            "Onboarding Screen" to ScreenRoutes.ONBOARDING,
-            "Login Screen" to ScreenRoutes.LOGIN,
-            "Register Screen" to ScreenRoutes.REGISTER,
-            "Setup Profile Screen" to ScreenRoutes.SETUP_PROFILE
+            "Onboarding Screen (السلايدر)" to ScreenRoutes.ONBOARDING,
+            "Login Screen (تسجيل الدخول)" to ScreenRoutes.LOGIN,
+            "Register Screen (إنشاء حساب)" to ScreenRoutes.REGISTER
         ),
-        "🔍 2. شاشات خالد (Explore & Course Hub)" to listOf(
-            "Home / Teams Feed (+ Demo Switcher)" to ScreenRoutes.HOME,
-            "Search & Filter Screen" to ScreenRoutes.SEARCH,
+        "🔍 3. شاشات خالد (Explore & Course Hub)" to listOf(
+            "Home / Teams Feed (الرئيسية)" to ScreenRoutes.HOME,
+            "Search & Filter Screen (البحث والفلترة)" to ScreenRoutes.SEARCH,
             "Course Hub Screen (صفحة المادة)" to ScreenRoutes.COURSE_HUB,
-            "Team Details Overview Screen" to ScreenRoutes.TEAM_DETAILS_OVERVIEW
+            "Team Details Overview (تفاصيل المشروع)" to ScreenRoutes.TEAM_DETAILS_OVERVIEW
         ),
-        "⚡ 3. شاشات حسام (Profiles, Requests & Notifications)" to listOf(
-            "My Profile Screen" to ScreenRoutes.MY_PROFILE,
-            "My Sent Applications (طلباتي)" to ScreenRoutes.MY_APPLICATIONS,
-            "Notifications Center (الإشعارات)" to ScreenRoutes.NOTIFICATIONS,
-            "Leader Review Applications (القبول والرفض)" to ScreenRoutes.REVIEW_APPLICATIONS
+        "⚡ 4. شاشات حسام (Profile, Requests & Notifications)" to listOf(
+            "My Profile Screen (ملفي الشخصي)" to ScreenRoutes.MY_PROFILE,
+            "Student Public Profile (معاينة بروفايل طالب)" to ScreenRoutes.STUDENT_PUBLIC_PROFILE,
+            "My Applications (طلباتي المعلقة)" to ScreenRoutes.MY_APPLICATIONS,
+            "Notifications Center (مركز الإشعارات)" to ScreenRoutes.NOTIFICATIONS
         ),
-        "💺 4. شاشات إسراء (Seat Map & Team Creation)" to listOf(
+        "💺 5. شاشات إسراء (Seat Map & Team Creation)" to listOf(
             "Interactive Seat Map (خريطة السينما)" to ScreenRoutes.SEAT_MAP,
-            "Create Team (Step 1: Info)" to ScreenRoutes.CREATE_TEAM_INFO,
-            "Create Team (Step 2: Seats)" to ScreenRoutes.CREATE_TEAM_SEATS,
-            "Edit Team Seats" to ScreenRoutes.EDIT_TEAM_SEATS
+            "Create Team Step 1 (بيانات المشروع)" to ScreenRoutes.CREATE_TEAM_INFO,
+            "Create Team Step 2 (تخصيص الكراسي)" to ScreenRoutes.CREATE_TEAM_SEATS,
+            "Seat Booking Sheet (حجز مقعد)" to ScreenRoutes.SEAT_BOOKING
         ),
-        "📑 5. شاشات آلاء (Workspace, Chat & TA Sheet)" to listOf(
-            "Team Workspace Dashboard" to ScreenRoutes.TEAM_WORKSPACE,
+        "📑 6. شاشات آلاء (Workspace, Chat & Review)" to listOf(
+            "Team Workspace (مساحة عمل التيم)" to ScreenRoutes.TEAM_WORKSPACE,
             "In-Team Group Chat (شات التيم)" to ScreenRoutes.TEAM_GROUP_CHAT,
-            "Team Calendar (المواعيد والتسليمات)" to ScreenRoutes.TEAM_CALENDAR,
-            "TA Sheet A4 Preview (كشف المعيدة)" to ScreenRoutes.TA_SHEET_PREVIEW
+            "Team Calendar (جدول المواعيد)" to ScreenRoutes.TEAM_CALENDAR,
+            "Review Applications (مراجعة وقبول الطلبات)" to ScreenRoutes.REVIEW_APPLICATIONS
         )
     )
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("💺 TeamSeat — لوحة التيم (6 أعضاء)") }
+                title = { Text("💺 TeamSeat — لوحة الـ 6 أعضاء (24 شاشة)") }
             )
         }
     ) { innerPadding ->
