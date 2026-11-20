@@ -29,6 +29,8 @@ fun MyApplicationsScreen(
             "زر (إلغاء وسحب الطلب) يستدعي onCancelApplicationClick(seat.id)"
         )
     )
+
+
 }
 
 @Preview(showBackground = true)
