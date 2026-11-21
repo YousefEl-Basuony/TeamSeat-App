@@ -12,7 +12,9 @@ data class User(
     val currentTeamId: String? = null, // التيم الذي تم قبوله فيه رسمياً (إذا وُجد)
     val githubUrl: String = "",
     val linkedinUrl: String = "",
-    val isLeader: Boolean = false
+    val isLeader: Boolean = false,
+    val avatarEmoji: String = if (isLeader) "👨‍💻" else "👩‍💻",
+    val major: String = "علوم حاسب (Computer Science)"
 )
 
 /**

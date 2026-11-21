@@ -23,4 +23,10 @@ data class Seat(
     val applicantName: String? = null,
     val applicantNote: String? = null,
     val expiresAt: Long? = null     // تاريخ انتهاء مهلة الـ 48 ساعة
-)
+) {
+    val seatLabel: String get() = "S$seatNumber"
+    val roleTag: String get() = roleRequired
+    val assignedStudentName: String? get() = applicantName
+    val assignedStudentId: String? get() = applicantId
+    val isLeader: Boolean get() = seatNumber == 1
+}
