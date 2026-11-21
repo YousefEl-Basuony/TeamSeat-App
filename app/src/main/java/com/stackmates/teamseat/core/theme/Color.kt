@@ -2,23 +2,41 @@ package com.stackmates.teamseat.core.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ألوان الهوية الأساسية للتطبيق (Material 3)
-val BrandPrimary = Color(0xFF1E40AF)       // أزرق أكاديمي احترافي
-val BrandSecondary = Color(0xFF3B82F6)
-val BrandBackground = Color(0xFFF8FAFC)
-val BrandSurface = Color(0xFFFFFFFF)
+// =========================================================================
+// 🎨 TeamSeat Official Color Palette (من الهوية البصرية المعتمدة للتطبيق)
+// =========================================================================
 
-// ألوان حالات مقاعد التيم الموحدة (يستخدمها التيم كله!)
-val SeatAvailableGreen = Color(0xFF16A34A) // 🟢 متاح للحجز
-val SeatAvailableBg = Color(0xFFDCFCE7)
+// الألوان الداكنة والأساسية
+val DeepNavy = Color(0xFF0A344A)      // العناوين الرئيسية والخلفيات الداكنة
+val DeepTeal = Color(0xFF1B6F7D)      // الأزرار الأساسية وشريط التنقل Navbar
+val Turquoise = Color(0xFF469D9F)     // الأيقونات والعناصر النشطة
+val LightAqua = Color(0xFFA9D5D4)     // الخلفيات الثانوية
 
-val SeatPendingAmber = Color(0xFFD97706)   // 🟡 قيد المراجعة (48 ساعة)
-val SeatPendingBg = Color(0xFFFEF3C7)
+// الألوان الفاتحة والخلفيات
+val WarmCream = Color(0xFFFCF2EA)     // الخلفية الرئيسية للتطبيق
+val SoftBeige = Color(0xFFF4E2DD)     // الكروت وحقول الإدخال Input Fields
+val Peach = Color(0xFFF4C195)         // لمسات جمالية وأزرار ثانوية
+val SoftGray = Color(0xFFD3CFD1)      // الحدود والعناصر غير النشطة
 
-val SeatBookedBlue = Color(0xFF2563EB)     // 🔵 محجوز ومعتمد
-val SeatBookedBg = Color(0xFFDBEAFE)
+// ألوان متوافقة مع Material 3 Theme Names
+val BrandPrimary = DeepTeal
+val BrandSecondary = Turquoise
+val BrandBackground = WarmCream
+val BrandSurface = SoftBeige
 
-val SeatLockedGray = Color(0xFF64748B)     // 🔒 التيم مقفل نهائياً
-val SeatLockedBg = Color(0xFFF1F5F9)
+// =========================================================================
+// 💺 ألوان حالات مقاعد التيم الموحدة (Interactive Seat Map)
+// =========================================================================
+val SeatAvailableGreen = Turquoise      // 🟢 متاح للحجز
+val SeatAvailableBg = LightAqua
 
-val LeaderCrownGold = Color(0xFFF59E0B)    // 👑 لون تاج قائد التيم
+val SeatPendingAmber = Peach            // 🟡 قيد المراجعة (48 ساعة)
+val SeatPendingBg = WarmCream
+
+val SeatBookedBlue = DeepNavy           // 🔵 محجوز ومعتمد
+val SeatBookedBg = SoftGray
+
+val SeatLockedGray = SoftGray           // 🔒 التيم مقفل نهائياً
+val SeatLockedBg = SoftBeige
+
+val LeaderCrownGold = Peach             // 👑 لون تاج قائد التيم
