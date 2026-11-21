@@ -25,7 +25,7 @@ fun HomeScreen(
 ) {
     // TODO (خالد): امسح EmptyScreenTemplate وصمم الشاشة الرئيسية هنا باستخدام البيانات الجاهزة فوق
     EmptyScreenTemplate(
-        screenTitle = "الرئيسية — تصفح التيمات",
+        screenTitle = "",
         ownerName = "خالد (Khaled)",
         hints = listOf(
             "وضع DemoSwitcherBar في الأعلى لعرض المستخدم الحالي والتبديل السريع",
