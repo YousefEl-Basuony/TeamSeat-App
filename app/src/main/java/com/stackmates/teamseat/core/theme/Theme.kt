@@ -8,10 +8,23 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 
 private val LightColorScheme = lightColorScheme(
-    primary = BrandPrimary,
-    secondary = BrandSecondary,
-    background = BrandBackground,
-    surface = BrandSurface
+    primary = DeepTeal,
+    onPrimary = WarmCream,
+    primaryContainer = LightAqua,
+    onPrimaryContainer = DeepNavy,
+    secondary = Turquoise,
+    onSecondary = WarmCream,
+    secondaryContainer = SoftBeige,
+    onSecondaryContainer = DeepNavy,
+    tertiary = Peach,
+    onTertiary = DeepNavy,
+    background = WarmCream,
+    onBackground = DeepNavy,
+    surface = SoftBeige,
+    onSurface = DeepNavy,
+    surfaceVariant = WarmCream,
+    onSurfaceVariant = DeepNavy,
+    outline = SoftGray
 )
 
 /**
