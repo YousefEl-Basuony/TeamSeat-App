@@ -60,6 +60,10 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.coroutines.android)
 
+    // Animation & Image Loading (UI Enhancements)
+    implementation("com.airbnb.android:lottie-compose:6.4.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
     // =========================================================================
     // Firebase Dependencies (للباك إند - فك الكومنت عند وضع google-services.json)
     // =========================================================================
