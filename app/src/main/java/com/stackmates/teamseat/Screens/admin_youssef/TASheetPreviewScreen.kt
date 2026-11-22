@@ -4,8 +4,6 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -50,8 +48,8 @@ import java.util.Locale
 
 /**
  * 💻 المسؤول عن الشاشة: يوسف (Youssef - Team Lead & Backend)
- * شاشة كشف التسليم والاعتماد الرسمي للمعيدة م. شهد أحمد والدكتور د. محمد كاظم (Official TA Sheet)
- * مصممة بنفس لغة التصميم الفخمة والمقاييس البصرية المكبرة والمريحة للعين في EditTeamSeatsScreen و LockTeamDialog.
+ * شاشة كشف التسليم الرسمي والاعتماد الأكاديمي (Official TA Sheet)
+ * مصممة بهندسة بصرية فخمة ومريحة للعين وخالية من أي نصوص مقطوعة أو مشاكل في الاتجاهات (RTL).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,28 +80,28 @@ fun TASheetPreviewScreen(
                 title = {
                     Column {
                         Text(
-                            text = "كشف التسليم الرسمي (TA Sheet)",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.ExtraBold,
-                                color = DeepNavy,
-                                fontSize = 21.sp
-                            )
+                            text = "كشف التسليم والاعتماد الأكاديمي",
+                            fontFamily = CairoFontFamily,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = DeepNavy,
+                            fontSize = 19.sp,
+                            maxLines = 1
                         )
                         Text(
-                            text = "كشف اعتماد أعضاء المشروع وتجميد المقاعد",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = DeepTeal,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp
-                            )
+                            text = "توثيق مقاعد وأعضاء مشروع التخرج",
+                            fontFamily = CairoFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            color = DeepTeal,
+                            fontSize = 13.sp,
+                            maxLines = 1
                         )
                     }
                 },
                 navigationIcon = {
                     Surface(
                         modifier = Modifier
-                            .padding(start = 12.dp, end = 8.dp)
-                            .size(44.dp),
+                            .padding(horizontal = 8.dp)
+                            .size(42.dp),
                         shape = CircleShape,
                         color = Color.White,
                         shadowElevation = 2.dp,
@@ -114,7 +112,7 @@ fun TASheetPreviewScreen(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "رجوع",
                                 tint = DeepNavy,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
@@ -122,12 +120,11 @@ fun TASheetPreviewScreen(
                 actions = {
                     Surface(
                         modifier = Modifier
-                            .padding(end = 12.dp)
-                            .size(44.dp),
+                            .padding(horizontal = 8.dp)
+                            .size(42.dp),
                         shape = CircleShape,
-                        color = Color.White,
-                        shadowElevation = 2.dp,
-                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.6f))
+                        color = DeepTeal.copy(alpha = 0.12f),
+                        border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.3f))
                     ) {
                         IconButton(
                             onClick = {
@@ -145,7 +142,7 @@ fun TASheetPreviewScreen(
                                 imageVector = Icons.Outlined.FileDownload,
                                 contentDescription = "تحميل PDF",
                                 tint = DeepTeal,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
@@ -162,8 +159,8 @@ fun TASheetPreviewScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // زر تصدير PDF
@@ -182,9 +179,9 @@ fun TASheetPreviewScreen(
                         },
                         enabled = !isExporting,
                         modifier = Modifier
-                            .weight(1.1f)
-                            .height(56.dp),
-                        shape = RoundedCornerShape(28.dp),
+                            .weight(1f)
+                            .height(54.dp),
+                        shape = RoundedCornerShape(27.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = DeepNavy),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                     ) {
@@ -197,21 +194,20 @@ fun TASheetPreviewScreen(
                         } else {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.FileDownload,
                                     contentDescription = null,
                                     tint = Peach,
-                                    modifier = Modifier.size(22.dp)
+                                    modifier = Modifier.size(20.dp)
                                 )
                                 Text(
                                     text = "تصدير كشف PDF",
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 15.sp,
-                                        color = Color.White
-                                    )
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.5.sp,
+                                    color = Color.White
                                 )
                             }
                         }
@@ -221,31 +217,28 @@ fun TASheetPreviewScreen(
                     Button(
                         onClick = onLockTeamClick,
                         modifier = Modifier
-                            .weight(1.1f)
-                            .height(56.dp),
-                        shape = RoundedCornerShape(28.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = DeepTeal
-                        ),
+                            .weight(1f)
+                            .height(54.dp),
+                        shape = RoundedCornerShape(27.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = DeepTeal),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Icon(
                                 imageVector = if (team.isLocked) Icons.Filled.Lock else Icons.Outlined.Lock,
                                 contentDescription = null,
                                 tint = Color.White,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(19.dp)
                             )
                             Text(
-                                text = if (team.isLocked) "التيم معتمد ومقفل 🔒" else "اعتماد وقفل الفريق",
-                                style = MaterialTheme.typography.labelLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp,
-                                    color = Color.White
-                                )
+                                text = if (team.isLocked) "معتمد ومقفل 🔒" else "اعتماد وقفل التيم",
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.5.sp,
+                                color = Color.White
                             )
                         }
                     }
@@ -258,17 +251,17 @@ fun TASheetPreviewScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
             contentPadding = PaddingValues(top = 10.dp, bottom = 28.dp)
         ) {
 
             // =================================================================
-            // 1. كارت ترويسة الكلية والمشروع الأكاديمي (Official University Header)
+            // 1. كارت ترويسة الكلية وبيانات المشروع (Official Academic Header)
             // =================================================================
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
@@ -276,10 +269,10 @@ fun TASheetPreviewScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                            .padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // الصف العلوي: شعار الكلية وبادج التوثيق
+                        // ترويسة الكلية والكود
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -287,10 +280,10 @@ fun TASheetPreviewScreen(
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
                                 Surface(
-                                    modifier = Modifier.size(50.dp),
+                                    modifier = Modifier.size(46.dp),
                                     shape = CircleShape,
                                     color = DeepNavy,
                                     shadowElevation = 2.dp
@@ -300,45 +293,42 @@ fun TASheetPreviewScreen(
                                             imageVector = Icons.Outlined.School,
                                             contentDescription = null,
                                             tint = Peach,
-                                            modifier = Modifier.size(26.dp)
+                                            modifier = Modifier.size(24.dp)
                                         )
                                     }
                                 }
 
                                 Column {
                                     Text(
-                                        text = "كلية الحاسبات والمعلومات",
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = DeepNavy,
-                                            fontSize = 17.sp
-                                        )
+                                        text = "كلية الحاسبات والذكاء الاصطناعي",
+                                        fontFamily = CairoFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = DeepNavy,
+                                        fontSize = 15.sp
                                     )
                                     Text(
-                                        text = "قسم علوم الحاسب • كشف التسليم المعتمد 2026",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = DeepTeal,
-                                            fontSize = 13.sp
-                                        )
+                                        text = "كشف التسليم الرسمي • مشاريع 2026",
+                                        fontFamily = CairoFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        color = DeepTeal,
+                                        fontSize = 12.sp
                                     )
                                 }
                             }
 
-                            // كود التوثيق
+                            // بادج كود الكشف
                             Surface(
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(10.dp),
                                 color = SoftBeige,
                                 border = BorderStroke(1.dp, Peach.copy(alpha = 0.8f))
                             ) {
                                 Text(
-                                    text = "#TS-${team.teamId.take(6).uppercase()}",
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = DeepNavy,
-                                        fontSize = 13.sp
-                                    )
+                                    text = "#TS-${team.teamId.take(5).uppercase()}",
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DeepNavy,
+                                    fontSize = 12.sp
                                 )
                             }
                         }
@@ -348,70 +338,69 @@ fun TASheetPreviewScreen(
                             thickness = 1.dp
                         )
 
-                        // تفاصيل المشروع وحالة الاعتماد
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
+                        // اسم المشروع والمقرر
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = team.projectName,
-                                    style = MaterialTheme.typography.headlineSmall.copy(
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = DeepNavy,
-                                        fontSize = 22.sp
-                                    )
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = DeepNavy,
+                                    fontSize = 20.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
-
-                                Surface(
-                                    shape = RoundedCornerShape(20.dp),
-                                    color = if (team.isLocked) SeatBookedBg else SeatAvailableBg,
-                                    border = BorderStroke(1.dp, if (team.isLocked) SeatBookedBlue else SeatAvailableGreen)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = if (team.isLocked) Icons.Filled.Lock else Icons.Filled.CheckCircle,
-                                            contentDescription = null,
-                                            tint = if (team.isLocked) SeatBookedBlue else SeatAvailableGreen,
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                        Text(
-                                            text = if (team.isLocked) "معتمد ومقفل" else "جاهز للتسليم",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                color = if (team.isLocked) SeatBookedBlue else SeatAvailableGreen,
-                                                fontSize = 12.sp
-                                            )
-                                        )
-                                    }
-                                }
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "المقرر: ${team.category}",
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = DeepTeal,
+                                    fontSize = 13.sp
+                                )
                             }
 
-                            Text(
-                                text = "المقرر: ${team.category} • تاريخ الإصدار: $currentDateStr",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = DeepNavy.copy(alpha = 0.7f),
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 14.sp
-                                )
-                            )
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = if (team.isLocked) SeatBookedBg else SeatAvailableBg,
+                                border = BorderStroke(1.dp, if (team.isLocked) SeatBookedBlue else SeatAvailableGreen)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = if (team.isLocked) Icons.Filled.Lock else Icons.Filled.CheckCircle,
+                                        contentDescription = null,
+                                        tint = if (team.isLocked) SeatBookedBlue else SeatAvailableGreen,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Text(
+                                        text = if (team.isLocked) "معتمد ومقفل" else "جاهز للتسليم",
+                                        fontFamily = CairoFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (team.isLocked) SeatBookedBlue else SeatAvailableGreen,
+                                        fontSize = 11.5.sp
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
 
             // =================================================================
-            // 2. كارت المشرفين الأكاديميين (Supervisors Card)
+            // 2. كارت المشرفين الأكاديميين (Academic Supervisors - بدون أي قص)
             // =================================================================
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
@@ -419,53 +408,151 @@ fun TASheetPreviewScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                            .padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Text(
                             text = "هيئة الإشراف والتقييم الأكاديمي:",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = DeepNavy,
-                                fontSize = 16.sp
-                            )
+                            fontFamily = CairoFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = DeepNavy,
+                            fontSize = 15.sp
                         )
 
-                        Row(
+                        // صف الدكتور المشرف (Full Width - بدون أي قطع بالاسم)
+                        Surface(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            shape = RoundedCornerShape(14.dp),
+                            color = WarmCream.copy(alpha = 0.55f),
+                            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.45f))
                         ) {
-                            // كارت الدكتور
-                            SupervisorPersonCard(
-                                title = "الأستاذ المشرف الأكاديمي",
-                                name = team.supervisorDoctor,
-                                roleSubtitle = "رئيس لجنة التحكيم",
-                                icon = Icons.Outlined.VerifiedUser,
-                                accentColor = DeepNavy,
-                                modifier = Modifier.weight(1f)
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Surface(
+                                    modifier = Modifier.size(40.dp),
+                                    shape = CircleShape,
+                                    color = DeepNavy
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.VerifiedUser,
+                                            contentDescription = null,
+                                            tint = WarmCream,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
 
-                            // كارت المعيدة
-                            SupervisorPersonCard(
-                                title = "المعيدة المشرفة المسؤولة",
-                                name = team.teachingAssistant,
-                                roleSubtitle = "المتابعة واعتماد الكشف",
-                                icon = Icons.Outlined.Person,
-                                accentColor = DeepTeal,
-                                modifier = Modifier.weight(1f)
-                            )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "الأستاذ المشرف الأكاديمي",
+                                        fontFamily = CairoFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        color = DeepNavy.copy(alpha = 0.65f),
+                                        fontSize = 11.5.sp
+                                    )
+                                    Text(
+                                        text = team.supervisorDoctor,
+                                        fontFamily = CairoFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = DeepNavy,
+                                        fontSize = 15.sp
+                                    )
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = DeepNavy.copy(alpha = 0.1f)
+                                ) {
+                                    Text(
+                                        text = "رئيس اللجنة",
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                        fontFamily = CairoFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = DeepNavy,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        // صف المعيدة المشرفة (Full Width - بدون أي قطع بالاسم)
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            color = WarmCream.copy(alpha = 0.55f),
+                            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.45f))
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Surface(
+                                    modifier = Modifier.size(40.dp),
+                                    shape = CircleShape,
+                                    color = DeepTeal
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Person,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "المعيدة المشرفة على المشروع",
+                                        fontFamily = CairoFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        color = DeepNavy.copy(alpha = 0.65f),
+                                        fontSize = 11.5.sp
+                                    )
+                                    Text(
+                                        text = team.teachingAssistant,
+                                        fontFamily = CairoFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = DeepNavy,
+                                        fontSize = 15.sp
+                                    )
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = DeepTeal.copy(alpha = 0.12f)
+                                ) {
+                                    Text(
+                                        text = "مسؤولة التسليم",
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                        fontFamily = CairoFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = DeepTeal,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
 
             // =================================================================
-            // 3. كشف الطلاب المعتمدين والمقاعد (The Official Roster Sheet)
+            // 3. كشف المقاعد والطلاب المعتمدين (Official Roster Table)
             // =================================================================
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
@@ -473,10 +560,10 @@ fun TASheetPreviewScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                            .padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // ترويسة الجدول
+                        // هيدر الكشف مع نسبة الاكتمال بنظام أفقي سليم 100% بدون أي انضغاط رأسي
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -484,26 +571,27 @@ fun TASheetPreviewScreen(
                         ) {
                             Text(
                                 text = "كشف المقاعد وأعضاء الفريق المعتمدين:",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 17.sp
-                                )
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = DeepNavy,
+                                fontSize = 15.sp,
+                                modifier = Modifier.weight(1f)
                             )
 
+                            // بادج عدد المقاعد (أفقي ومريح للعين تماماً)
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
-                                color = LightAqua.copy(alpha = 0.35f),
-                                border = BorderStroke(1.dp, Turquoise.copy(alpha = 0.5f))
+                                color = LightAqua.copy(alpha = 0.4f),
+                                border = BorderStroke(1.dp, Turquoise.copy(alpha = 0.6f))
                             ) {
                                 Text(
                                     text = "$bookedCount من $totalCount مقاعد مكتملة",
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        color = DeepTeal,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp
-                                    )
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DeepTeal,
+                                    fontSize = 12.sp,
+                                    maxLines = 1
                                 )
                             }
                         }
@@ -513,16 +601,16 @@ fun TASheetPreviewScreen(
                             thickness = 1.dp
                         )
 
-                        // قائمة صفوف المقاعد كشف كامل مكبر وواضح جداً
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        // قائمة المقاعد كصفوف مستقلة وواضحة جداً
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             seats.forEachIndexed { index, seat ->
                                 val isLeader = index == 0
                                 val isBooked = seat.status == SeatStatus.BOOKED
 
                                 Surface(
                                     modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(16.dp),
-                                    color = if (isLeader) Peach.copy(alpha = 0.15f) else WarmCream.copy(alpha = 0.5f),
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = if (isLeader) Peach.copy(alpha = 0.15f) else WarmCream.copy(alpha = 0.45f),
                                     border = BorderStroke(
                                         width = 1.dp,
                                         color = if (isLeader) Peach else SoftGray.copy(alpha = 0.5f)
@@ -531,30 +619,28 @@ fun TASheetPreviewScreen(
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                                            .padding(horizontal = 12.dp, vertical = 11.dp),
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
                                         // رقم المقعد S1..S6
                                         Surface(
-                                            modifier = Modifier.size(44.dp),
-                                            shape = RoundedCornerShape(12.dp),
-                                            color = if (isLeader) DeepTeal else DeepNavy,
-                                            shadowElevation = 1.dp
+                                            modifier = Modifier.size(42.dp),
+                                            shape = RoundedCornerShape(10.dp),
+                                            color = if (isLeader) DeepTeal else DeepNavy
                                         ) {
                                             Box(contentAlignment = Alignment.Center) {
                                                 Text(
                                                     text = "S${seat.seatNumber}",
-                                                    style = MaterialTheme.typography.labelLarge.copy(
-                                                        color = Color.White,
-                                                        fontWeight = FontWeight.ExtraBold,
-                                                        fontSize = 15.sp
-                                                    )
+                                                    fontFamily = CairoFontFamily,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color.White,
+                                                    fontSize = 14.sp
                                                 )
                                             }
                                         }
 
-                                        // اسم الطالب والتخصص
+                                        // اسم العضو والتخصص
                                         Column(modifier = Modifier.weight(1f)) {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
@@ -562,11 +648,10 @@ fun TASheetPreviewScreen(
                                             ) {
                                                 Text(
                                                     text = if (isBooked) (seat.applicantName ?: "طالب معتمد") else "— مقعد شاغر متاح —",
-                                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = if (isBooked) DeepNavy else SoftGray,
-                                                        fontSize = 16.sp
-                                                    ),
+                                                    fontFamily = CairoFontFamily,
+                                                    fontWeight = if (isBooked) FontWeight.Bold else FontWeight.Medium,
+                                                    color = if (isBooked) DeepNavy else SoftGray,
+                                                    fontSize = 15.sp,
                                                     maxLines = 1,
                                                     overflow = TextOverflow.Ellipsis
                                                 )
@@ -577,37 +662,33 @@ fun TASheetPreviewScreen(
                                                     ) {
                                                         Text(
                                                             text = "👑 القائد",
-                                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
-                                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                                color = Color.White,
-                                                                fontWeight = FontWeight.Bold,
-                                                                fontSize = 11.sp
-                                                            )
+                                                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                                                            fontFamily = CairoFontFamily,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = Color.White,
+                                                            fontSize = 10.5.sp
                                                         )
                                                     }
                                                 }
                                             }
 
-                                            Spacer(modifier = Modifier.height(2.dp))
-
                                             Text(
                                                 text = seat.roleRequired,
-                                                style = MaterialTheme.typography.bodyMedium.copy(
-                                                    color = DeepTeal,
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    fontSize = 13.5.sp
-                                                )
+                                                fontFamily = CairoFontFamily,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = DeepTeal,
+                                                fontSize = 12.5.sp
                                             )
                                         }
 
                                         // بادج حالة المقعد
                                         Surface(
-                                            shape = RoundedCornerShape(10.dp),
+                                            shape = RoundedCornerShape(8.dp),
                                             color = if (isBooked) SeatAvailableBg else SeatPendingBg,
                                             border = BorderStroke(0.8.dp, if (isBooked) SeatAvailableGreen else SeatPendingAmber)
                                         ) {
                                             Row(
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                                             ) {
@@ -615,15 +696,14 @@ fun TASheetPreviewScreen(
                                                     imageVector = if (isBooked) Icons.Filled.CheckCircle else Icons.Outlined.HourglassTop,
                                                     contentDescription = null,
                                                     tint = if (isBooked) SeatAvailableGreen else SeatPendingAmber,
-                                                    modifier = Modifier.size(13.dp)
+                                                    modifier = Modifier.size(12.dp)
                                                 )
                                                 Text(
                                                     text = if (isBooked) "معتمد ✓" else "شاغر",
-                                                    style = MaterialTheme.typography.labelSmall.copy(
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = if (isBooked) SeatAvailableGreen else SeatPendingAmber,
-                                                        fontSize = 11.5.sp
-                                                    )
+                                                    fontFamily = CairoFontFamily,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = if (isBooked) SeatAvailableGreen else SeatPendingAmber,
+                                                    fontSize = 11.sp
                                                 )
                                             }
                                         }
@@ -636,12 +716,12 @@ fun TASheetPreviewScreen(
             }
 
             // =================================================================
-            // 4. كارت الإقرار والتوقيعات الرسمية (Declaration & Signatures)
+            // 4. كارت الإقرار الأكاديمي والتوقيعات الرسمية
             // =================================================================
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
@@ -649,42 +729,40 @@ fun TASheetPreviewScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                            .padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // تنبيه الإقرار
                         Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = LightAqua.copy(alpha = 0.3f),
-                            border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.35f))
+                            shape = RoundedCornerShape(12.dp),
+                            color = LightAqua.copy(alpha = 0.35f),
+                            border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.3f))
                         ) {
                             Row(
-                                modifier = Modifier.padding(12.dp),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                modifier = Modifier.padding(10.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalAlignment = Alignment.Top
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.Info,
                                     contentDescription = null,
                                     tint = DeepTeal,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(18.dp)
                                 )
                                 Column {
                                     Text(
                                         text = "إقرار وتسليم رسمي:",
-                                        style = MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = DeepNavy,
-                                            fontSize = 14.5.sp
-                                        )
+                                        fontFamily = CairoFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = DeepNavy,
+                                        fontSize = 13.5.sp
                                     )
                                     Text(
-                                        text = "يقر قائد الفريق بتوافق جميع المقاعد المسجلة مع معايير الكلية واعتماد أعضاء الفريق، وتُعتبر هذه الوثيقة نهائية ومجمدة بمجرد الاعتماد الرسمي.",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            color = DeepNavy.copy(alpha = 0.75f),
-                                            fontSize = 13.sp,
-                                            lineHeight = 18.sp
-                                        )
+                                        text = "يقر قائد الفريق بصحة توزيع المقاعد المعتمدة وفقاً لمتطلبات المقرر الدراسي، وتُعتبر هذه الوثيقة نهائية ومجمدة بعد الاعتماد الأكاديمي.",
+                                        fontFamily = CairoFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        color = DeepNavy.copy(alpha = 0.75f),
+                                        fontSize = 12.sp,
+                                        lineHeight = 17.sp
                                     )
                                 }
                             }
@@ -692,32 +770,31 @@ fun TASheetPreviewScreen(
 
                         Text(
                             text = "التوقيعات والاعتمادات الرسمية:",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = DeepNavy,
-                                fontSize = 16.sp
-                            )
+                            fontFamily = CairoFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = DeepNavy,
+                            fontSize = 14.5.sp
                         )
 
-                        // 3 خانات توقيع كبيرة ومريحة للعين
+                        // 3 خانات توقيع مريحة بدون ضغط
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            ExecutiveSignatureBox(
+                            AcademicSignatureBlock(
                                 title = "قائد الفريق",
                                 signatory = team.leaderName,
                                 isSigned = true,
                                 modifier = Modifier.weight(1f)
                             )
-                            ExecutiveSignatureBox(
+                            AcademicSignatureBlock(
                                 title = "المعيدة المشرفة",
                                 signatory = "م. شهد أحمد",
                                 isSigned = team.isLocked,
                                 modifier = Modifier.weight(1f)
                             )
-                            ExecutiveSignatureBox(
-                                title = "أستاذ المادة",
+                            AcademicSignatureBlock(
+                                title = "أستاذ المقرر",
                                 signatory = "د. محمد كاظم",
                                 isSigned = team.isLocked,
                                 modifier = Modifier.weight(1f)
@@ -727,14 +804,13 @@ fun TASheetPreviewScreen(
                 }
             }
 
-            // مسافة سفلية إضافية لضمان عدم تغطية المحتوى بالـ BottomBar
             item {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
 
-    // نافذة تأكيد تصدير ملف الـ PDF بنجاح
+    // نافذة تأكيد نجاح تصدير ملف الـ PDF
     if (showExportSuccessDialog && exportedFile != null) {
         ExportSuccessDialog(
             file = exportedFile!!,
@@ -745,151 +821,70 @@ fun TASheetPreviewScreen(
 }
 
 /**
- * 👨‍🏫 كارت المشرف الأكاديمي الفردي
+ * 🖋️ صندوق التوقيع الأكاديمي المريح
  */
 @Composable
-private fun SupervisorPersonCard(
-    title: String,
-    name: String,
-    roleSubtitle: String,
-    icon: ImageVector,
-    accentColor: Color,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        color = WarmCream.copy(alpha = 0.6f),
-        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
-    ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Surface(
-                    modifier = Modifier.size(36.dp),
-                    shape = CircleShape,
-                    color = accentColor.copy(alpha = 0.15f)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = accentColor,
-                            modifier = Modifier.size(19.dp)
-                        )
-                    }
-                }
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = DeepNavy.copy(alpha = 0.7f),
-                        fontSize = 12.sp
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Column {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = DeepNavy,
-                        fontSize = 15.sp
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = roleSubtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontWeight = FontWeight.Medium,
-                        color = DeepTeal,
-                        fontSize = 12.5.sp
-                    ),
-                    maxLines = 1
-                )
-            }
-        }
-    }
-}
-
-/**
- * ✍️ خانة التوقيع التنفيذية
- */
-@Composable
-private fun ExecutiveSignatureBox(
+private fun AcademicSignatureBlock(
     title: String,
     signatory: String,
     isSigned: Boolean,
     modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = modifier.height(96.dp),
-        shape = RoundedCornerShape(14.dp),
-        color = WarmCream.copy(alpha = 0.45f),
+        modifier = modifier.height(90.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = WarmCream.copy(alpha = 0.5f),
         border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.55f))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp),
+                .padding(6.dp),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = DeepNavy.copy(alpha = 0.7f),
-                    fontSize = 12.sp
-                )
+                fontFamily = CairoFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                color = DeepNavy.copy(alpha = 0.7f),
+                fontSize = 11.5.sp
             )
 
             if (isSigned) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Filled.CheckCircle,
                         contentDescription = null,
                         tint = DeepTeal,
-                        modifier = Modifier.size(15.dp)
+                        modifier = Modifier.size(13.dp)
                     )
                     Text(
-                        text = "معتمد إلكترونياً",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            color = DeepTeal,
-                            fontSize = 11.sp
-                        )
+                        text = "معتمد ✓",
+                        fontFamily = CairoFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = DeepTeal,
+                        fontSize = 10.5.sp
                     )
                 }
             } else {
                 Text(
-                    text = ".......................",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = SoftGray,
-                        fontSize = 13.sp
-                    )
+                    text = "..................",
+                    fontFamily = CairoFontFamily,
+                    color = SoftGray,
+                    fontSize = 11.sp
                 )
             }
 
             Text(
                 text = signatory,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = DeepNavy,
-                    fontSize = 13.sp
-                ),
+                fontFamily = CairoFontFamily,
+                fontWeight = FontWeight.Bold,
+                color = DeepNavy,
+                fontSize = 12.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -916,88 +911,84 @@ private fun ExportSuccessDialog(
             ) {
                 Text(
                     text = "تم، حسناً",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        fontSize = 14.5.sp
-                    )
+                    fontFamily = CairoFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    fontSize = 14.sp
                 )
             }
         },
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Surface(
                     shape = CircleShape,
                     color = SeatAvailableBg,
-                    modifier = Modifier.size(38.dp)
+                    modifier = Modifier.size(36.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Filled.Check,
                             contentDescription = null,
                             tint = SeatAvailableGreen,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
                 Text(
                     text = "تم تصدير الكشف بنجاح!",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        color = DeepNavy,
-                        fontSize = 18.sp
-                    )
+                    fontFamily = CairoFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = DeepNavy,
+                    fontSize = 17.sp
                 )
             }
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = "تم إنشاء كشف التسليم الرسمي بنجاح لمشروع ($teamName) وتجهيزه كملف PDF بحجم A4 جاهز للتسليم للمعيدة.",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = DeepNavy.copy(alpha = 0.8f),
-                        fontSize = 14.sp,
-                        lineHeight = 20.sp
-                    )
+                    fontFamily = CairoFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    color = DeepNavy.copy(alpha = 0.8f),
+                    fontSize = 13.5.sp,
+                    lineHeight = 18.sp
                 )
 
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     color = SoftBeige.copy(alpha = 0.5f),
                     border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.6f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
+                    Column(modifier = Modifier.padding(10.dp)) {
                         Text(
                             text = "اسم الملف المُصدَّر:",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = DeepNavy.copy(alpha = 0.6f),
-                                fontSize = 11.5.sp
-                            )
+                            fontFamily = CairoFontFamily,
+                            color = DeepNavy.copy(alpha = 0.6f),
+                            fontSize = 11.sp
                         )
                         Text(
                             text = file.name,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = DeepNavy,
-                                fontSize = 13.5.sp
-                            )
+                            fontFamily = CairoFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = DeepNavy,
+                            fontSize = 12.5.sp
                         )
                     }
                 }
             }
         },
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(20.dp),
         containerColor = Color.White
     )
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-private fun TASheetPreviewScreenExecutivePreview() {
+private fun TASheetPreviewScreenCairoPreview() {
     TeamSeatTheme {
         TASheetPreviewScreen()
     }
