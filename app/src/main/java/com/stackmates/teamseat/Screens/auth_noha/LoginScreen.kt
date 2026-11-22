@@ -11,6 +11,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,8 +25,9 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
@@ -32,148 +38,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.stackmates.teamseat.core.theme.*
 
-// درجات الألوان الرسمية لتطبيق TeamSeat
-private val DeepNavy   = Color(0xFF0A344A) // العناوين الداكنة
-private val DeepTeal   = Color(0xFF1B6F7D) // الأزرار الأساسية
-private val Turquoise  = Color(0xFF469D9F) // الأيقونات والعناصر النشطة
-private val LightAqua  = Color(0xFFA9D5D4) // خلفية دائرة الشعار العلوية
-private val WarmCream  = Color(0xFFFCF2EA) // الخلفية الرئيسية للشاشة
-private val SoftBeige  = Color(0xFFF4E2DD) // خلفية الحقول
-private val Peach      = Color(0xFFF4C195) // اللمسات الجمالية
-private val SoftGray   = Color(0xFFD3CFD1) // الحدود
-
-// شعار الكرسي الدائري
-@Composable
-fun LoginChairBadge(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(56.dp)
-            .clip(CircleShape)
-            .background(LightAqua.copy(alpha = 0.45f)),
-        contentAlignment = Alignment.Center
-    ) {
-        Canvas(modifier = Modifier.size(30.dp)) {
-            val w = size.width
-            val h = size.height
-
-            // مسند الكرسي
-            drawRoundRect(
-                color = DeepNavy,
-                topLeft = Offset(w * 0.25f, h * 0.15f),
-                size = Size(w * 0.50f, h * 0.40f),
-                cornerRadius = CornerRadius(6f, 6f),
-                style = Stroke(width = 2.5f)
-            )
-            // مقعد الكرسي
-            drawRoundRect(
-                color = DeepNavy,
-                topLeft = Offset(w * 0.12f, h * 0.52f),
-                size = Size(w * 0.76f, h * 0.16f),
-                cornerRadius = CornerRadius(4f, 4f),
-                style = Stroke(width = 2.5f)
-            )
-            // الأرجل
-            drawLine(color = DeepNavy, start = Offset(w * 0.28f, h * 0.68f), end = Offset(w * 0.20f, h * 0.88f), strokeWidth = 2.5f, cap = StrokeCap.Round)
-            drawLine(color = DeepNavy, start = Offset(w * 0.72f, h * 0.68f), end = Offset(w * 0.80f, h * 0.88f), strokeWidth = 2.5f, cap = StrokeCap.Round)
-        }
-    }
-}
-
-// أيقونة الإيميل
-@Composable
-fun LoginEmailIcon(modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier.size(20.dp)) {
-        val w = size.width
-        val h = size.height
-        drawRoundRect(
-            color = Turquoise,
-            topLeft = Offset(w * 0.12f, h * 0.20f),
-            size = Size(w * 0.76f, h * 0.60f),
-            cornerRadius = CornerRadius(4f, 4f),
-            style = Stroke(width = 2f)
-        )
-        drawLine(color = Turquoise, start = Offset(w * 0.15f, h * 0.24f), end = Offset(w * 0.5f, h * 0.54f), strokeWidth = 2f, cap = StrokeCap.Round)
-        drawLine(color = Turquoise, start = Offset(w * 0.85f, h * 0.24f), end = Offset(w * 0.5f, h * 0.54f), strokeWidth = 2f, cap = StrokeCap.Round)
-    }
-}
-
-// أيقونة القفل
-@Composable
-fun LoginLockIcon(modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier.size(20.dp)) {
-        val w = size.width
-        val h = size.height
-        drawArc(
-            color = Turquoise,
-            startAngle = 180f,
-            sweepAngle = 180f,
-            useCenter = false,
-            topLeft = Offset(w * 0.25f, h * 0.12f),
-            size = Size(w * 0.50f, h * 0.45f),
-            style = Stroke(width = 2f, cap = StrokeCap.Round)
-        )
-        drawRoundRect(
-            color = Turquoise,
-            topLeft = Offset(w * 0.18f, h * 0.42f),
-            size = Size(w * 0.64f, h * 0.48f),
-            cornerRadius = CornerRadius(4f, 4f),
-            style = Stroke(width = 2f)
-        )
-    }
-}
-
-// أيقونة العين
-@Composable
-fun LoginEyeIcon(isVisible: Boolean, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier.size(20.dp)) {
-        val w = size.width
-        val h = size.height
-        drawArc(
-            color = if (isVisible) DeepTeal else SoftGray,
-            startAngle = 30f,
-            sweepAngle = 120f,
-            useCenter = false,
-            topLeft = Offset(w * 0.1f, h * 0.1f),
-            size = Size(w * 0.8f, h * 0.6f),
-            style = Stroke(width = 2f, cap = StrokeCap.Round)
-        )
-        drawArc(
-            color = if (isVisible) DeepTeal else SoftGray,
-            startAngle = 210f,
-            sweepAngle = 120f,
-            useCenter = false,
-            topLeft = Offset(w * 0.1f, h * 0.3f),
-            size = Size(w * 0.8f, h * 0.6f),
-            style = Stroke(width = 2f, cap = StrokeCap.Round)
-        )
-        drawCircle(color = if (isVisible) DeepTeal else SoftGray, radius = 3.5f, center = Offset(w * 0.5f, h * 0.5f))
-        if (!isVisible) {
-            drawLine(color = SoftGray, start = Offset(w * 0.2f, h * 0.2f), end = Offset(w * 0.8f, h * 0.8f), strokeWidth = 2f, cap = StrokeCap.Round)
-        }
-    }
-}
-
-// أيقونة Google الملونة
-@Composable
-fun GoogleColoredIcon(modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier.size(20.dp)) {
-        val w = size.width
-        val h = size.height
-        drawCircle(
-            color = Color(0xFF4285F4),
-            radius = w * 0.45f,
-            center = Offset(w * 0.5f, h * 0.5f),
-            style = Stroke(width = 3f)
-        )
-        drawCircle(
-            color = Color(0xFFEA4335),
-            radius = w * 0.2f,
-            center = Offset(w * 0.5f, h * 0.5f)
-        )
-    }
-}
-
+/**
+ * 🌸 شاشة تسجيل الدخول (Login Screen)
+ * مسؤولية: نُهى (Noha) — تصميم متطابق بالملي مع الموك آب المعتمد
+ * مستخدم فيه نفس خط تجوال (Tajawal) المعتمد في شاشات يوسف، مع المسافات المتناسقة وشعار Google الرسمي.
+ */
 @Composable
 fun LoginScreen(
     onLoginClick: (email: String, pass: String) -> Unit = { _, _ -> },
@@ -184,241 +55,292 @@ fun LoginScreen(
     var emailOrId by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
-    var rememberMe by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(WarmCream)
     ) {
+        // 1. خلفية التموجات الانسيابية الهادئة في الزوايا لمنع الفراغ
+        LoginFluidBackground()
+
+        // 2. المحتوى الرئيسي المتناسق مع الشاشة
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = 24.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            // الهيدر واللوجو
-            LoginChairBadge(modifier = Modifier.padding(top = 16.dp))
-
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text(
-                text = "TeamSeat",
-                color = DeepNavy,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp
-            )
+            // شعار الكرسي الأيقوني لـ TeamSeat مع الحلقة التركوازية
+            LoginHeroChairLogo(modifier = Modifier.size(76.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
+            // اسم التطبيق
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Team",
+                    fontFamily = TajawalFontFamily,
+                    color = DeepNavy,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.5).sp
+                )
+                Text(
+                    text = "Seat",
+                    fontFamily = TajawalFontFamily,
+                    color = DeepTeal,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.5).sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // عنوان الترحيب
             Text(
                 text = "Welcome Back!",
+                fontFamily = TajawalFontFamily,
                 color = DeepNavy,
-                fontSize = 26.sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.ExtraBold
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
             Text(
-                text = "Sign in to continue your journey",
+                text = "Sign in to continue",
+                fontFamily = TajawalFontFamily,
                 color = DeepNavy.copy(alpha = 0.65f),
-                fontSize = 14.sp,
+                fontSize = 14.5.sp,
                 fontWeight = FontWeight.Medium
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(26.dp))
 
-            // 1. حقل الإيميل أو الرقم الجامعي
-            OutlinedTextField(
-                value = emailOrId,
-                onValueChange = { emailOrId = it },
-                placeholder = { Text("Email or Student ID", color = DeepNavy.copy(alpha = 0.5f), fontSize = 15.sp) },
-                trailingIcon = { LoginEmailIcon(modifier = Modifier.padding(end = 12.dp)) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedBorderColor = DeepTeal,
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedTextColor = DeepNavy,
-                    unfocusedTextColor = DeepNavy
-                ),
-                singleLine = true
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // 2. حقل الباسورد (العين على اليسار والقفل على اليمين)
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                placeholder = { Text("Password", color = DeepNavy.copy(alpha = 0.5f), fontSize = 15.sp) },
-                leadingIcon = {
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 12.dp)
-                            .clickable { isPasswordVisible = !isPasswordVisible }
-                    ) {
-                        LoginEyeIcon(isVisible = isPasswordVisible)
-                    }
-                },
-                trailingIcon = { LoginLockIcon(modifier = Modifier.padding(end = 12.dp)) },
-                visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedBorderColor = DeepTeal,
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedTextColor = DeepNavy,
-                    unfocusedTextColor = DeepNavy
-                ),
-                singleLine = true
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // سطر Remember Me و Forgot Password
-            Row(
+            // بطاقة الحقول (Form Card) لتجميع العناصر ومنع الإحساس بالفراغ
+            Card(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.92f)),
+                border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.45f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
             ) {
-                // Forgot Password على اليسار
-                Text(
-                    text = "Forgot Password?",
-                    color = DeepTeal,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { onForgotPassword() }
-                )
-
-                // Remember Me على اليمين
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { rememberMe = !rememberMe }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp, vertical = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text(
-                        text = "Remember Me",
-                        color = DeepNavy.copy(alpha = 0.7f),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Box(
+                    // حقل الإيميل أو الرقم الجامعي
+                    OutlinedTextField(
+                        value = emailOrId,
+                        onValueChange = { emailOrId = it },
+                        placeholder = {
+                            Text(
+                                text = "Email or Student ID",
+                                fontFamily = TajawalFontFamily,
+                                color = DeepNavy.copy(alpha = 0.45f),
+                                fontSize = 14.5.sp
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Email,
+                                contentDescription = null,
+                                tint = Turquoise,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        },
                         modifier = Modifier
-                            .size(16.dp)
-                            .border(
-                                width = 1.5.dp,
-                                color = if (rememberMe) DeepTeal else SoftGray,
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .background(
-                                color = if (rememberMe) DeepTeal else Color.Transparent,
-                                shape = RoundedCornerShape(4.dp)
-                            )
+                            .fillMaxWidth()
+                            .height(54.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = SoftBeige.copy(alpha = 0.4f),
+                            unfocusedContainerColor = SoftBeige.copy(alpha = 0.25f),
+                            focusedBorderColor = DeepTeal,
+                            unfocusedBorderColor = SoftGray.copy(alpha = 0.5f),
+                            focusedTextColor = DeepNavy,
+                            unfocusedTextColor = DeepNavy
+                        ),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                     )
+
+                    // حقل كلمة المرور
+                    Column {
+                        OutlinedTextField(
+                            value = password,
+                            onValueChange = { password = it },
+                            placeholder = {
+                                Text(
+                                    text = "Password",
+                                    fontFamily = TajawalFontFamily,
+                                    color = DeepNavy.copy(alpha = 0.45f),
+                                    fontSize = 14.5.sp
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Lock,
+                                    contentDescription = null,
+                                    tint = Turquoise,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                                    Icon(
+                                        imageVector = if (isPasswordVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                                        contentDescription = "تبديل الرؤية",
+                                        tint = if (isPasswordVisible) DeepTeal else SoftGray,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            },
+                            visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(54.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = SoftBeige.copy(alpha = 0.4f),
+                                unfocusedContainerColor = SoftBeige.copy(alpha = 0.25f),
+                                focusedBorderColor = DeepTeal,
+                                unfocusedBorderColor = SoftGray.copy(alpha = 0.5f),
+                                focusedTextColor = DeepNavy,
+                                unfocusedTextColor = DeepNavy
+                            ),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                        )
+
+                        // زر Forgot Password على اليمين
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Text(
+                                text = "Forgot Password?",
+                                fontFamily = TajawalFontFamily,
+                                color = DeepTeal,
+                                fontSize = 13.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clickable { onForgotPassword() }
+                            )
+                        }
+                    }
+
+                    // زر تسجيل الدخول الرئيسي
+                    Button(
+                        onClick = {
+                            onLoginClick(emailOrId, password)
+                            onLoginSuccess()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                            .shadow(
+                                elevation = 4.dp,
+                                shape = RoundedCornerShape(26.dp),
+                                spotColor = DeepTeal.copy(alpha = 0.35f)
+                            ),
+                        shape = RoundedCornerShape(26.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = DeepNavy)
+                    ) {
+                        Text(
+                            text = "Log In",
+                            fontFamily = TajawalFontFamily,
+                            color = Color.White,
+                            fontSize = 16.5.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    // خط OR الفاصل
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        HorizontalDivider(
+                            modifier = Modifier.weight(1f),
+                            color = SoftGray.copy(alpha = 0.6f)
+                        )
+                        Text(
+                            text = "or",
+                            fontFamily = TajawalFontFamily,
+                            color = DeepNavy.copy(alpha = 0.5f),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(horizontal = 12.dp)
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.weight(1f),
+                            color = SoftGray.copy(alpha = 0.6f)
+                        )
+                    }
+
+                    // زر تسجيل الدخول بواسطة Google مع الأيقونة الملونة الرسمية
+                    OutlinedButton(
+                        onClick = { /* Google Login */ },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(25.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
+                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.8f))
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            GoogleOfficialLogo(modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "Continue with Google",
+                                fontFamily = TajawalFontFamily,
+                                color = DeepNavy,
+                                fontSize = 14.5.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // زرار تسجيل الدخول الرئيسي: -> Log In
-            Button(
-                onClick = {
-                    onLoginClick(emailOrId, password)
-                    onLoginSuccess()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp)
-                    .shadow(6.dp, RoundedCornerShape(27.dp), spotColor = DeepTeal.copy(alpha = 0.35f)),
-                shape = RoundedCornerShape(27.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = DeepTeal)
-            ) {
-                Text(
-                    text = "→ Log In",
-                    color = WarmCream,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(22.dp))
-
-            // خط OR الفاصل
-            Row(
-                modifier = Modifier.fillMaxWidth(0.85f),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HorizontalDivider(modifier = Modifier.weight(1f), color = SoftGray.copy(alpha = 0.6f))
-                Text(
-                    text = "OR",
-                    color = DeepNavy.copy(alpha = 0.5f),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 14.dp)
-                )
-                HorizontalDivider(modifier = Modifier.weight(1f), color = SoftGray.copy(alpha = 0.6f))
-            }
-
-            Spacer(modifier = Modifier.height(22.dp))
-
-            // زرار Continue with Google
-            OutlinedButton(
-                onClick = { /* Google Login */ },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(26.dp),
-                colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.7f))
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "Continue with Google",
-                        color = DeepNavy,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    GoogleColoredIcon(modifier = Modifier.size(18.dp))
-                }
-            }
-
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // الفوتر: Don't have an account? Sign Up
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp),
+                modifier = Modifier.padding(bottom = 12.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "Don't have an account? ",
-                    color = DeepNavy.copy(alpha = 0.65f),
-                    fontSize = 14.sp
+                    fontFamily = TajawalFontFamily,
+                    color = DeepNavy.copy(alpha = 0.7f),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
                 )
                 Text(
                     text = "Sign Up",
+                    fontFamily = TajawalFontFamily,
                     color = DeepTeal,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.5.sp,
+                    fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier.clickable { onNavigateToRegister() }
                 )
             }
@@ -426,8 +348,178 @@ fun LoginScreen(
     }
 }
 
+/**
+ * 🌐 شعار Google الرسمي بالألوان الأربعة الدقيقة
+ */
+@Composable
+fun GoogleOfficialLogo(modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(20.dp)) {
+        val w = size.width
+        val h = size.height
+        val stroke = w * 0.22f
+        val r = (w - stroke) / 2f
+        val cx = w / 2f
+        val cy = h / 2f
+
+        // 1. القوس الأحمر العلوي
+        drawArc(
+            color = Color(0xFFEA4335),
+            startAngle = 180f,
+            sweepAngle = 100f,
+            useCenter = false,
+            topLeft = Offset(stroke / 2f, stroke / 2f),
+            size = Size(r * 2, r * 2),
+            style = Stroke(width = stroke, cap = StrokeCap.Butt)
+        )
+
+        // 2. القوس الأصفر الأيسر
+        drawArc(
+            color = Color(0xFFFBBC05),
+            startAngle = 125f,
+            sweepAngle = 60f,
+            useCenter = false,
+            topLeft = Offset(stroke / 2f, stroke / 2f),
+            size = Size(r * 2, r * 2),
+            style = Stroke(width = stroke, cap = StrokeCap.Butt)
+        )
+
+        // 3. القوس الأخضر السفلي
+        drawArc(
+            color = Color(0xFF34A853),
+            startAngle = 20f,
+            sweepAngle = 110f,
+            useCenter = false,
+            topLeft = Offset(stroke / 2f, stroke / 2f),
+            size = Size(r * 2, r * 2),
+            style = Stroke(width = stroke, cap = StrokeCap.Butt)
+        )
+
+        // 4. القوس والخط الأزرق الأيمن
+        drawArc(
+            color = Color(0xFF4285F4),
+            startAngle = -35f,
+            sweepAngle = 60f,
+            useCenter = false,
+            topLeft = Offset(stroke / 2f, stroke / 2f),
+            size = Size(r * 2, r * 2),
+            style = Stroke(width = stroke, cap = StrokeCap.Butt)
+        )
+
+        // الخط الأزرق الأفقي الأوسط لرمز حرف G
+        drawLine(
+            color = Color(0xFF4285F4),
+            start = Offset(cx - w * 0.05f, cy),
+            end = Offset(cx + r + stroke / 2f, cy),
+            strokeWidth = stroke,
+            cap = StrokeCap.Square
+        )
+    }
+}
+
+/**
+ * 💺 شعار كرسي TeamSeat مع الحلقة التركوازية المدارية
+ */
+@Composable
+fun LoginHeroChairLogo(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .clip(CircleShape)
+            .background(LightAqua.copy(alpha = 0.45f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.size(44.dp)) {
+            val w = size.width
+            val h = size.height
+
+            // الحلقة البيضاوية التركوازية التي تدور حول الكرسي
+            drawArc(
+                color = Turquoise,
+                startAngle = 135f,
+                sweepAngle = 270f,
+                useCenter = false,
+                topLeft = Offset(w * 0.05f, h * 0.28f),
+                size = Size(w * 0.90f, h * 0.44f),
+                style = Stroke(width = 3.5f, cap = StrokeCap.Round)
+            )
+
+            // مسند الظهر المريح للكرسي
+            drawRoundRect(
+                color = DeepNavy,
+                topLeft = Offset(w * 0.24f, h * 0.12f),
+                size = Size(w * 0.52f, h * 0.40f),
+                cornerRadius = CornerRadius(8f, 8f),
+                style = Stroke(width = 3.5f)
+            )
+
+            // قاعدة مقعد الكرسي
+            drawRoundRect(
+                color = DeepNavy,
+                topLeft = Offset(w * 0.12f, h * 0.52f),
+                size = Size(w * 0.76f, h * 0.16f),
+                cornerRadius = CornerRadius(5f, 5f),
+                style = Stroke(width = 3.5f)
+            )
+
+            // أرجل الكرسي الأنيقة
+            drawLine(
+                color = DeepNavy,
+                start = Offset(w * 0.26f, h * 0.68f),
+                end = Offset(w * 0.18f, h * 0.90f),
+                strokeWidth = 3.5f,
+                cap = StrokeCap.Round
+            )
+            drawLine(
+                color = DeepNavy,
+                start = Offset(w * 0.74f, h * 0.68f),
+                end = Offset(w * 0.82f, h * 0.90f),
+                strokeWidth = 3.5f,
+                cap = StrokeCap.Round
+            )
+        }
+    }
+}
+
+/**
+ * 🌊 تموجات الخلفية الانسيابية لتصميم تسجيل الدخول
+ */
+@Composable
+fun LoginFluidBackground() {
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+
+        // تموج علوي ناعم في الزاوية اليمنى
+        val topPath = Path().apply {
+            moveTo(w * 0.65f, 0f)
+            cubicTo(
+                w * 0.75f, h * 0.08f,
+                w * 0.88f, h * 0.05f,
+                w, h * 0.14f
+            )
+            lineTo(w, 0f)
+            close()
+        }
+        drawPath(topPath, color = Turquoise.copy(alpha = 0.22f))
+
+        // تموج سفلي ناعم في الزاوية اليسرى
+        val bottomPath = Path().apply {
+            moveTo(0f, h * 0.86f)
+            cubicTo(
+                w * 0.15f, h * 0.92f,
+                w * 0.28f, h * 0.88f,
+                w * 0.40f, h
+            )
+            lineTo(0f, h)
+            close()
+        }
+        drawPath(bottomPath, color = Peach.copy(alpha = 0.25f))
+    }
+}
+
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun LoginScreenPreview() {
-    LoginScreen()
+fun LoginScreenOfficialPreview() {
+    TeamSeatTheme {
+        LoginScreen()
+    }
 }

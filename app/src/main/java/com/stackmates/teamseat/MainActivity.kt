@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.stackmates.teamseat.Screens.auth_noha.SplashScreen
+import com.stackmates.teamseat.Screens.auth_noha.LoginScreen
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
 import com.stackmates.teamseat.navigation.AppNavGraph
 
@@ -14,7 +14,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             TeamSeatTheme {
-                SplashScreen ()
+                LoginScreen()
             }
         }
     }
