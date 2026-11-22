@@ -19,6 +19,29 @@ val TajawalFontFamily = FontFamily(
     Font(R.font.tajawal_extrabold, FontWeight.ExtraBold)
 )
 
+/**
+ * خط كايرو الأيقوني العصري (Cairo Font Family)
+ * الأكثر شهرة في تطبيقات الموبايل العربية الاحترافية، مريح وفخم جداً للعين.
+ */
+val CairoFontFamily = FontFamily(
+    Font(R.font.cairo, FontWeight.Normal),
+    Font(R.font.cairo, FontWeight.Medium),
+    Font(R.font.cairo, FontWeight.SemiBold),
+    Font(R.font.cairo, FontWeight.Bold),
+    Font(R.font.cairo, FontWeight.ExtraBold)
+)
+
+/**
+ * خط الإسكندرية الهندسي الحديث (Alexandria Font Family)
+ */
+val AlexandriaFontFamily = FontFamily(
+    Font(R.font.alexandria, FontWeight.Normal),
+    Font(R.font.alexandria, FontWeight.Medium),
+    Font(R.font.alexandria, FontWeight.SemiBold),
+    Font(R.font.alexandria, FontWeight.Bold),
+    Font(R.font.alexandria, FontWeight.ExtraBold)
+)
+
 val AppTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = TajawalFontFamily,
