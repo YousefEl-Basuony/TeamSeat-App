@@ -3,7 +3,6 @@ package com.stackmates.teamseat.Screens.auth_noha
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,14 +12,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Badge
+import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material.icons.outlined.WorkspacePremium
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,7 +39,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,12 +46,13 @@ import com.stackmates.teamseat.core.theme.*
 
 /**
  * 🌸 شاشة إنشاء الحساب (Register Screen)
- * مسؤولية: نُهى (Noha) — متناسقة تماماً مع شاشة تسجيل الدخول وبنفس الهوية البصرية.
- * تستخدم خط تجوال (Tajawal) المعتمد، ومزودة بقسم اختيار الدور (Student vs Team Leader) والتخصص.
+ * مسؤولية: نُهى (Noha) — تصميم عصري وجذاب متوافق تماماً مع الهوية البصرية لتطبيق TeamSeat.
+ * مزودة بقسم اختيار الدور والتخصص التقني (Designer, Developer, Frontend, QA) بتصميم شبكي (2x2) فائق الأناقة والوضوح.
  */
 @Composable
 fun RegisterScreen(
     onRegisterClick: (name: String, studentId: String, email: String, pass: String) -> Unit = { _, _, _, _ -> },
+    onRegisterWithRoleClick: (name: String, studentId: String, email: String, pass: String, role: String) -> Unit = { _, _, _, _, _ -> },
     onRegisterSuccess: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {},
     onBackToLogin: () -> Unit = onNavigateToLogin
@@ -62,30 +63,30 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
 
-    // الدور الأساسي (Student vs Team Leader كما في الموك آب)
-    var selectedRole by remember { mutableStateOf("Student") }
+    // التخصص / الدور التقني في الفريق (Designer, Developer, Frontend, QA)
+    var selectedRole by remember { mutableStateOf("Developer") }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(WarmCream)
     ) {
-        // خلفية التموجات الانسيابية المتطابقة مع شاشة الدخول
+        // خلفية التموجات الانسيابية المتطابقة مع شاشة تسجيل الدخول
         RegisterFluidBackground()
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 20.dp),
+                .padding(horizontal = 22.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
             // شعار الكرسي الأيقوني لـ TeamSeat
-            RegisterHeroChairLogo(modifier = Modifier.size(68.dp))
+            RegisterHeroChairLogo(modifier = Modifier.size(64.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             // اسم التطبيق
             Row(
@@ -123,16 +124,16 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(2.dp))
 
             Text(
-                text = "Join TeamSeat and start your journey",
+                text = "Join TeamSeat and collaborate with your team",
                 fontFamily = TajawalFontFamily,
                 color = DeepNavy.copy(alpha = 0.65f),
-                fontSize = 14.sp,
+                fontSize = 13.5.sp,
                 fontWeight = FontWeight.Medium
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            // بطاقة الحقول واختيار الدور المجمعة لمنع الفراغات والـ Zoom-out
+            // بطاقة الحقول واختيار التخصص لتجميع العناصر ومنع الإحساس بالفراغ
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -144,7 +145,7 @@ fun RegisterScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 18.dp, vertical = 18.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    verticalArrangement = Arrangement.spacedBy(13.dp)
                 ) {
                     // 1. الاسم بالكامل
                     OutlinedTextField(
@@ -155,7 +156,7 @@ fun RegisterScreen(
                                 text = "Full Name",
                                 fontFamily = TajawalFontFamily,
                                 color = DeepNavy.copy(alpha = 0.45f),
-                                fontSize = 14.5.sp
+                                fontSize = 14.sp
                             )
                         },
                         leadingIcon = {
@@ -168,7 +169,7 @@ fun RegisterScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
+                            .height(50.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = SoftBeige.copy(alpha = 0.35f),
@@ -190,7 +191,7 @@ fun RegisterScreen(
                                 text = "Student ID",
                                 fontFamily = TajawalFontFamily,
                                 color = DeepNavy.copy(alpha = 0.45f),
-                                fontSize = 14.5.sp
+                                fontSize = 14.sp
                             )
                         },
                         leadingIcon = {
@@ -203,7 +204,7 @@ fun RegisterScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
+                            .height(50.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = SoftBeige.copy(alpha = 0.35f),
@@ -226,7 +227,7 @@ fun RegisterScreen(
                                 text = "Academic Email",
                                 fontFamily = TajawalFontFamily,
                                 color = DeepNavy.copy(alpha = 0.45f),
-                                fontSize = 14.5.sp
+                                fontSize = 14.sp
                             )
                         },
                         leadingIcon = {
@@ -239,7 +240,7 @@ fun RegisterScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
+                            .height(50.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = SoftBeige.copy(alpha = 0.35f),
@@ -262,7 +263,7 @@ fun RegisterScreen(
                                 text = "Password",
                                 fontFamily = TajawalFontFamily,
                                 color = DeepNavy.copy(alpha = 0.45f),
-                                fontSize = 14.5.sp
+                                fontSize = 14.sp
                             )
                         },
                         leadingIcon = {
@@ -286,7 +287,7 @@ fun RegisterScreen(
                         visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
+                            .height(50.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = SoftBeige.copy(alpha = 0.35f),
@@ -301,42 +302,76 @@ fun RegisterScreen(
                     )
 
                     // =========================================================
-                    // 5. قسم اختيار الدور (Choose Your Role) المتطابق مع الموك آب
+                    // 5. قسم اختيار التخصص / الدور التقني (Role / Track Selection)
                     // =========================================================
                     Column(
                         modifier = Modifier.padding(top = 2.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = "Choose Your Role:",
-                            fontFamily = TajawalFontFamily,
-                            color = DeepNavy,
-                            fontSize = 14.5.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Select Your Role",
+                                fontFamily = TajawalFontFamily,
+                                color = DeepNavy,
+                                fontSize = 14.5.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "تخصصك في الفريق",
+                                fontFamily = TajawalFontFamily,
+                                color = DeepTeal,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
 
-                        // كارتين الاختيار الأساسيين: Student vs Team Leader
+                        // شبكة 2x2 للكروت الأنيقة للتخصصات الأربعة
+                        // الصف الأول: Designer & Developer
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            // خيار 1: Student
                             RoleOptionCard(
-                                title = "Student",
-                                subtitle = "حجز مقعد وتيم",
-                                icon = Icons.Outlined.School,
-                                isSelected = selectedRole == "Student",
-                                onClick = { selectedRole = "Student" },
+                                title = "Designer",
+                                subtitle = "UI/UX & Design",
+                                icon = Icons.Outlined.Palette,
+                                isSelected = selectedRole == "Designer",
+                                onClick = { selectedRole = "Designer" },
                                 modifier = Modifier.weight(1f)
                             )
-
-                            // خيار 2: Team Leader
                             RoleOptionCard(
-                                title = "Team Leader",
-                                subtitle = "إنشاء وإدارة التيم",
-                                icon = Icons.Outlined.WorkspacePremium,
-                                isSelected = selectedRole == "Team Leader",
-                                onClick = { selectedRole = "Team Leader" },
+                                title = "Developer",
+                                subtitle = "Mobile & Backend",
+                                icon = Icons.Outlined.Code,
+                                isSelected = selectedRole == "Developer",
+                                onClick = { selectedRole = "Developer" },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                        // الصف الثاني: Frontend & QA
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            RoleOptionCard(
+                                title = "Frontend",
+                                subtitle = "Web & Client",
+                                icon = Icons.Outlined.Devices,
+                                isSelected = selectedRole == "Frontend",
+                                onClick = { selectedRole = "Frontend" },
+                                modifier = Modifier.weight(1f)
+                            )
+                            RoleOptionCard(
+                                title = "QA",
+                                subtitle = "Testing & Review",
+                                icon = Icons.Outlined.BugReport,
+                                isSelected = selectedRole == "QA",
+                                onClick = { selectedRole = "QA" },
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -348,6 +383,7 @@ fun RegisterScreen(
                     Button(
                         onClick = {
                             onRegisterClick(fullName, studentId, email, password)
+                            onRegisterWithRoleClick(fullName, studentId, email, password, selectedRole)
                             onRegisterSuccess()
                         },
                         modifier = Modifier
@@ -404,7 +440,7 @@ fun RegisterScreen(
 }
 
 /**
- * 🎴 كارت اختيار الدور الأنيق (Student vs Team Leader)
+ * 🎴 كارت اختيار التخصص الأنيق (Designer, Developer, Frontend, QA)
  */
 @Composable
 private fun RoleOptionCard(
@@ -422,26 +458,26 @@ private fun RoleOptionCard(
         color = if (isSelected) DeepNavy else Color.White,
         border = BorderStroke(
             width = if (isSelected) 1.5.dp else 1.dp,
-            color = if (isSelected) DeepNavy else SoftGray.copy(alpha = 0.7f)
+            color = if (isSelected) Turquoise else SoftGray.copy(alpha = 0.5f)
         ),
-        shadowElevation = if (isSelected) 3.dp else 0.dp
+        shadowElevation = if (isSelected) 3.dp else 1.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 10.dp, vertical = 6.dp),
+                .padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Surface(
                 shape = CircleShape,
-                color = if (isSelected) Peach else LightAqua.copy(alpha = 0.4f),
+                color = if (isSelected) Peach else LightAqua.copy(alpha = 0.45f),
                 modifier = Modifier.size(34.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = icon,
-                        contentDescription = null,
+                        contentDescription = title,
                         tint = DeepNavy,
                         modifier = Modifier.size(18.dp)
                     )
@@ -464,8 +500,8 @@ private fun RoleOptionCard(
                     text = subtitle,
                     fontFamily = TajawalFontFamily,
                     fontWeight = FontWeight.Normal,
-                    fontSize = 10.5.sp,
-                    color = if (isSelected) WarmCream.copy(alpha = 0.8f) else DeepNavy.copy(alpha = 0.6f),
+                    fontSize = 10.sp,
+                    color = if (isSelected) WarmCream.copy(alpha = 0.85f) else DeepNavy.copy(alpha = 0.6f),
                     maxLines = 1
                 )
             }
@@ -493,7 +529,7 @@ fun RegisterHeroChairLogo(modifier: Modifier = Modifier) {
             .background(LightAqua.copy(alpha = 0.45f)),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(modifier = Modifier.size(38.dp)) {
+        Canvas(modifier = Modifier.size(36.dp)) {
             val w = size.width
             val h = size.height
 
