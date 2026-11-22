@@ -1,4 +1,4 @@
-package com.example.teamseat.screens.auth_noha
+package com.stackmates.teamseat.Screens.auth_noha
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -176,6 +176,7 @@ fun GoogleColoredIcon(modifier: Modifier = Modifier) {
 
 @Composable
 fun LoginScreen(
+    onLoginClick: (email: String, pass: String) -> Unit = { _, _ -> },
     onLoginSuccess: () -> Unit = {},
     onNavigateToRegister: () -> Unit = {},
     onForgotPassword: () -> Unit = {}
@@ -334,7 +335,10 @@ fun LoginScreen(
 
             // زرار تسجيل الدخول الرئيسي: -> Log In
             Button(
-                onClick = onLoginSuccess,
+                onClick = {
+                    onLoginClick(emailOrId, password)
+                    onLoginSuccess()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp)

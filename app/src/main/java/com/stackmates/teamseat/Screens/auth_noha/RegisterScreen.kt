@@ -1,4 +1,4 @@
-package com.example.teamseat.screens.auth_noha
+package com.stackmates.teamseat.Screens.auth_noha
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -239,8 +239,10 @@ fun RoleCardItem(
 
 @Composable
 fun RegisterScreen(
+    onRegisterClick: (name: String, studentId: String, email: String, pass: String) -> Unit = { _, _, _, _ -> },
     onRegisterSuccess: () -> Unit = {},
-    onNavigateToLogin: () -> Unit = {}
+    onNavigateToLogin: () -> Unit = {},
+    onBackToLogin: () -> Unit = onNavigateToLogin
 ) {
     var fullName by remember { mutableStateOf("") }
     var studentId by remember { mutableStateOf("") }
@@ -464,7 +466,10 @@ fun RegisterScreen(
 
             // زرار إنشاء الحساب: -> Create Account
             Button(
-                onClick = onRegisterSuccess,
+                onClick = {
+                    onRegisterClick(fullName, studentId, email, password)
+                    onRegisterSuccess()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp)
@@ -500,7 +505,10 @@ fun RegisterScreen(
                     color = DeepTeal,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onNavigateToLogin() }
+                    modifier = Modifier.clickable { 
+                        onNavigateToLogin()
+                        onBackToLogin()
+                    }
                 )
             }
         }

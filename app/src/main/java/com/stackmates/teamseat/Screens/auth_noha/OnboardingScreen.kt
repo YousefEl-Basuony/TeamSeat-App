@@ -1,7 +1,6 @@
-package com.example.teamseat.screens.auth_noha
+package com.stackmates.teamseat.Screens.auth_noha
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,6 +8,9 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -16,18 +18,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.teamseat.R
 import kotlinx.coroutines.launch
 
 // درجات الألوان الرسمية لتطبيق TeamSeat
@@ -37,6 +39,7 @@ private val Turquoise  = Color(0xFF469D9F) // التركواز للأيقونا�
 private val LightAqua  = Color(0xFFA9D5D4) // خلفيات الآورا والبادج
 private val WarmCream  = Color(0xFFFAF5EE) // الخلفية الكريمية الدافئة للشاشة
 private val SoftGray   = Color(0xFFD8D3D3) // النقاط غير النشطة
+private val Peach      = Color(0xFFF4C195) // اللمسات الدافئة
 
 // بيانات كل شريحة
 data class OnboardingSlideItem(
@@ -44,8 +47,7 @@ data class OnboardingSlideItem(
     val titleLine1: String,
     val highlightTitle: String,
     val description: String,
-    val imageRes: Int,
-    val isFullIllustration: Boolean = false
+    val illustration: @Composable () -> Unit
 )
 
 // رسم الخلفية الانسيابية مع التموجات وشبكة النقاط المتطابقة تماماً مع التصميم
@@ -172,42 +174,289 @@ fun TitleAccentRays(modifier: Modifier = Modifier) {
     }
 }
 
+// شعار الكرسي الدائري لـ TeamSeat
+@Composable
+fun TeamSeatChairLogo(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(52.dp)
+            .clip(CircleShape)
+            .background(LightAqua.copy(alpha = 0.45f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.size(28.dp)) {
+            val w = size.width
+            val h = size.height
+
+            // الحلقة البيضاوية التركوازية
+            drawArc(
+                color = Turquoise,
+                startAngle = 135f,
+                sweepAngle = 270f,
+                useCenter = false,
+                topLeft = Offset(w * 0.05f, h * 0.30f),
+                size = Size(w * 0.90f, h * 0.40f),
+                style = Stroke(width = 2.5f, cap = StrokeCap.Round)
+            )
+
+            // مسند الكرسي
+            drawRoundRect(
+                color = DeepNavy,
+                topLeft = Offset(w * 0.25f, h * 0.15f),
+                size = Size(w * 0.50f, h * 0.38f),
+                cornerRadius = CornerRadius(6f, 6f),
+                style = Stroke(width = 2.5f)
+            )
+            // مقعد الكرسي
+            drawRoundRect(
+                color = DeepNavy,
+                topLeft = Offset(w * 0.14f, h * 0.52f),
+                size = Size(w * 0.72f, h * 0.16f),
+                cornerRadius = CornerRadius(4f, 4f),
+                style = Stroke(width = 2.5f)
+            )
+            // أرجل الكرسي
+            drawLine(color = DeepNavy, start = Offset(w * 0.28f, h * 0.68f), end = Offset(w * 0.20f, h * 0.88f), strokeWidth = 2.5f, cap = StrokeCap.Round)
+            drawLine(color = DeepNavy, start = Offset(w * 0.72f, h * 0.68f), end = Offset(w * 0.80f, h * 0.88f), strokeWidth = 2.5f, cap = StrokeCap.Round)
+        }
+    }
+}
+
+// رسمة الشريحة 1: Build Your Dream Team
+@Composable
+fun DreamTeamIllustration(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(220.dp)
+            .clip(CircleShape)
+            .background(LightAqua.copy(alpha = 0.4f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = Color.White,
+                shadowElevation = 8.dp,
+                modifier = Modifier.size(90.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Outlined.Groups,
+                        contentDescription = null,
+                        tint = DeepTeal,
+                        modifier = Modifier.size(52.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = DeepNavy
+                ) {
+                    Text(
+                        text = "Team Lead 👑",
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Turquoise
+                ) {
+                    Text(
+                        text = "Developer 💻",
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+// رسمة الشريحة 2: Manage Your Seats
+@Composable
+fun ManageSeatsIllustration(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(220.dp)
+            .clip(CircleShape)
+            .background(LightAqua.copy(alpha = 0.4f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = Color.White,
+                shadowElevation = 8.dp,
+                modifier = Modifier.size(90.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Outlined.EventSeat,
+                        contentDescription = null,
+                        tint = DeepTeal,
+                        modifier = Modifier.size(50.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = Peach
+            ) {
+                Text(
+                    text = "Seat B3 • Reserved ✓",
+                    color = DeepNavy,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                )
+            }
+        }
+    }
+}
+
+// رسمة الشريحة 3: Work Together Smarter
+@Composable
+fun CollaborationIllustration(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(220.dp)
+            .clip(CircleShape)
+            .background(LightAqua.copy(alpha = 0.4f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = Color.White,
+                shadowElevation = 8.dp,
+                modifier = Modifier.size(90.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Outlined.RocketLaunch,
+                        contentDescription = null,
+                        tint = DeepTeal,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = DeepNavy
+            ) {
+                Text(
+                    text = "Sync & Progress 🚀",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                )
+            }
+        }
+    }
+}
+
+// رسمة الشريحة 4: Project Success
+@Composable
+fun GoalsIllustration(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(220.dp)
+            .clip(CircleShape)
+            .background(LightAqua.copy(alpha = 0.4f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = Color.White,
+                shadowElevation = 8.dp,
+                modifier = Modifier.size(90.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Outlined.EmojiEvents,
+                        contentDescription = null,
+                        tint = DeepTeal,
+                        modifier = Modifier.size(50.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = Turquoise
+            ) {
+                Text(
+                    text = "A4 TA Sheet Ready 📄",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun OnboardingScreen(
-    onFinishOnboarding: () -> Unit = {}
+    onFinishOnboarding: () -> Unit = {},
+    onFinish: () -> Unit = onFinishOnboarding,
+    onSkip: () -> Unit = onFinishOnboarding
 ) {
     val items = listOf(
         OnboardingSlideItem(
             tag = "WORK SMARTER TOGETHER",
             titleLine1 = "Build Your",
             highlightTitle = "Dream Team",
-            description = "Find teammates,  reserve seats\nand collaborate easily!",
-            imageRes = R.drawable.img_onboarding_1,
-            isFullIllustration = true
+            description = "Find teammates, reserve seats\nand collaborate easily!",
+            illustration = { DreamTeamIllustration() }
         ),
         OnboardingSlideItem(
             tag = "SMART RESERVATION",
             titleLine1 = "Manage Your",
             highlightTitle = "Seats",
             description = "Book and organize seats\nfor your team smoothly.",
-            imageRes = R.drawable.img_onboarding_2,
-            isFullIllustration = false
+            illustration = { ManageSeatsIllustration() }
         ),
         OnboardingSlideItem(
             tag = "TEAM COLLABORATION",
             titleLine1 = "Work Together",
             highlightTitle = "Smarter",
             description = "Coordinate schedules and boost\nyour team productivity!",
-            imageRes = R.drawable.img_onboarding_3,
-            isFullIllustration = false
+            illustration = { CollaborationIllustration() }
         ),
         OnboardingSlideItem(
             tag = "PROJECT SUCCESS",
             titleLine1 = "Achieve Your",
             highlightTitle = "Goals",
             description = "Complete your project milestones\ntogether on time!",
-            imageRes = R.drawable.ic_teamseat_logo,
-            isFullIllustration = false
+            illustration = { GoalsIllustration() }
         )
     )
 
@@ -239,14 +488,7 @@ fun OnboardingScreen(
                     modifier = Modifier.align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_teamseat_logo),
-                        contentDescription = "TeamSeat Logo",
-                        modifier = Modifier
-                            .height(44.dp)
-                            .wrapContentWidth(),
-                        contentScale = ContentScale.Fit
-                    )
+                    TeamSeatChairLogo()
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically
@@ -308,40 +550,14 @@ fun OnboardingScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    // مساحة الرسمة
+                    // مساحة الرسمة التفاعلية
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(245.dp),
+                            .height(230.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (item.isFullIllustration) {
-                            // الرسمة الكاملة المتطابقة بالملي مع التصميم
-                            Image(
-                                painter = painterResource(id = item.imageRes),
-                                contentDescription = item.highlightTitle,
-                                modifier = Modifier
-                                    .fillMaxWidth(0.96f)
-                                    .fillMaxHeight(),
-                                contentScale = ContentScale.Fit
-                            )
-                        } else {
-                            // خلفية دائرية هادئة بلون LightAqua للشرائح الأخرى
-                            Box(
-                                modifier = Modifier
-                                    .size(190.dp)
-                                    .clip(CircleShape)
-                                    .background(LightAqua.copy(alpha = 0.45f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Image(
-                                    painter = painterResource(id = item.imageRes),
-                                    contentDescription = item.highlightTitle,
-                                    modifier = Modifier.size(125.dp),
-                                    contentScale = ContentScale.Fit
-                                )
-                            }
-                        }
+                        item.illustration()
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
@@ -382,7 +598,7 @@ fun OnboardingScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // العنوان السطر الأول: Build Your
+                    // العنوان السطر الأول
                     Text(
                         text = item.titleLine1,
                         color = DeepNavy,
@@ -392,7 +608,7 @@ fun OnboardingScreen(
                         letterSpacing = (-0.5).sp
                     )
 
-                    // العنوان السطر الثاني: Dream Team ومعه العلامات الجمالية //
+                    // العنوان السطر الثاني ومعه العلامات الجمالية //
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
@@ -466,12 +682,23 @@ fun OnboardingScreen(
                     shape = RoundedCornerShape(27.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = DeepTeal)
                 ) {
-                    Text(
-                        text = if (pagerState.currentPage < items.size - 1) "Next   →" else "Get Started   →",
-                        color = WarmCream,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = if (pagerState.currentPage < items.size - 1) "Next" else "Get Started",
+                            color = WarmCream,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = WarmCream,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }

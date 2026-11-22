@@ -1,4 +1,4 @@
-package com.example.teamseat.screens.auth_noha
+package com.stackmates.teamseat.Screens.auth_noha
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -37,10 +37,12 @@ private val InactiveDotColor   = Color(0xFF8BA5A8) // لون النقاط غير
 
 @Composable
 fun SplashScreen(
-    onNavigateToNext: () -> Unit = {}
+    onSplashFinished: () -> Unit = {},
+    onNavigateToNext: () -> Unit = onSplashFinished
 ) {
     LaunchedEffect(Unit) {
         delay(2000L) // مدة ثانيتين
+        onSplashFinished()
         onNavigateToNext()
     }
 
