@@ -1,12 +1,9 @@
 package com.stackmates.teamseat.Screens.requests_hossam
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,23 +19,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.HourglassTop
-import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,8 +35,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -55,13 +42,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -75,15 +60,13 @@ import com.stackmates.teamseat.core.theme.Peach
 import com.stackmates.teamseat.core.theme.SoftBeige
 import com.stackmates.teamseat.core.theme.SoftGray
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
-import com.stackmates.teamseat.core.theme.Turquoise
 import com.stackmates.teamseat.core.theme.WarmCream
-import kotlinx.coroutines.launch
 
 /**
  * ⚡ المسؤول عن الشاشة: حسام (Hossam) — [HOSSAM-1]
  * شاشة ملفي الشخصي وتعديل مهاراتي (My Profile Screen)
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyProfileScreen(
     user: User = MockDataProvider.saraStudent,
@@ -91,56 +74,23 @@ fun MyProfileScreen(
     onLogoutClick: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
-    var selectedRole by remember { mutableStateOf(user.roleTag) }
+    var roleTag by remember { mutableStateOf(user.roleTag) }
     var githubUrl by remember { mutableStateOf(user.githubUrl) }
-    var linkedinUrl by remember { mutableStateOf(user.linkedinUrl) }
-
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-
-    val availableRoles = remember {
-        listOf(
-            "Android Developer",
-            "Backend Developer",
-            "UI/UX Designer",
-            "Flutter Developer",
-            "AI / ML Engineer",
-            "QA & Tester"
-        )
-    }
-
     val isTeamMember = !user.currentTeamId.isNullOrEmpty()
 
     Scaffold(
         containerColor = WarmCream,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = "ملفي الشخصي",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = DeepNavy
-                        )
-                    )
-                },
+                title = { Text("ملفي الشخصي", fontWeight = FontWeight.Bold, color = DeepNavy) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "رجوع",
-                            tint = DeepNavy
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "رجوع", tint = DeepNavy)
                     }
                 },
                 actions = {
                     IconButton(onClick = onLogoutClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = "تسجيل الخروج",
-                            tint = Color(0xFFC0392B)
-                        )
+                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "تسجيل الخروج", tint = Color(0xFFC0392B))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = WarmCream)
@@ -152,420 +102,144 @@ fun MyProfileScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // =========================================================================
-            // 1. بطاقة الهوية الأساسية (Avatar & Header Card)
-            // =========================================================================
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = SoftBeige),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            // 1. صورة رمزية (Avatar) + اسم الطالب والرقم الجامعي
+            Box(
+                modifier = Modifier
+                    .size(90.dp)
+                    .clip(CircleShape)
+                    .background(LightAqua),
+                contentAlignment = Alignment.Center
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Avatar دائري
-                    Box(
-                        modifier = Modifier
-                            .size(96.dp)
-                            .clip(CircleShape)
-                            .background(LightAqua)
-                            .border(3.dp, Turquoise, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = user.avatarEmoji,
-                            fontSize = 44.sp
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = user.name,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            color = DeepNavy
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Badge,
-                            contentDescription = null,
-                            tint = DeepTeal,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "الرقم الجامعي: ${user.studentId}",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = DeepNavy.copy(alpha = 0.8f),
-                                fontWeight = FontWeight.Medium
-                            )
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.School,
-                            contentDescription = null,
-                            tint = DeepTeal,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = user.major,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = DeepNavy.copy(alpha = 0.7f)
-                            )
-                        )
-                    }
-                }
+                Text(text = user.avatarEmoji, fontSize = 42.sp)
             }
 
-            // =========================================================================
-            // 2. كارت حالة الانضمام (Team Membership Status)
-            // =========================================================================
+            Text(
+                text = user.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = DeepNavy
+            )
+
+            Text(
+                text = "الرقم الجامعي: ${user.studentId} • ${user.major}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = DeepNavy.copy(alpha = 0.7f)
+            )
+
+            // 2. حالة الانضمام الحالية (منضم لتيم أو يبحث عن مقعد)
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (isTeamMember) LightAqua.copy(alpha = 0.5f) else Peach.copy(alpha = 0.4f)
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    containerColor = if (isTeamMember) LightAqua.copy(alpha = 0.6f) else Peach.copy(alpha = 0.4f)
+                )
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(46.dp)
-                            .clip(CircleShape)
-                            .background(if (isTeamMember) Turquoise else Peach),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = if (isTeamMember) Icons.Default.CheckCircle else Icons.Default.HourglassTop,
-                            contentDescription = null,
-                            tint = DeepNavy,
-                            modifier = Modifier.size(26.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(14.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
+                    Text(text = if (isTeamMember) "✅" else "⏳", fontSize = 24.sp)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
                         Text(
-                            text = if (isTeamMember) "عضو معتمد في تيم" else "في مرحلة البحث عن مقعد",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = DeepNavy,
-                                fontSize = 16.sp
-                            )
+                            text = if (isTeamMember) "منضم لتيم معتمد" else "يبحث عن مقعد شاغر",
+                            fontWeight = FontWeight.Bold,
+                            color = DeepNavy
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = if (isTeamMember) {
-                                "تم اعتماد انضمامك رسمياً في تيم (#${user.currentTeamId})"
-                            } else {
-                                "لم يتم اعتمادك في أي تيم حتى الآن، يمكنك التقدم لحجز مقاعد شاغرة"
-                            },
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = DeepNavy.copy(alpha = 0.75f)
-                            )
+                            text = if (isTeamMember) "تم قبولك في تيم (#${user.currentTeamId})" else "لم تنضم لأي تيم بعد",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = DeepNavy.copy(alpha = 0.7f)
                         )
                     }
                 }
             }
 
-            // =========================================================================
-            // 3. كارت التخصص والمهارات (Role & Skills Selection)
-            // =========================================================================
+            // 3. كارت تعديل التخصص ورابط GitHub
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = SoftBeige),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = SoftBeige)
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Code,
-                            contentDescription = null,
-                            tint = DeepTeal
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "التخصص الأساسي والمهارة",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = DeepNavy
-                            )
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "اختر التخصص الذي تبحث عن مقعد له في مشاريع التخرج:",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = DeepNavy.copy(alpha = 0.7f)
+                    OutlinedTextField(
+                        value = roleTag,
+                        onValueChange = { roleTag = it },
+                        label = { Text("التخصص الأساسي") },
+                        leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = DeepTeal) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = WarmCream,
+                            unfocusedContainerColor = WarmCream,
+                            focusedBorderColor = DeepTeal,
+                            unfocusedBorderColor = SoftGray
                         )
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    FlowRow(
+                    OutlinedTextField(
+                        value = githubUrl,
+                        onValueChange = { githubUrl = it },
+                        label = { Text("رابط GitHub / Portfolio") },
+                        leadingIcon = { Icon(Icons.Default.Code, contentDescription = null, tint = DeepTeal) },
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        availableRoles.forEach { role ->
-                            val isSelected = selectedRole == role
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = { selectedRole = role },
-                                label = {
-                                    Text(
-                                        text = role,
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                        )
-                                    )
-                                },
-                                leadingIcon = if (isSelected) {
-                                    {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                } else null,
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = DeepTeal,
-                                    selectedLabelColor = WarmCream,
-                                    selectedLeadingIconColor = WarmCream,
-                                    containerColor = WarmCream,
-                                    labelColor = DeepNavy
-                                ),
-                                border = FilterChipDefaults.filterChipBorder(
-                                    enabled = true,
-                                    selected = isSelected,
-                                    borderColor = SoftGray,
-                                    selectedBorderColor = DeepTeal,
-                                    borderWidth = 1.dp,
-                                    selectedBorderWidth = 1.5.dp
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-
-            // =========================================================================
-            // 4. كارت الروابط ومعلومات التواصل (GitHub & Contact)
-            // =========================================================================
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = SoftBeige),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Link,
-                            contentDescription = null,
-                            tint = DeepTeal
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = WarmCream,
+                            unfocusedContainerColor = WarmCream,
+                            focusedBorderColor = DeepTeal,
+                            unfocusedBorderColor = SoftGray
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "روابط الأعمال ومعلومات التواصل",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = DeepNavy
-                            )
-                        )
-                    }
+                    )
 
-                    // البريد الجامعي (للقراءة فقط)
                     OutlinedTextField(
                         value = user.email,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("البريد الإلكتروني الجامعي") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Email,
-                                contentDescription = null,
-                                tint = DeepTeal
-                            )
-                        },
+                        label = { Text("البريد الجامعي") },
+                        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = DeepTeal) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = WarmCream,
                             unfocusedContainerColor = WarmCream,
-                            disabledContainerColor = WarmCream,
                             focusedBorderColor = SoftGray,
-                            unfocusedBorderColor = SoftGray,
-                            focusedTextColor = DeepNavy,
-                            unfocusedTextColor = DeepNavy
-                        )
-                    )
-
-                    // رابط GitHub (قابل للتعديل)
-                    OutlinedTextField(
-                        value = githubUrl,
-                        onValueChange = { githubUrl = it },
-                        label = { Text("رابط حساب GitHub / Portfolio") },
-                        placeholder = { Text("https://github.com/username") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Code,
-                                contentDescription = null,
-                                tint = DeepTeal
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = WarmCream,
-                            unfocusedContainerColor = WarmCream,
-                            focusedBorderColor = DeepTeal,
-                            unfocusedBorderColor = SoftGray,
-                            focusedTextColor = DeepNavy,
-                            unfocusedTextColor = DeepNavy,
-                            cursorColor = DeepTeal
-                        )
-                    )
-
-                    // رابط LinkedIn (قابل للتعديل)
-                    OutlinedTextField(
-                        value = linkedinUrl,
-                        onValueChange = { linkedinUrl = it },
-                        label = { Text("رابط حساب LinkedIn") },
-                        placeholder = { Text("https://linkedin.com/in/username") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = DeepTeal
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = WarmCream,
-                            unfocusedContainerColor = WarmCream,
-                            focusedBorderColor = DeepTeal,
-                            unfocusedBorderColor = SoftGray,
-                            focusedTextColor = DeepNavy,
-                            unfocusedTextColor = DeepNavy,
-                            cursorColor = DeepTeal
+                            unfocusedBorderColor = SoftGray
                         )
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // =========================================================================
-            // 5. زر حفظ التعديلات وزر تسجيل الخروج
-            // =========================================================================
+            // 4. أزرار حفظ التعديلات وتسجيل الخروج
             Button(
-                onClick = {
-                    onSaveChangesClick(selectedRole, githubUrl)
-                    scope.launch {
-                        snackbarHostState.showSnackbar("تم حفظ تعديلات الملف الشخصي بنجاح! ✨")
-                    }
-                },
+                onClick = { onSaveChangesClick(roleTag, githubUrl) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = DeepTeal,
-                    contentColor = WarmCream
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                    .height(48.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = DeepTeal, contentColor = WarmCream)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Save,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
+                Icon(Icons.Default.Save, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "حفظ التعديلات",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = WarmCream
-                    )
-                )
+                Text("حفظ التعديلات", fontWeight = FontWeight.Bold)
             }
 
             OutlinedButton(
                 onClick = onLogoutClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color(0xFFC0392B)
-                ),
-                border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(
-                    brush = SolidColor(Color(0xFFE74C3C).copy(alpha = 0.5f))
-                )
+                    .height(48.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFC0392B))
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Logout,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
+                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "تسجيل الخروج",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFFC0392B)
-                    )
-                )
+                Text("تسجيل الخروج", fontWeight = FontWeight.Bold)
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -574,18 +248,6 @@ fun MyProfileScreen(
 @Composable
 private fun MyProfileScreenPreview() {
     TeamSeatTheme {
-        MyProfileScreen(
-            user = MockDataProvider.saraStudent
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun MyProfileScreenLeaderPreview() {
-    TeamSeatTheme {
-        MyProfileScreen(
-            user = MockDataProvider.ahmedLeader
-        )
+        MyProfileScreen()
     }
 }
