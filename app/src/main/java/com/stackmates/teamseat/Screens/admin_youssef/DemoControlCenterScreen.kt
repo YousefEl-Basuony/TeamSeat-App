@@ -4,12 +4,18 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -20,7 +26,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -36,21 +45,12 @@ import com.stackmates.teamseat.core.model.DemoPersona
 import com.stackmates.teamseat.core.model.User
 import com.stackmates.teamseat.core.theme.*
 
-// ألوان مريحة وعملية متوافقة مع شاشات التطبيق
-private val ScreenBg = Color(0xFFF8FAFC)
-private val NavyDark = Color(0xFF0F172A)
-private val DeepTeal = Color(0xFF1B6F7D)
-private val OrangePrimary = Color(0xFFF97316)
-private val OrangeLight = Color(0xFFFFF7ED)
-private val EmeraldGreen = Color(0xFF10B981)
-private val EmeraldLight = Color(0xFFECFDF5)
-private val CardBorderColor = Color(0xFFE2E8F0)
-private val TextSecondary = Color(0xFF64748B)
-
 /**
  * 💻 المسؤول عن الشاشة: يوسف (Youssef - Team Lead & Backend)
- * شاشة التبديل السريع بين الحسابات أثناء العرض والمناقشة (Offline Demo Account Switcher)
- * تصميم بسيط جداً، غير مزدحم، وسريع الاستخدام بلمسة واحدة بدون الحاجة للتمرير (Single Viewport - No Scrolling).
+ * مركز التحكم في العرض التوضيحي السريع للمناقشة (Live Demo Control Center)
+ * مصممة بهوية TeamSeat الرسمية الفاخرة بألوان Color.kt حصراً:
+ * (DeepNavy, DeepTeal, Turquoise, LightAqua, WarmCream, SoftBeige, Peach, SoftGray)
+ * وتصميم تنفيذي فخم تفاعلي بلمسة واحدة للتبديل الفوري بين السيناريوهات والشخصيات.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,121 +67,204 @@ fun DemoControlCenterScreen(
 
     val isLeaderActive = selectedPersona == DemoPersona.AHMED_LEADER
 
-    Scaffold(
-        containerColor = ScreenBg,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "تبديل حساب العرض (Offline)",
-                            fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = NavyDark,
-                            fontSize = 18.sp,
-                            maxLines = 1,
-                            softWrap = false
-                        )
-                        Text(
-                            text = "اختر الشخصية لتجربة دورة الحجز والاعتماد فوراً",
-                            fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            color = TextSecondary,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            softWrap = false
-                        )
-                    }
-                },
-                navigationIcon = {
-                    Surface(
-                        modifier = Modifier
-                            .padding(start = 12.dp, end = 6.dp)
-                            .size(40.dp),
-                        shape = CircleShape,
-                        color = Color.White,
-                        shadowElevation = 2.dp,
-                        border = BorderStroke(1.dp, CardBorderColor)
-                    ) {
-                        IconButton(onClick = onBackClick) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "رجوع",
-                                tint = NavyDark,
-                                modifier = Modifier.size(20.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(WarmCream)
+    ) {
+        // تموجات الخلفية الانسيابية الهادئة بألوان الهوية (Turquoise & Peach)
+        DemoAmbientBackground()
+
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text(
+                                text = "مركز تحكم المناقشة (Live Demo)",
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = DeepNavy,
+                                fontSize = 19.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                            Text(
+                                text = "التبديل اللحظي وإدارة سيناريوهات العرض",
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                color = DeepTeal,
+                                fontSize = 12.5.sp,
+                                maxLines = 1,
+                                softWrap = false
                             )
                         }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = ScreenBg)
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            // الجزء العلوي: شريط الحالة + البطاقتان الكبيرتان للتبديل الفوري
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                // 1. شريط حالة الحساب الحالي (Compact Active Banner)
+                    },
+                    navigationIcon = {
+                        Surface(
+                            modifier = Modifier
+                                .padding(start = 12.dp, end = 6.dp)
+                                .size(42.dp),
+                            shape = CircleShape,
+                            color = Color.White,
+                            shadowElevation = 2.dp,
+                            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.6f))
+                        ) {
+                            IconButton(onClick = onBackClick) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "رجوع",
+                                    tint = DeepNavy,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                )
+            },
+            bottomBar = {
+                // شريط التثبيت السفلي الملموم لزر إعادة ضبط البيانات
                 Surface(
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = if (isLeaderActive) OrangeLight else EmeraldLight,
-                    border = BorderStroke(
-                        1.dp,
-                        if (isLeaderActive) OrangePrimary.copy(alpha = 0.5f) else EmeraldGreen.copy(alpha = 0.5f)
-                    )
+                    color = Color.White.copy(alpha = 0.95f),
+                    shadowElevation = 10.dp,
+                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                    border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
                 ) {
                     Row(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 14.dp),
+                            .fillMaxWidth()
+                            .padding(horizontal = 18.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "تصفير وإعادة ضبط الجلسة",
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = DeepNavy,
+                                fontSize = 13.5.sp
+                            )
+                            Text(
+                                text = "إعادة المقاعد والطلبات لحالتها الأولية للتجربة",
+                                fontFamily = CairoFontFamily,
+                                color = DeepTeal,
+                                fontSize = 11.5.sp,
+                                maxLines = 1
+                            )
+                        }
+
+                        Button(
+                            onClick = { showResetConfirmDialog = true },
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = DeepNavy),
+                            modifier = Modifier.height(44.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.RestartAlt,
+                                    contentDescription = null,
+                                    tint = Peach,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = "إعادة ضبط (Reset)",
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    fontSize = 12.5.sp,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 18.dp, vertical = 10.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                // =============================================================
+                // 1. شريط الحالة النشطة العلوي (Active Persona Banner)
+                // =============================================================
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = if (isLeaderActive) Peach.copy(alpha = 0.25f) else LightAqua.copy(alpha = 0.45f),
+                    border = BorderStroke(
+                        1.2.dp,
+                        if (isLeaderActive) Peach else Turquoise.copy(alpha = 0.7f)
+                    ),
+                    shadowElevation = 1.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Filled.CheckCircle,
-                                contentDescription = null,
-                                tint = if (isLeaderActive) OrangePrimary else EmeraldGreen,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Text(
-                                text = if (isLeaderActive) {
-                                    "الحساب النشط الآن: أحمد محمود (قائد التيم)"
-                                } else {
-                                    "الحساب النشط الآن: سارة علي (طالبة)"
-                                },
-                                fontFamily = CairoFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                color = NavyDark,
-                                fontSize = 13.sp,
-                                maxLines = 1,
-                                softWrap = false
-                            )
+                            Surface(
+                                modifier = Modifier.size(34.dp),
+                                shape = CircleShape,
+                                color = if (isLeaderActive) DeepNavy else DeepTeal
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = if (isLeaderActive) Icons.Outlined.WorkspacePremium else Icons.Outlined.School,
+                                        contentDescription = null,
+                                        tint = if (isLeaderActive) Peach else Color.White,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+
+                            Column {
+                                Text(
+                                    text = "الحساب النشط حالياً في التطبيق:",
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = DeepNavy.copy(alpha = 0.7f),
+                                    fontSize = 11.5.sp
+                                )
+                                Text(
+                                    text = if (isLeaderActive) "أحمد محمود (قائد التيم 👑)" else "سارة علي (طالبة باحثة 👩‍💻)",
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = DeepNavy,
+                                    fontSize = 14.5.sp,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
                         }
 
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = if (isLeaderActive) OrangePrimary else EmeraldGreen
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (isLeaderActive) DeepNavy else DeepTeal
                         ) {
                             Text(
-                                text = "مُفعّل",
-                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                                text = "مُفعّل الآن ✓",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 fontFamily = CairoFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
-                                fontSize = 10.5.sp,
+                                fontSize = 11.sp,
                                 maxLines = 1,
                                 softWrap = false
                             )
@@ -189,91 +272,110 @@ fun DemoControlCenterScreen(
                     }
                 }
 
-                // 2. الكارت الأول — قائد الفريق (Team Leader)
-                PersonaBigCard(
+                // =============================================================
+                // 2. كارت الشخصية 1: أحمد محمود (قائد الفريق - Team Leader)
+                // =============================================================
+                ExecutivePersonaCard(
                     name = "أحمد محمود",
-                    roleArabic = "قائد التيم",
-                    roleEnglish = "Team Leader",
-                    description = "إنشاء التيم، مراجعة الطلبات، وقفل الكشف النهائي.",
+                    roleBadge = "قائد التيم",
+                    englishRole = "Team Leader & Android Lead",
+                    description = "يملك صلاحيات إدارة وتعديل مقاعد المشروع، قبول ورفض المتقدمين، اعتماد وقفل التيم، وتصدير كشف الـ A4 الرسمي للمعيدة.",
+                    capabilities = listOf("إدارة وتعديل المقاعد", "قبول طلبات الانضمام", "قفل التيم وتصدير PDF"),
                     icon = Icons.Outlined.WorkspacePremium,
                     isActive = isLeaderActive,
-                    accentColor = OrangePrimary,
-                    accentLightColor = OrangeLight,
+                    badgeColor = DeepTeal,
+                    accentColor = Peach,
                     onClick = {
                         if (!isLeaderActive) {
                             selectedPersona = DemoPersona.AHMED_LEADER
                             onTogglePersonaClick()
-                            Toast.makeText(context, "تم التحويل إلى: أحمد محمود (قائد التيم)", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "تم التبديل إلى حساب: أحمد محمود (قائد التيم)", Toast.LENGTH_SHORT).show()
                         }
                     }
                 )
 
-                // 3. الكارت الثاني — طالبة متقدمة (Student)
-                PersonaBigCard(
+                // =============================================================
+                // 3. كارت الشخصية 2: سارة علي (طالبة باحثة عن مقعد - Student Applicant)
+                // =============================================================
+                ExecutivePersonaCard(
                     name = "سارة علي",
-                    roleArabic = "طالبة متقدمة",
-                    roleEnglish = "UI/UX & Android",
-                    description = "استعراض التيمات، اختيار مقعد من الخريطة، وإرسال طلب حجز.",
+                    roleBadge = "طالبة متقدمة",
+                    englishRole = "UI/UX Designer & Student",
+                    description = "تمثل منظور الطالب الباحث عن تيم: استعراض المشاريع الشاغرة، اختيار المقعد من خريطة الكراسي، وإرسال طلب الحجز لليدر.",
+                    capabilities = listOf("استعراض التيمات الشاغرة", "حجز مقعد من خريطة السينما", "متابعة مهلة الـ 48 ساعة"),
                     icon = Icons.Outlined.School,
                     isActive = !isLeaderActive,
-                    accentColor = EmeraldGreen,
-                    accentLightColor = EmeraldLight,
+                    badgeColor = DeepNavy,
+                    accentColor = Turquoise,
                     onClick = {
                         if (isLeaderActive) {
                             selectedPersona = DemoPersona.SARA_STUDENT
                             onTogglePersonaClick()
-                            Toast.makeText(context, "تم التحويل إلى: سارة علي (طالبة متقدمة)", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "تم التبديل إلى حساب: سارة علي (طالبة متقدمة)", Toast.LENGTH_SHORT).show()
                         }
                     }
                 )
-            }
 
-            // 4. زر إعادة ضبط البيانات التجريبية (Reset Demo Data) في الأسفل مع نافذة تأكيد
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 6.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { showResetConfirmDialog = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, CardBorderColor),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.White,
-                        contentColor = TextSecondary
-                    )
+                // =============================================================
+                // 4. كارت الإرشادات الذكية للمناقشة (Defense Tips Card)
+                // =============================================================
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
+                    border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Outlined.RestartAlt,
-                            contentDescription = null,
-                            tint = TextSecondary,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = SoftBeige,
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Lightbulb,
+                                        contentDescription = null,
+                                        tint = DeepTeal,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                            Text(
+                                text = "كيف تستعرض السيناريو أمام د. محمد كاظم وم. شهد؟",
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = DeepNavy,
+                                fontSize = 13.5.sp
+                            )
+                        }
+
                         Text(
-                            text = "إعادة ضبط المقاعد التجريبية (Reset)",
+                            text = "1. ابدأ بحساب سارة وقدّم على مقعد متاح -> 2. بدّل فوراً لأحمد وأظهر إشعار القبول -> 3. افتح كشف التسليم واقفل التيم لاستعراض ملف الـ PDF الرسمي.",
                             fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            color = TextSecondary,
-                            fontSize = 13.sp,
-                            maxLines = 1,
-                            softWrap = false
+                            fontWeight = FontWeight.Medium,
+                            color = DeepNavy.copy(alpha = 0.75f),
+                            fontSize = 12.sp,
+                            lineHeight = 17.5.sp
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(10.dp))
             }
         }
     }
 
-    // نافذة تأكيد إعادة ضبط البيانات لتجنب الضغط بالخطأ أثناء العرض
+    // نافذة تأكيد تصفير البيانات التجريبية
     if (showResetConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showResetConfirmDialog = false },
@@ -284,14 +386,14 @@ fun DemoControlCenterScreen(
                 ) {
                     Surface(
                         shape = CircleShape,
-                        color = OrangeLight,
+                        color = Peach.copy(alpha = 0.35f),
                         modifier = Modifier.size(36.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Outlined.RestartAlt,
                                 contentDescription = null,
-                                tint = OrangePrimary,
+                                tint = DeepNavy,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -300,16 +402,16 @@ fun DemoControlCenterScreen(
                         text = "تأكيد إعادة الضبط",
                         fontFamily = CairoFontFamily,
                         fontWeight = FontWeight.Bold,
-                        color = NavyDark,
+                        color = DeepNavy,
                         fontSize = 16.5.sp
                     )
                 }
             },
             text = {
                 Text(
-                    text = "هل تريد إعادة ضبط جميع المقاعد والطلبات للحالة الأولى؟ سيتم تصفير أي حجز تم أثناء العرض الحالي.",
+                    text = "هل تريد تصفير بيانات المقاعد والطلبات وإعادتها لحالتها الأولية؟ يُنصح بذلك قبل بدء جولة تجريبية جديدة أمام اللجنة.",
                     fontFamily = CairoFontFamily,
-                    color = TextSecondary,
+                    color = DeepNavy.copy(alpha = 0.8f),
                     fontSize = 13.sp,
                     lineHeight = 18.sp
                 )
@@ -322,7 +424,7 @@ fun DemoControlCenterScreen(
                         Toast.makeText(context, "تمت إعادة ضبط بيانات المقاعد بنجاح ✓", Toast.LENGTH_SHORT).show()
                     },
                     shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = NavyDark)
+                    colors = ButtonDefaults.buttonColors(containerColor = DeepNavy)
                 ) {
                     Text(
                         text = "نعم، إعادة ضبط",
@@ -337,59 +439,60 @@ fun DemoControlCenterScreen(
                 OutlinedButton(
                     onClick = { showResetConfirmDialog = false },
                     shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, CardBorderColor)
+                    border = BorderStroke(1.dp, SoftGray)
                 ) {
                     Text(
                         text = "إلغاء",
                         fontFamily = CairoFontFamily,
                         fontWeight = FontWeight.Medium,
-                        color = TextSecondary,
+                        color = DeepNavy,
                         fontSize = 13.sp
                     )
                 }
             },
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(18.dp),
             containerColor = Color.White
         )
     }
 }
 
 /**
- * 🎴 كارت الشخصية الكبير التفاعلي بلمسة واحدة (Single Tap Persona Card)
+ * 👑 كارت الشخصية التنفيذي الفاخر (Executive Persona Card)
  */
 @Composable
-private fun PersonaBigCard(
+private fun ExecutivePersonaCard(
     name: String,
-    roleArabic: String,
-    roleEnglish: String,
+    roleBadge: String,
+    englishRole: String,
     description: String,
+    capabilities: List<String>,
     icon: ImageVector,
     isActive: Boolean,
+    badgeColor: Color,
     accentColor: Color,
-    accentLightColor: Color,
     onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isActive) accentLightColor.copy(alpha = 0.5f) else Color.White
+            containerColor = if (isActive) Color.White else Color.White.copy(alpha = 0.85f)
         ),
         border = BorderStroke(
-            width = if (isActive) 1.8.dp else 1.dp,
-            color = if (isActive) accentColor else CardBorderColor
+            width = if (isActive) 2.dp else 1.dp,
+            color = if (isActive) DeepTeal else SoftGray.copy(alpha = 0.6f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isActive) 3.dp else 1.5.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isActive) 4.dp else 1.5.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+                .padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // الصف العلوي: الأيقونة، الاسم، الدور، وشارة الحالة
+            // الصف العلوي: الأيقونة، الاسم، الدور، وزر/شارة الحالة
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -400,75 +503,77 @@ private fun PersonaBigCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // أيقونة الشخصية الدائرية
+                    // أيقونة الشخصية الفاخرة
                     Surface(
-                        modifier = Modifier.size(44.dp),
-                        shape = CircleShape,
-                        color = if (isActive) accentColor else Color(0xFFF1F5F9)
+                        modifier = Modifier.size(50.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        color = if (isActive) DeepTeal else DeepNavy,
+                        shadowElevation = if (isActive) 2.dp else 0.dp
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
-                                tint = if (isActive) Color.White else NavyDark,
-                                modifier = Modifier.size(22.dp)
+                                tint = if (isActive) Peach else LightAqua,
+                                modifier = Modifier.size(26.dp)
                             )
                         }
                     }
 
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(
-                            text = name,
-                            fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = NavyDark,
-                            fontSize = 16.sp,
-                            maxLines = 1,
-                            softWrap = false
-                        )
-
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = roleArabic,
+                                text = name,
                                 fontFamily = CairoFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                color = TextSecondary,
-                                fontSize = 12.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = DeepNavy,
+                                fontSize = 16.5.sp,
                                 maxLines = 1,
                                 softWrap = false
                             )
-                            Text(
-                                text = "•",
-                                color = TextSecondary,
-                                fontSize = 12.sp
-                            )
-                            Text(
-                                text = roleEnglish,
-                                fontFamily = CairoFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isActive) accentColor else TextSecondary,
-                                fontSize = 11.5.sp,
-                                maxLines = 1,
-                                softWrap = false,
-                                style = TextStyle(textDirection = TextDirection.Ltr)
-                            )
+
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (isActive) Peach.copy(alpha = 0.35f) else SoftBeige
+                            ) {
+                                Text(
+                                    text = roleBadge,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DeepNavy,
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
                         }
+
+                        Text(
+                            text = englishRole,
+                            fontFamily = CairoFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            color = DeepTeal,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            softWrap = false,
+                            style = TextStyle(textDirection = TextDirection.Ltr)
+                        )
                     }
                 }
 
-                // شارة نشط حالياً أو زر التحويل
+                // شارة نشط حالياً أو زر التحويل بنقرة واحدة
                 if (isActive) {
                     Surface(
-                        modifier = Modifier.wrapContentWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        color = accentColor,
+                        shape = RoundedCornerShape(10.dp),
+                        color = DeepTeal,
                         shadowElevation = 1.dp
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
@@ -491,52 +596,107 @@ private fun PersonaBigCard(
                     }
                 } else {
                     Surface(
-                        modifier = Modifier.wrapContentWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        color = Color(0xFFF1F5F9),
-                        border = BorderStroke(1.dp, CardBorderColor)
+                        shape = RoundedCornerShape(10.dp),
+                        color = SoftBeige.copy(alpha = 0.6f),
+                        border = BorderStroke(1.dp, SoftGray)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = "تبديل لهذا الحساب ←",
-                                fontFamily = CairoFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                color = NavyDark,
-                                fontSize = 11.sp,
-                                maxLines = 1,
-                                softWrap = false
-                            )
-                        }
+                        Text(
+                            text = "تبديل لهذا الحساب ←",
+                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                            fontFamily = CairoFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = DeepNavy,
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            softWrap = false
+                        )
                     }
                 }
             }
 
-            HorizontalDivider(
-                color = CardBorderColor.copy(alpha = 0.7f),
-                thickness = 0.8.dp
-            )
-
-            // وصف الصلاحية في سطر واحد بدون انكسار
+            // الوصف التوضيحي لصلاحية الحساب
             Text(
                 text = description,
                 fontFamily = CairoFontFamily,
-                fontWeight = FontWeight.Medium,
-                color = if (isActive) NavyDark.copy(alpha = 0.85f) else TextSecondary,
-                fontSize = 12.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                fontWeight = FontWeight.Normal,
+                color = DeepNavy.copy(alpha = 0.8f),
+                fontSize = 12.5.sp,
+                lineHeight = 17.5.sp
             )
+
+            HorizontalDivider(
+                color = SoftGray.copy(alpha = 0.45f),
+                thickness = 0.8.dp
+            )
+
+            // شرائح الصلاحيات السريعة (3 Feature Chips)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                capabilities.forEach { cap ->
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (isActive) LightAqua.copy(alpha = 0.35f) else SoftBeige.copy(alpha = 0.45f),
+                        border = BorderStroke(0.6.dp, SoftGray.copy(alpha = 0.6f))
+                    ) {
+                        Text(
+                            text = cap,
+                            modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp),
+                            fontFamily = CairoFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            color = DeepNavy,
+                            fontSize = 10.5.sp,
+                            maxLines = 1,
+                            textAlign = TextAlign.Center,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
         }
+    }
+}
+
+/**
+ * 🌊 تموجات الخلفية الانسيابية لتصميم TeamSeat
+ */
+@Composable
+private fun DemoAmbientBackground() {
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+
+        val topPath = Path().apply {
+            moveTo(0f, 0f)
+            lineTo(w * 0.45f, 0f)
+            cubicTo(
+                w * 0.32f, h * 0.08f,
+                w * 0.14f, h * 0.06f,
+                0f, h * 0.15f
+            )
+            close()
+        }
+        drawPath(topPath, color = Turquoise.copy(alpha = 0.16f))
+
+        val bottomPath = Path().apply {
+            moveTo(w, h * 0.85f)
+            cubicTo(
+                w * 0.84f, h * 0.92f,
+                w * 0.74f, h * 0.89f,
+                w * 0.62f, h
+            )
+            lineTo(w, h)
+            close()
+        }
+        drawPath(bottomPath, color = Peach.copy(alpha = 0.22f))
     }
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-private fun DemoControlCenterScreenSimplePreview() {
+private fun DemoControlCenterScreenExecutivePreview() {
     TeamSeatTheme {
         DemoControlCenterScreen()
     }
