@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,7 +19,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,7 +26,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -49,7 +55,8 @@ import java.util.Locale
 /**
  * 💻 المسؤول عن الشاشة: يوسف (Youssef - Team Lead & Backend)
  * شاشة كشف التسليم الرسمي والاعتماد الأكاديمي (Official TA Sheet)
- * مصممة بهندسة بصرية فخمة ومريحة للعين وخالية من أي نصوص مقطوعة أو مشاكل في الاتجاهات (RTL).
+ * مصممة بهوية TeamSeat العصرية بالكامل المطابقة للموك آب المعتمد:
+ * كروت ناعمة بيضاء، خلفية انسيابية دافئة، مقاعد واضحة، وخط تجوال (Tajawal) المتناسق.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,144 +74,185 @@ fun TASheetPreviewScreen(
 
     val totalCount = seats.size
     val bookedCount = seats.count { it.status == SeatStatus.BOOKED }
-    val isTeamFullyBooked = totalCount > 0 && bookedCount == totalCount
+    val progressPercent = if (totalCount > 0) ((bookedCount.toFloat() / totalCount) * 100).toInt() else 0
 
     val currentDateStr = remember {
         SimpleDateFormat("yyyy/MM/dd", Locale("ar")).format(Date())
     }
 
-    Scaffold(
-        containerColor = WarmCream,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "كشف التسليم والاعتماد الأكاديمي",
-                            fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = DeepNavy,
-                            fontSize = 19.sp,
-                            maxLines = 1
-                        )
-                        Text(
-                            text = "توثيق مقاعد وأعضاء مشروع التخرج",
-                            fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            color = DeepTeal,
-                            fontSize = 13.sp,
-                            maxLines = 1
-                        )
-                    }
-                },
-                navigationIcon = {
-                    Surface(
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp)
-                            .size(42.dp),
-                        shape = CircleShape,
-                        color = Color.White,
-                        shadowElevation = 2.dp,
-                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.6f))
-                    ) {
-                        IconButton(onClick = onBackClick) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "رجوع",
-                                tint = DeepNavy,
-                                modifier = Modifier.size(20.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(WarmCream)
+    ) {
+        // تموجات الخلفية الانسيابية الهادئة المتطابقة مع هوية التطبيق
+        TASheetFluidBackground()
+
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text(
+                                text = "كشف التسليم الرسمي",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = DeepNavy,
+                                fontSize = 20.sp,
+                                maxLines = 1
+                            )
+                            Text(
+                                text = "اعتماد وتوثيق مقاعد التيم للمعيدة",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                color = DeepTeal,
+                                fontSize = 13.sp,
+                                maxLines = 1
                             )
                         }
-                    }
-                },
-                actions = {
-                    Surface(
+                    },
+                    navigationIcon = {
+                        Surface(
+                            modifier = Modifier
+                                .padding(horizontal = 8.dp)
+                                .size(42.dp),
+                            shape = CircleShape,
+                            color = Color.White,
+                            shadowElevation = 2.dp,
+                            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
+                        ) {
+                            IconButton(onClick = onBackClick) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "رجوع",
+                                    tint = DeepNavy,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    },
+                    actions = {
+                        Surface(
+                            modifier = Modifier
+                                .padding(horizontal = 8.dp)
+                                .size(42.dp),
+                            shape = CircleShape,
+                            color = Color.White,
+                            shadowElevation = 2.dp,
+                            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    val result = PdfExporter.exportTeamSheetPdf(context, team, seats)
+                                    result.onSuccess { file ->
+                                        exportedFile = file
+                                        showExportSuccessDialog = true
+                                        onExportPdfClick()
+                                    }.onFailure { e ->
+                                        Toast.makeText(context, "فشل تصدير الكشف: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.FileDownload,
+                                    contentDescription = "تحميل PDF",
+                                    tint = DeepTeal,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                )
+            },
+            bottomBar = {
+                Surface(
+                    color = Color.White.copy(alpha = 0.96f),
+                    shadowElevation = 12.dp,
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                    border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.4f))
+                ) {
+                    Row(
                         modifier = Modifier
-                            .padding(horizontal = 8.dp)
-                            .size(42.dp),
-                        shape = CircleShape,
-                        color = DeepTeal.copy(alpha = 0.12f),
-                        border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.3f))
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(
+                        // زر تصدير PDF
+                        Button(
                             onClick = {
+                                isExporting = true
                                 val result = PdfExporter.exportTeamSheetPdf(context, team, seats)
+                                isExporting = false
                                 result.onSuccess { file ->
                                     exportedFile = file
                                     showExportSuccessDialog = true
                                     onExportPdfClick()
                                 }.onFailure { e ->
-                                    Toast.makeText(context, "فشل تصدير الكشف: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "فشل تصدير الملف: ${e.message}", Toast.LENGTH_LONG).show()
+                                }
+                            },
+                            enabled = !isExporting,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp)
+                                .shadow(4.dp, RoundedCornerShape(26.dp), spotColor = DeepNavy.copy(alpha = 0.3f)),
+                            shape = RoundedCornerShape(26.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = DeepNavy)
+                        ) {
+                            if (isExporting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.FileDownload,
+                                        contentDescription = null,
+                                        tint = Peach,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "تصدير كشف PDF",
+                                        fontFamily = TajawalFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.5.sp,
+                                        color = Color.White
+                                    )
                                 }
                             }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.FileDownload,
-                                contentDescription = "تحميل PDF",
-                                tint = DeepTeal,
-                                modifier = Modifier.size(20.dp)
-                            )
                         }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = WarmCream)
-            )
-        },
-        bottomBar = {
-            Surface(
-                color = Color.White,
-                shadowElevation = 16.dp,
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // زر تصدير PDF
-                    Button(
-                        onClick = {
-                            isExporting = true
-                            val result = PdfExporter.exportTeamSheetPdf(context, team, seats)
-                            isExporting = false
-                            result.onSuccess { file ->
-                                exportedFile = file
-                                showExportSuccessDialog = true
-                                onExportPdfClick()
-                            }.onFailure { e ->
-                                Toast.makeText(context, "فشل تصدير الملف: ${e.message}", Toast.LENGTH_LONG).show()
-                            }
-                        },
-                        enabled = !isExporting,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(54.dp),
-                        shape = RoundedCornerShape(27.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = DeepNavy),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-                    ) {
-                        if (isExporting) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(22.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
+
+                        // زر اعتماد وقفل الفريق
+                        Button(
+                            onClick = onLockTeamClick,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp)
+                                .shadow(4.dp, RoundedCornerShape(26.dp), spotColor = DeepTeal.copy(alpha = 0.3f)),
+                            shape = RoundedCornerShape(26.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = DeepTeal)
+                        ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Outlined.FileDownload,
+                                    imageVector = if (team.isLocked) Icons.Filled.Lock else Icons.Outlined.Lock,
                                     contentDescription = null,
-                                    tint = Peach,
-                                    modifier = Modifier.size(20.dp)
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
                                 )
                                 Text(
-                                    text = "تصدير كشف PDF",
-                                    fontFamily = CairoFontFamily,
+                                    text = if (team.isLocked) "معتمد ومقفل 🔒" else "اعتماد وقفل التيم",
+                                    fontFamily = TajawalFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.5.sp,
                                     color = Color.White
@@ -212,605 +260,350 @@ fun TASheetPreviewScreen(
                             }
                         }
                     }
-
-                    // زر قفل واعتماد التيم
-                    Button(
-                        onClick = onLockTeamClick,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(54.dp),
-                        shape = RoundedCornerShape(27.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = DeepTeal),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (team.isLocked) Icons.Filled.Lock else Icons.Outlined.Lock,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(19.dp)
-                            )
-                            Text(
-                                text = if (team.isLocked) "معتمد ومقفل 🔒" else "اعتماد وقفل التيم",
-                                fontFamily = CairoFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.5.sp,
-                                color = Color.White
-                            )
-                        }
-                    }
                 }
             }
-        }
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-            contentPadding = PaddingValues(top = 10.dp, bottom = 28.dp)
-        ) {
+        ) { paddingValues ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp)
+            ) {
 
-            // =================================================================
-            // 1. كارت ترويسة الكلية وبيانات المشروع (Official Academic Header)
-            // =================================================================
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(18.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                // =============================================================
+                // 1. كارت ملخص المشروع الأنيق (Modern Hero Project Card)
+                // =============================================================
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(22.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
                     ) {
-                        // ترويسة الكلية والكود
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
+                            // الصف العلوي: اللوجو واسم المشروع
                             Row(
+                                modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Surface(
-                                    modifier = Modifier.size(46.dp),
-                                    shape = CircleShape,
-                                    color = DeepNavy,
-                                    shadowElevation = 2.dp
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.School,
-                                            contentDescription = null,
-                                            tint = Peach,
-                                            modifier = Modifier.size(24.dp)
+                                    Surface(
+                                        modifier = Modifier.size(46.dp),
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = LightAqua.copy(alpha = 0.45f)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.School,
+                                                contentDescription = null,
+                                                tint = DeepNavy,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Column {
+                                        Text(
+                                            text = team.projectName,
+                                            fontFamily = TajawalFontFamily,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = DeepNavy,
+                                            fontSize = 19.sp
+                                        )
+                                        Text(
+                                            text = team.category,
+                                            fontFamily = TajawalFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                            color = DeepTeal,
+                                            fontSize = 13.sp
                                         )
                                     }
                                 }
 
-                                Column {
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (team.isLocked) SeatBookedBg else SeatAvailableBg,
+                                    border = BorderStroke(1.dp, if (team.isLocked) SeatBookedBlue else SeatAvailableGreen)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = if (team.isLocked) Icons.Filled.Lock else Icons.Filled.CheckCircle,
+                                            contentDescription = null,
+                                            tint = if (team.isLocked) SeatBookedBlue else SeatAvailableGreen,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                        Text(
+                                            text = if (team.isLocked) "معتمد ومقفل" else "جاهز للاعتماد",
+                                            fontFamily = TajawalFontFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (team.isLocked) SeatBookedBlue else SeatAvailableGreen,
+                                            fontSize = 11.5.sp
+                                        )
+                                    }
+                                }
+                            }
+
+                            HorizontalDivider(
+                                color = SoftGray.copy(alpha = 0.35f),
+                                thickness = 0.8.dp
+                            )
+
+                            // شريط نسبة اكتمال المقاعد
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Text(
-                                        text = "كلية الحاسبات والذكاء الاصطناعي",
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        color = DeepNavy,
-                                        fontSize = 15.sp
+                                        text = "اكتمال مقاعد التيم الرسمية",
+                                        fontFamily = TajawalFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        color = DeepNavy.copy(alpha = 0.7f),
+                                        fontSize = 12.5.sp
                                     )
                                     Text(
-                                        text = "كشف التسليم الرسمي • مشاريع 2026",
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Medium,
+                                        text = "$bookedCount من $totalCount مقاعد معتمدة ($progressPercent%)",
+                                        fontFamily = TajawalFontFamily,
+                                        fontWeight = FontWeight.Bold,
                                         color = DeepTeal,
+                                        fontSize = 12.5.sp
+                                    )
+                                }
+
+                                LinearProgressIndicator(
+                                    progress = { if (totalCount > 0) bookedCount.toFloat() / totalCount else 0f },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(8.dp)
+                                        .clip(RoundedCornerShape(4.dp)),
+                                    color = DeepTeal,
+                                    trackColor = SoftBeige
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // =============================================================
+                // 2. كارت المشرفين الأكاديميين (Supervisors Card)
+                // =============================================================
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(22.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text(
+                                text = "الإشراف الأكاديمي والمتابعة:",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = DeepNavy,
+                                fontSize = 15.sp
+                            )
+
+                            // المشرف الأكاديمي
+                            SupervisorModernRow(
+                                title = "الأستاذ المشرف الأكاديمي",
+                                name = team.supervisorDoctor,
+                                badge = "رئيس اللجنة",
+                                icon = Icons.Outlined.VerifiedUser,
+                                accentColor = DeepNavy
+                            )
+
+                            // المعيدة المسؤولة
+                            SupervisorModernRow(
+                                title = "المعيدة المشرفة على المشروع",
+                                name = team.teachingAssistant,
+                                badge = "مسؤولة التسليم",
+                                icon = Icons.Outlined.Person,
+                                accentColor = DeepTeal
+                            )
+                        }
+                    }
+                }
+
+                // =============================================================
+                // 3. كشف المقاعد والأعضاء (The Official Roster Sheet)
+                // =============================================================
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(22.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "كشف مقاعد الفريق المعتمدة:",
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DeepNavy,
+                                    fontSize = 15.sp
+                                )
+
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = SoftBeige,
+                                    border = BorderStroke(1.dp, Peach.copy(alpha = 0.7f))
+                                ) {
+                                    Text(
+                                        text = "$totalCount مقاعد رسمية",
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                        fontFamily = TajawalFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = DeepNavy,
                                         fontSize = 12.sp
                                     )
                                 }
                             }
 
-                            // بادج كود الكشف
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = SoftBeige,
-                                border = BorderStroke(1.dp, Peach.copy(alpha = 0.8f))
-                            ) {
-                                Text(
-                                    text = "#TS-${team.teamId.take(5).uppercase()}",
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    fontFamily = CairoFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 12.sp
-                                )
-                            }
-                        }
-
-                        HorizontalDivider(
-                            color = SoftGray.copy(alpha = 0.4f),
-                            thickness = 1.dp
-                        )
-
-                        // اسم المشروع والمقرر
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = team.projectName,
-                                    fontFamily = CairoFontFamily,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = DeepNavy,
-                                    fontSize = 20.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "المقرر: ${team.category}",
-                                    fontFamily = CairoFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = DeepTeal,
-                                    fontSize = 13.sp
-                                )
-                            }
-
-                            Surface(
-                                shape = RoundedCornerShape(14.dp),
-                                color = if (team.isLocked) SeatBookedBg else SeatAvailableBg,
-                                border = BorderStroke(1.dp, if (team.isLocked) SeatBookedBlue else SeatAvailableGreen)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = if (team.isLocked) Icons.Filled.Lock else Icons.Filled.CheckCircle,
-                                        contentDescription = null,
-                                        tint = if (team.isLocked) SeatBookedBlue else SeatAvailableGreen,
-                                        modifier = Modifier.size(13.dp)
-                                    )
-                                    Text(
-                                        text = if (team.isLocked) "معتمد ومقفل" else "جاهز للتسليم",
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (team.isLocked) SeatBookedBlue else SeatAvailableGreen,
-                                        fontSize = 11.5.sp
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // =================================================================
-            // 2. كارت المشرفين الأكاديميين (Academic Supervisors - بدون أي قص)
-            // =================================================================
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(18.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text(
-                            text = "هيئة الإشراف والتقييم الأكاديمي:",
-                            fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            color = DeepNavy,
-                            fontSize = 15.sp
-                        )
-
-                        // صف الدكتور المشرف (Full Width - بدون أي قطع بالاسم)
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            color = WarmCream.copy(alpha = 0.55f),
-                            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.45f))
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                Surface(
-                                    modifier = Modifier.size(40.dp),
-                                    shape = CircleShape,
-                                    color = DeepNavy
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.VerifiedUser,
-                                            contentDescription = null,
-                                            tint = WarmCream,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                }
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "الأستاذ المشرف الأكاديمي",
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Medium,
-                                        color = DeepNavy.copy(alpha = 0.65f),
-                                        fontSize = 11.5.sp
-                                    )
-                                    Text(
-                                        text = team.supervisorDoctor,
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        color = DeepNavy,
-                                        fontSize = 15.sp
-                                    )
-                                }
-
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = DeepNavy.copy(alpha = 0.1f)
-                                ) {
-                                    Text(
-                                        text = "رئيس اللجنة",
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        color = DeepNavy,
-                                        fontSize = 11.sp
-                                    )
-                                }
-                            }
-                        }
-
-                        // صف المعيدة المشرفة (Full Width - بدون أي قطع بالاسم)
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            color = WarmCream.copy(alpha = 0.55f),
-                            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.45f))
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                Surface(
-                                    modifier = Modifier.size(40.dp),
-                                    shape = CircleShape,
-                                    color = DeepTeal
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Person,
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                }
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "المعيدة المشرفة على المشروع",
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Medium,
-                                        color = DeepNavy.copy(alpha = 0.65f),
-                                        fontSize = 11.5.sp
-                                    )
-                                    Text(
-                                        text = team.teachingAssistant,
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        color = DeepNavy,
-                                        fontSize = 15.sp
-                                    )
-                                }
-
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = DeepTeal.copy(alpha = 0.12f)
-                                ) {
-                                    Text(
-                                        text = "مسؤولة التسليم",
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        color = DeepTeal,
-                                        fontSize = 11.sp
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // =================================================================
-            // 3. كشف المقاعد والطلاب المعتمدين (Official Roster Table)
-            // =================================================================
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(18.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        // هيدر الكشف مع نسبة الاكتمال بنظام أفقي سليم 100% بدون أي انضغاط رأسي
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "كشف المقاعد وأعضاء الفريق المعتمدين:",
-                                fontFamily = CairoFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                color = DeepNavy,
-                                fontSize = 15.sp,
-                                modifier = Modifier.weight(1f)
+                            HorizontalDivider(
+                                color = SoftGray.copy(alpha = 0.35f),
+                                thickness = 0.8.dp
                             )
 
-                            // بادج عدد المقاعد (أفقي ومريح للعين تماماً)
+                            // قائمة المقاعد الـ 6 بتصميم مطابق للموك آب
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                seats.forEachIndexed { index, seat ->
+                                    val isLeader = index == 0
+                                    val isBooked = seat.status == SeatStatus.BOOKED
+
+                                    ModernSeatRow(
+                                        seat = seat,
+                                        isLeader = isLeader,
+                                        isBooked = isBooked
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // =============================================================
+                // 4. كارت الإقرار والاعتماد الرسمي (Official Declaration)
+                // =============================================================
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(22.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
-                                color = LightAqua.copy(alpha = 0.4f),
-                                border = BorderStroke(1.dp, Turquoise.copy(alpha = 0.6f))
+                                color = LightAqua.copy(alpha = 0.35f),
+                                border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.3f))
                             ) {
-                                Text(
-                                    text = "$bookedCount من $totalCount مقاعد مكتملة",
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    fontFamily = CairoFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepTeal,
-                                    fontSize = 12.sp,
-                                    maxLines = 1
-                                )
-                            }
-                        }
-
-                        HorizontalDivider(
-                            color = SoftGray.copy(alpha = 0.4f),
-                            thickness = 1.dp
-                        )
-
-                        // قائمة المقاعد كصفوف مستقلة وواضحة جداً
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            seats.forEachIndexed { index, seat ->
-                                val isLeader = index == 0
-                                val isBooked = seat.status == SeatStatus.BOOKED
-
-                                Surface(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(14.dp),
-                                    color = if (isLeader) Peach.copy(alpha = 0.15f) else WarmCream.copy(alpha = 0.45f),
-                                    border = BorderStroke(
-                                        width = 1.dp,
-                                        color = if (isLeader) Peach else SoftGray.copy(alpha = 0.5f)
-                                    )
+                                Row(
+                                    modifier = Modifier.padding(10.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.Top
                                 ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 12.dp, vertical = 11.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                    ) {
-                                        // رقم المقعد S1..S6
-                                        Surface(
-                                            modifier = Modifier.size(42.dp),
-                                            shape = RoundedCornerShape(10.dp),
-                                            color = if (isLeader) DeepTeal else DeepNavy
-                                        ) {
-                                            Box(contentAlignment = Alignment.Center) {
-                                                Text(
-                                                    text = "S${seat.seatNumber}",
-                                                    fontFamily = CairoFontFamily,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = Color.White,
-                                                    fontSize = 14.sp
-                                                )
-                                            }
-                                        }
-
-                                        // اسم العضو والتخصص
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                            ) {
-                                                Text(
-                                                    text = if (isBooked) (seat.applicantName ?: "طالب معتمد") else "— مقعد شاغر متاح —",
-                                                    fontFamily = CairoFontFamily,
-                                                    fontWeight = if (isBooked) FontWeight.Bold else FontWeight.Medium,
-                                                    color = if (isBooked) DeepNavy else SoftGray,
-                                                    fontSize = 15.sp,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
-                                                if (isLeader) {
-                                                    Surface(
-                                                        shape = RoundedCornerShape(6.dp),
-                                                        color = DeepTeal
-                                                    ) {
-                                                        Text(
-                                                            text = "👑 القائد",
-                                                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
-                                                            fontFamily = CairoFontFamily,
-                                                            fontWeight = FontWeight.Bold,
-                                                            color = Color.White,
-                                                            fontSize = 10.5.sp
-                                                        )
-                                                    }
-                                                }
-                                            }
-
-                                            Text(
-                                                text = seat.roleRequired,
-                                                fontFamily = CairoFontFamily,
-                                                fontWeight = FontWeight.SemiBold,
-                                                color = DeepTeal,
-                                                fontSize = 12.5.sp
-                                            )
-                                        }
-
-                                        // بادج حالة المقعد
-                                        Surface(
-                                            shape = RoundedCornerShape(8.dp),
-                                            color = if (isBooked) SeatAvailableBg else SeatPendingBg,
-                                            border = BorderStroke(0.8.dp, if (isBooked) SeatAvailableGreen else SeatPendingAmber)
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                            ) {
-                                                Icon(
-                                                    imageVector = if (isBooked) Icons.Filled.CheckCircle else Icons.Outlined.HourglassTop,
-                                                    contentDescription = null,
-                                                    tint = if (isBooked) SeatAvailableGreen else SeatPendingAmber,
-                                                    modifier = Modifier.size(12.dp)
-                                                )
-                                                Text(
-                                                    text = if (isBooked) "معتمد ✓" else "شاغر",
-                                                    fontFamily = CairoFontFamily,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = if (isBooked) SeatAvailableGreen else SeatPendingAmber,
-                                                    fontSize = 11.sp
-                                                )
-                                            }
-                                        }
+                                    Icon(
+                                        imageVector = Icons.Outlined.Info,
+                                        contentDescription = null,
+                                        tint = DeepTeal,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Column {
+                                        Text(
+                                            text = "إقرار وتسليم رسمي:",
+                                            fontFamily = TajawalFontFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            color = DeepNavy,
+                                            fontSize = 13.5.sp
+                                        )
+                                        Text(
+                                            text = "يقر قائد الفريق بصحة توزيع المقاعد المعتمدة أعلاه، ويتم تثبيت الكشف رسمياً لدى المعيدة المشرفة بعد قفل الفريق.",
+                                            fontFamily = TajawalFontFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            color = DeepNavy.copy(alpha = 0.75f),
+                                            fontSize = 12.sp,
+                                            lineHeight = 17.sp
+                                        )
                                     }
                                 }
                             }
-                        }
-                    }
-                }
-            }
 
-            // =================================================================
-            // 4. كارت الإقرار الأكاديمي والتوقيعات الرسمية
-            // =================================================================
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(18.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = LightAqua.copy(alpha = 0.35f),
-                            border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.3f))
-                        ) {
+                            // خانات التوقيعات الثلاثة
                             Row(
-                                modifier = Modifier.padding(10.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.Top
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Info,
-                                    contentDescription = null,
-                                    tint = DeepTeal,
-                                    modifier = Modifier.size(18.dp)
+                                ModernSignatureBox(
+                                    title = "قائد الفريق",
+                                    signatory = team.leaderName,
+                                    isSigned = true,
+                                    modifier = Modifier.weight(1f)
                                 )
-                                Column {
-                                    Text(
-                                        text = "إقرار وتسليم رسمي:",
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        color = DeepNavy,
-                                        fontSize = 13.5.sp
-                                    )
-                                    Text(
-                                        text = "يقر قائد الفريق بصحة توزيع المقاعد المعتمدة وفقاً لمتطلبات المقرر الدراسي، وتُعتبر هذه الوثيقة نهائية ومجمدة بعد الاعتماد الأكاديمي.",
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Normal,
-                                        color = DeepNavy.copy(alpha = 0.75f),
-                                        fontSize = 12.sp,
-                                        lineHeight = 17.sp
-                                    )
-                                }
+                                ModernSignatureBox(
+                                    title = "المعيدة المشرفة",
+                                    signatory = "م. شهد أحمد",
+                                    isSigned = team.isLocked,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                ModernSignatureBox(
+                                    title = "أستاذ المقرر",
+                                    signatory = "د. محمد كاظم",
+                                    isSigned = team.isLocked,
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
                         }
-
-                        Text(
-                            text = "التوقيعات والاعتمادات الرسمية:",
-                            fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            color = DeepNavy,
-                            fontSize = 14.5.sp
-                        )
-
-                        // 3 خانات توقيع مريحة بدون ضغط
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            AcademicSignatureBlock(
-                                title = "قائد الفريق",
-                                signatory = team.leaderName,
-                                isSigned = true,
-                                modifier = Modifier.weight(1f)
-                            )
-                            AcademicSignatureBlock(
-                                title = "المعيدة المشرفة",
-                                signatory = "م. شهد أحمد",
-                                isSigned = team.isLocked,
-                                modifier = Modifier.weight(1f)
-                            )
-                            AcademicSignatureBlock(
-                                title = "أستاذ المقرر",
-                                signatory = "د. محمد كاظم",
-                                isSigned = team.isLocked,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
                     }
                 }
-            }
 
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
+                item {
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
             }
         }
     }
 
-    // نافذة تأكيد نجاح تصدير ملف الـ PDF
+    // مودال نجاح تصدير ملف الـ PDF
     if (showExportSuccessDialog && exportedFile != null) {
         ExportSuccessDialog(
             file = exportedFile!!,
@@ -821,19 +614,205 @@ fun TASheetPreviewScreen(
 }
 
 /**
- * 🖋️ صندوق التوقيع الأكاديمي المريح
+ * 💺 صف المقعد الأنيق والمريح في كشف الفريق
  */
 @Composable
-private fun AcademicSignatureBlock(
+private fun ModernSeatRow(
+    seat: Seat,
+    isLeader: Boolean,
+    isBooked: Boolean
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = if (isLeader) Peach.copy(alpha = 0.18f) else SoftBeige.copy(alpha = 0.35f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (isLeader) Peach else SoftGray.copy(alpha = 0.55f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // أيقونة المقعد الشيك (رمز الكرسي المعتمد)
+            Surface(
+                modifier = Modifier.size(42.dp),
+                shape = RoundedCornerShape(10.dp),
+                color = if (isLeader) DeepTeal else if (isBooked) DeepNavy else SoftGray.copy(alpha = 0.6f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "S${seat.seatNumber}",
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+
+            // الاسم والتخصص
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = if (isBooked) (seat.applicantName ?: "طالب معتمد") else "— مقعد شاغر متاح —",
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = if (isBooked) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isBooked) DeepNavy else DeepNavy.copy(alpha = 0.5f),
+                        fontSize = 15.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (isLeader) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = DeepTeal
+                        ) {
+                            Text(
+                                text = "القائد",
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontSize = 10.5.sp
+                            )
+                        }
+                    }
+                }
+
+                Text(
+                    text = seat.roleRequired,
+                    fontFamily = TajawalFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    color = DeepTeal,
+                    fontSize = 12.5.sp
+                )
+            }
+
+            // بادج حالة المقعد
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = if (isBooked) SeatAvailableBg else SeatPendingBg,
+                border = BorderStroke(0.8.dp, if (isBooked) SeatAvailableGreen else SeatPendingAmber)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isBooked) Icons.Filled.CheckCircle else Icons.Outlined.HourglassTop,
+                        contentDescription = null,
+                        tint = if (isBooked) SeatAvailableGreen else SeatPendingAmber,
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Text(
+                        text = if (isBooked) "معتمد" else "شاغر",
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isBooked) SeatAvailableGreen else SeatPendingAmber,
+                        fontSize = 11.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 👨‍🏫 صف المشرف الأكاديمي الفردي
+ */
+@Composable
+private fun SupervisorModernRow(
+    title: String,
+    name: String,
+    badge: String,
+    icon: ImageVector,
+    accentColor: Color
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = WarmCream.copy(alpha = 0.5f),
+        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.45f))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = CircleShape,
+                color = accentColor.copy(alpha = 0.15f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = accentColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    fontFamily = TajawalFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    color = DeepNavy.copy(alpha = 0.65f),
+                    fontSize = 11.5.sp
+                )
+                Text(
+                    text = name,
+                    fontFamily = TajawalFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = DeepNavy,
+                    fontSize = 14.5.sp
+                )
+            }
+
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = accentColor.copy(alpha = 0.12f)
+            ) {
+                Text(
+                    text = badge,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    fontFamily = TajawalFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = accentColor,
+                    fontSize = 11.sp
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 🖋️ صندوق التوقيع الأكاديمي الأنيق
+ */
+@Composable
+private fun ModernSignatureBox(
     title: String,
     signatory: String,
     isSigned: Boolean,
     modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = modifier.height(90.dp),
+        modifier = modifier.height(86.dp),
         shape = RoundedCornerShape(12.dp),
-        color = WarmCream.copy(alpha = 0.5f),
+        color = WarmCream.copy(alpha = 0.45f),
         border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.55f))
     ) {
         Column(
@@ -845,10 +824,10 @@ private fun AcademicSignatureBlock(
         ) {
             Text(
                 text = title,
-                fontFamily = CairoFontFamily,
-                fontWeight = FontWeight.SemiBold,
+                fontFamily = TajawalFontFamily,
+                fontWeight = FontWeight.Medium,
                 color = DeepNavy.copy(alpha = 0.7f),
-                fontSize = 11.5.sp
+                fontSize = 11.sp
             )
 
             if (isSigned) {
@@ -863,8 +842,8 @@ private fun AcademicSignatureBlock(
                         modifier = Modifier.size(13.dp)
                     )
                     Text(
-                        text = "معتمد ✓",
-                        fontFamily = CairoFontFamily,
+                        text = "معتمد",
+                        fontFamily = TajawalFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = DeepTeal,
                         fontSize = 10.5.sp
@@ -872,8 +851,7 @@ private fun AcademicSignatureBlock(
                 }
             } else {
                 Text(
-                    text = "..................",
-                    fontFamily = CairoFontFamily,
+                    text = "...........",
                     color = SoftGray,
                     fontSize = 11.sp
                 )
@@ -881,14 +859,49 @@ private fun AcademicSignatureBlock(
 
             Text(
                 text = signatory,
-                fontFamily = CairoFontFamily,
+                fontFamily = TajawalFontFamily,
                 fontWeight = FontWeight.Bold,
                 color = DeepNavy,
-                fontSize = 12.sp,
+                fontSize = 11.5.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
+    }
+}
+
+/**
+ * 🌊 تموجات الخلفية الانسيابية لتصميم TeamSeat
+ */
+@Composable
+private fun TASheetFluidBackground() {
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+
+        val topPath = Path().apply {
+            moveTo(0f, 0f)
+            lineTo(w * 0.4f, 0f)
+            cubicTo(
+                w * 0.3f, h * 0.08f,
+                w * 0.15f, h * 0.06f,
+                0f, h * 0.14f
+            )
+            close()
+        }
+        drawPath(topPath, color = Turquoise.copy(alpha = 0.18f))
+
+        val bottomPath = Path().apply {
+            moveTo(w, h * 0.88f)
+            cubicTo(
+                w * 0.85f, h * 0.93f,
+                w * 0.75f, h * 0.90f,
+                w * 0.65f, h
+            )
+            lineTo(w, h)
+            close()
+        }
+        drawPath(bottomPath, color = Peach.copy(alpha = 0.22f))
     }
 }
 
@@ -911,7 +924,7 @@ private fun ExportSuccessDialog(
             ) {
                 Text(
                     text = "تم، حسناً",
-                    fontFamily = CairoFontFamily,
+                    fontFamily = TajawalFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                     fontSize = 14.sp
@@ -939,7 +952,7 @@ private fun ExportSuccessDialog(
                 }
                 Text(
                     text = "تم تصدير الكشف بنجاح!",
-                    fontFamily = CairoFontFamily,
+                    fontFamily = TajawalFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = DeepNavy,
                     fontSize = 17.sp
@@ -950,7 +963,7 @@ private fun ExportSuccessDialog(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = "تم إنشاء كشف التسليم الرسمي بنجاح لمشروع ($teamName) وتجهيزه كملف PDF بحجم A4 جاهز للتسليم للمعيدة.",
-                    fontFamily = CairoFontFamily,
+                    fontFamily = TajawalFontFamily,
                     fontWeight = FontWeight.Normal,
                     color = DeepNavy.copy(alpha = 0.8f),
                     fontSize = 13.5.sp,
@@ -966,13 +979,13 @@ private fun ExportSuccessDialog(
                     Column(modifier = Modifier.padding(10.dp)) {
                         Text(
                             text = "اسم الملف المُصدَّر:",
-                            fontFamily = CairoFontFamily,
+                            fontFamily = TajawalFontFamily,
                             color = DeepNavy.copy(alpha = 0.6f),
                             fontSize = 11.sp
                         )
                         Text(
                             text = file.name,
-                            fontFamily = CairoFontFamily,
+                            fontFamily = TajawalFontFamily,
                             fontWeight = FontWeight.Bold,
                             color = DeepNavy,
                             fontSize = 12.5.sp
@@ -988,7 +1001,7 @@ private fun ExportSuccessDialog(
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-private fun TASheetPreviewScreenCairoPreview() {
+private fun TASheetPreviewScreenFullPreview() {
     TeamSeatTheme {
         TASheetPreviewScreen()
     }
