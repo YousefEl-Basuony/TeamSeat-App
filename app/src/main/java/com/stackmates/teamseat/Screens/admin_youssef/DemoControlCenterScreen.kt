@@ -1,22 +1,19 @@
 package com.stackmates.teamseat.Screens.admin_youssef
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,7 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -35,11 +36,21 @@ import com.stackmates.teamseat.core.model.DemoPersona
 import com.stackmates.teamseat.core.model.User
 import com.stackmates.teamseat.core.theme.*
 
+// ألوان مريحة وعملية متوافقة مع شاشات التطبيق
+private val ScreenBg = Color(0xFFF8FAFC)
+private val NavyDark = Color(0xFF0F172A)
+private val DeepTeal = Color(0xFF1B6F7D)
+private val OrangePrimary = Color(0xFFF97316)
+private val OrangeLight = Color(0xFFFFF7ED)
+private val EmeraldGreen = Color(0xFF10B981)
+private val EmeraldLight = Color(0xFFECFDF5)
+private val CardBorderColor = Color(0xFFE2E8F0)
+private val TextSecondary = Color(0xFF64748B)
+
 /**
  * 💻 المسؤول عن الشاشة: يوسف (Youssef - Team Lead & Backend)
- * مركز التحكم في العرض التوضيحي السريع للمناقشة (Live Demo Control Center)
- * مصممة بنفس الهيكل والتصميم الفاخر لشاشة LockTeamDialog و EditTeamSeatsScreen:
- * خلفية WarmCream، كروت بيضاء بزوايا 24dp، إحصائيات 2x2، تبديل فوري للشخصيات، ومحاكاة السيناريوهات أمام اللجنة.
+ * شاشة التبديل السريع بين الحسابات أثناء العرض والمناقشة (Offline Demo Account Switcher)
+ * تصميم بسيط جداً، غير مزدحم، وسريع الاستخدام بلمسة واحدة بدون الحاجة للتمرير (Single Viewport - No Scrolling).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,800 +61,482 @@ fun DemoControlCenterScreen(
     onResetMockDataClick: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     var selectedPersona by remember { mutableStateOf(currentPersona) }
-    var showResetSuccess by remember { mutableStateOf(false) }
-    var showSwitchSuccess by remember { mutableStateOf(false) }
-    var isResetting by remember { mutableStateOf(false) }
+    var showResetConfirmDialog by remember { mutableStateOf(false) }
 
     val isLeaderActive = selectedPersona == DemoPersona.AHMED_LEADER
-    val activeUser = if (isLeaderActive) MockDataProvider.ahmedLeader else MockDataProvider.saraStudent
 
     Scaffold(
-        containerColor = WarmCream,
+        containerColor = ScreenBg,
         topBar = {
             TopAppBar(
                 title = {
                     Column {
                         Text(
-                            text = "مركز تحكم المناقشة (Live Demo)",
+                            text = "تبديل حساب العرض (Offline)",
                             fontFamily = CairoFontFamily,
                             fontWeight = FontWeight.ExtraBold,
-                            color = DeepNavy,
-                            fontSize = 20.sp,
-                            maxLines = 1
+                            color = NavyDark,
+                            fontSize = 18.sp,
+                            maxLines = 1,
+                            softWrap = false
                         )
                         Text(
-                            text = "التبديل اللحظي وإدارة سيناريوهات العرض",
+                            text = "اختر الشخصية لتجربة دورة الحجز والاعتماد فوراً",
                             fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            color = DeepTeal,
-                            fontSize = 13.5.sp,
-                            maxLines = 1
+                            fontWeight = FontWeight.Medium,
+                            color = TextSecondary,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
                 },
                 navigationIcon = {
                     Surface(
                         modifier = Modifier
-                            .padding(start = 12.dp, end = 8.dp)
-                            .size(44.dp),
+                            .padding(start = 12.dp, end = 6.dp)
+                            .size(40.dp),
                         shape = CircleShape,
                         color = Color.White,
                         shadowElevation = 2.dp,
-                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.6f))
+                        border = BorderStroke(1.dp, CardBorderColor)
                     ) {
                         IconButton(onClick = onBackClick) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "رجوع",
-                                tint = DeepNavy,
-                                modifier = Modifier.size(22.dp)
+                                tint = NavyDark,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = WarmCream)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = ScreenBg)
             )
-        },
-        bottomBar = {
-            Surface(
-                color = Color.White,
-                shadowElevation = 16.dp,
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    // 1. زر التبديل اللحظي بين الحسابين (Primary Action)
-                    Button(
-                        onClick = {
-                            selectedPersona = if (isLeaderActive) DemoPersona.SARA_STUDENT else DemoPersona.AHMED_LEADER
-                            showSwitchSuccess = true
-                            showResetSuccess = false
-                            onTogglePersonaClick()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = DeepTeal),
-                        shape = RoundedCornerShape(28.dp),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.SwapHoriz,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(22.dp)
-                            )
-                            Text(
-                                text = if (isLeaderActive) "تبديل إلى سارة علي (طالبة باحثة عن مقعد)" else "تبديل إلى أحمد محمود (قائد التيم)",
-                                fontFamily = CairoFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp,
-                                color = Color.White,
-                                maxLines = 1
-                            )
-                        }
-                    }
-
-                    // 2. زر إعادة ضبط وتصفير البيانات التجريبية (Secondary Action)
-                    OutlinedButton(
-                        onClick = {
-                            isResetting = true
-                            onResetMockDataClick()
-                            showResetSuccess = true
-                            showSwitchSuccess = false
-                            isResetting = false
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        border = BorderStroke(1.dp, DeepNavy.copy(alpha = 0.35f)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = DeepNavy)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.RestartAlt,
-                                contentDescription = null,
-                                tint = DeepNavy,
-                                modifier = Modifier.size(19.dp)
-                            )
-                            Text(
-                                text = "إعادة ضبط وتصفير بيانات الكراسي للتجربة",
-                                fontFamily = CairoFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                color = DeepNavy,
-                                maxLines = 1
-                            )
-                        }
-                    }
-                }
-            }
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-
-            // إشعار نجاح تبديل الحساب
-            AnimatedVisibility(
-                visible = showSwitchSuccess,
-                enter = slideInVertically() + fadeIn(),
-                exit = slideOutVertically() + fadeOut()
+            // الجزء العلوي: شريط الحالة + البطاقتان الكبيرتان للتبديل الفوري
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
+                // 1. شريط حالة الحساب الحالي (Compact Active Banner)
                 Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(12.dp),
-                    color = LightAqua.copy(alpha = 0.45f),
-                    border = BorderStroke(1.dp, Turquoise.copy(alpha = 0.7f))
+                    color = if (isLeaderActive) OrangeLight else EmeraldLight,
+                    border = BorderStroke(
+                        1.dp,
+                        if (isLeaderActive) OrangePrimary.copy(alpha = 0.5f) else EmeraldGreen.copy(alpha = 0.5f)
+                    )
                 ) {
                     Row(
-                        modifier = Modifier.padding(12.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.CheckCircle,
-                            contentDescription = null,
-                            tint = DeepTeal,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Text(
-                            text = "تم التبديل بنجاح إلى: ${activeUser.name}",
-                            fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            color = DeepNavy,
-                            fontSize = 13.5.sp
-                        )
-                    }
-                }
-            }
-
-            // إشعار نجاح تصفير البيانات
-            AnimatedVisibility(
-                visible = showResetSuccess,
-                enter = slideInVertically() + fadeIn(),
-                exit = slideOutVertically() + fadeOut()
-            ) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = SoftBeige,
-                    border = BorderStroke(1.dp, Peach.copy(alpha = 0.8f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.CheckCircle,
-                            contentDescription = null,
-                            tint = DeepNavy,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Text(
-                            text = "تمت إعادة ضبط جميع المقاعد والطلبات للحالة الأولى بنجاح ✓",
-                            fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            color = DeepNavy,
-                            fontSize = 13.sp
-                        )
-                    }
-                }
-            }
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(top = 8.dp, bottom = 28.dp)
-            ) {
-
-                // =============================================================
-                // 1. كارت ملخص وضع المناقشة (Hero Metric Dashboard 2x2 Grid)
-                // =============================================================
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(20.dp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            // الصف العلوي مع مؤشر الحالة والوضع الحي
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Surface(
-                                        shape = RoundedCornerShape(10.dp),
-                                        color = SoftBeige,
-                                        modifier = Modifier.padding(bottom = 6.dp)
-                                    ) {
-                                        Text(
-                                            text = "جلسة التقييم والمناقشة 2026",
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                            fontFamily = CairoFontFamily,
-                                            fontWeight = FontWeight.Bold,
-                                            color = DeepTeal,
-                                            fontSize = 12.sp
-                                        )
-                                    }
-
-                                    Text(
-                                        text = "غرفة تحكم العرض الحي (Demo Cockpit)",
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = DeepNavy,
-                                        fontSize = 18.5.sp,
-                                        maxLines = 1
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = "الحساب النشط حالياً: ${activeUser.name}",
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color.Gray,
-                                        fontSize = 13.5.sp
-                                    )
-                                }
-
-                                // مؤشر الحالة الدائري الشيك
-                                Surface(
-                                    modifier = Modifier.size(60.dp),
-                                    shape = CircleShape,
-                                    color = if (isLeaderActive) DeepNavy else DeepTeal,
-                                    shadowElevation = 2.dp
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Icon(
-                                                imageVector = if (isLeaderActive) Icons.Outlined.WorkspacePremium else Icons.Outlined.School,
-                                                contentDescription = null,
-                                                tint = Peach,
-                                                modifier = Modifier.size(24.dp)
-                                            )
-                                            Text(
-                                                text = if (isLeaderActive) "قائد" else "طالبة",
-                                                fontFamily = CairoFontFamily,
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color.White,
-                                                fontSize = 10.sp
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            // شبكة إحصائيات المناقشة 2x2 بنظام LockMetricCard المطابق لـ LockTeamDialog
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    DemoControlMetricCard(
-                                        modifier = Modifier.weight(1f),
-                                        title = "الشخصية النشطة",
-                                        value = if (isLeaderActive) "أحمد (قائد التيم)" else "سارة (طالبة)",
-                                        icon = Icons.Outlined.Person,
-                                        iconTint = DeepNavy,
-                                        iconBg = SoftBeige
-                                    )
-                                    DemoControlMetricCard(
-                                        modifier = Modifier.weight(1f),
-                                        title = "صلاحيات الحساب",
-                                        value = if (isLeaderActive) "إدارة، قفل، وتصدير" else "استعراض وطلب حجز",
-                                        icon = Icons.Outlined.AdminPanelSettings,
-                                        iconTint = DeepTeal,
-                                        iconBg = LightAqua.copy(alpha = 0.45f)
-                                    )
-                                }
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    DemoControlMetricCard(
-                                        modifier = Modifier.weight(1f),
-                                        title = "حالة البيانات",
-                                        value = "6 مقاعد جاهزة",
-                                        icon = Icons.Outlined.CheckCircle,
-                                        iconTint = Turquoise,
-                                        iconBg = LightAqua.copy(alpha = 0.45f)
-                                    )
-                                    DemoControlMetricCard(
-                                        modifier = Modifier.weight(1f),
-                                        title = "وضع المحاكاة",
-                                        value = "مزامنة لحظية ⚡",
-                                        icon = Icons.Outlined.Speed,
-                                        iconTint = DeepNavy,
-                                        iconBg = Peach.copy(alpha = 0.35f)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // =============================================================
-                // 2. كروت شخصيات العرض واختيار الدور (Persona Selection Cards)
-                // =============================================================
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(18.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "شخصيات العرض التوضيحي (Personas)",
-                                    fontFamily = CairoFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 16.sp
-                                )
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = SoftBeige
-                                ) {
-                                    Text(
-                                        text = "انقر للتبديل الفوري",
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        color = DeepTeal,
-                                        fontSize = 11.5.sp
-                                    )
-                                }
-                            }
-
-                            HorizontalDivider(color = SoftGray.copy(alpha = 0.4f))
-
-                            // بطاقة شخصية 1: أحمد محمود (قائد التيم)
-                            PersonaOptionCard(
-                                name = MockDataProvider.ahmedLeader.name,
-                                role = "Android Lead • قائد التيم والمشروع",
-                                permissions = "إدارة مقاعد التيم، قبول المتقدمين، قفل التيم وتصدير كشف الـ A4 للمعيدة",
-                                icon = Icons.Outlined.WorkspacePremium,
-                                isSelected = isLeaderActive,
-                                onClick = {
-                                    if (!isLeaderActive) {
-                                        selectedPersona = DemoPersona.AHMED_LEADER
-                                        showSwitchSuccess = true
-                                        showResetSuccess = false
-                                        onTogglePersonaClick()
-                                    }
-                                }
+                            Icon(
+                                imageVector = Icons.Filled.CheckCircle,
+                                contentDescription = null,
+                                tint = if (isLeaderActive) OrangePrimary else EmeraldGreen,
+                                modifier = Modifier.size(18.dp)
                             )
-
-                            // بطاقة شخصية 2: سارة علي (طالبة باحثة عن تيم)
-                            PersonaOptionCard(
-                                name = MockDataProvider.saraStudent.name,
-                                role = "UI/UX Designer • تبحث عن مقعد متاح",
-                                permissions = "استعراض تيمات الدفعة، تصفح خريطة المقاعد الشاغرة، وتقديم طلب انضمام",
-                                icon = Icons.Outlined.School,
-                                isSelected = !isLeaderActive,
-                                onClick = {
-                                    if (isLeaderActive) {
-                                        selectedPersona = DemoPersona.SARA_STUDENT
-                                        showSwitchSuccess = true
-                                        showResetSuccess = false
-                                        onTogglePersonaClick()
-                                    }
-                                }
-                            )
-                        }
-                    }
-                }
-
-                // =============================================================
-                // 3. كارت سيناريوهات المناقشة الحية (Live Demo Scenarios)
-                // =============================================================
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(18.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
                             Text(
-                                text = "سيناريوهات العرض أمام د. محمد كاظم وم. شهد أحمد:",
+                                text = if (isLeaderActive) {
+                                    "الحساب النشط الآن: أحمد محمود (قائد التيم)"
+                                } else {
+                                    "الحساب النشط الآن: سارة علي (طالبة)"
+                                },
                                 fontFamily = CairoFontFamily,
                                 fontWeight = FontWeight.Bold,
-                                color = DeepNavy,
-                                fontSize = 15.sp
+                                color = NavyDark,
+                                fontSize = 13.sp,
+                                maxLines = 1,
+                                softWrap = false
                             )
+                        }
 
-                            HorizontalDivider(color = SoftGray.copy(alpha = 0.4f))
-
-                            DemoScenarioRow(
-                                stepNumber = "1",
-                                title = "سيناريو حجز مقعد جديد (منظور الطالب)",
-                                description = "التبديل إلى سارة -> فتح خريطة المقاعد -> اختيار المقعد الشاغر -> تأكيد الحجز ومتابعة عداد الـ 48 ساعة."
-                            )
-
-                            DemoScenarioRow(
-                                stepNumber = "2",
-                                title = "سيناريو قبول واعتماد الطلب (منظور القائد)",
-                                description = "التبديل إلى أحمد -> استعراض إشعار طلب سارة -> مراجعة ملفها وقبولها -> ينضم الطالب فوراً للمقعد."
-                            )
-
-                            DemoScenarioRow(
-                                stepNumber = "3",
-                                title = "سيناريو قفل التيم وتصدير الكشف (التسليم النهائي)",
-                                description = "التبديل إلى أحمد -> مراجعة كشف التسليم الرسمي -> اعتماد وإغلاق التيم -> تصدير كشف A4 PDF للمعيدة."
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = if (isLeaderActive) OrangePrimary else EmeraldGreen
+                        ) {
+                            Text(
+                                text = "مُفعّل",
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontSize = 10.5.sp,
+                                maxLines = 1,
+                                softWrap = false
                             )
                         }
                     }
                 }
 
-                // =============================================================
-                // 4. صندوق نصائح وإرشادات المناقشة (Advisory Box)
-                // =============================================================
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = SoftBeige),
-                        border = BorderStroke(1.dp, Peach.copy(alpha = 0.6f))
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(18.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = Peach
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Info,
-                                        contentDescription = null,
-                                        tint = DeepNavy,
-                                        modifier = Modifier
-                                            .padding(6.dp)
-                                            .size(16.dp)
-                                    )
-                                }
-                                Text(
-                                    text = "نقاط القوة التي يجب إبرازها أثناء المناقشة الأكاديمية:",
-                                    fontFamily = CairoFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 14.5.sp
-                                )
-                            }
-
-                            DemoBulletPoint("حل فوضى تشكيل الفرق: يمنع التطبيق ازدواجية التسجيل والانسحاب العشوائي بفضل نظام قفل التيم.")
-                            DemoBulletPoint("التوثيق الأكاديمي الشفاف: كشف تسليم رسمي بنظام A4 PDF باسم المشرفين والمعيدة وتوقيعات الطلاب.")
-                            DemoBulletPoint("مرونة الأدوار الفنية: كل مقعد مخصص لدور برمجي محدد (Android, Backend, UI/UX, QA) لتوازن المشروع.")
+                // 2. الكارت الأول — قائد الفريق (Team Leader)
+                PersonaBigCard(
+                    name = "أحمد محمود",
+                    roleArabic = "قائد التيم",
+                    roleEnglish = "Team Leader",
+                    description = "إنشاء التيم، مراجعة الطلبات، وقفل الكشف النهائي.",
+                    icon = Icons.Outlined.WorkspacePremium,
+                    isActive = isLeaderActive,
+                    accentColor = OrangePrimary,
+                    accentLightColor = OrangeLight,
+                    onClick = {
+                        if (!isLeaderActive) {
+                            selectedPersona = DemoPersona.AHMED_LEADER
+                            onTogglePersonaClick()
+                            Toast.makeText(context, "تم التحويل إلى: أحمد محمود (قائد التيم)", Toast.LENGTH_SHORT).show()
                         }
+                    }
+                )
+
+                // 3. الكارت الثاني — طالبة متقدمة (Student)
+                PersonaBigCard(
+                    name = "سارة علي",
+                    roleArabic = "طالبة متقدمة",
+                    roleEnglish = "UI/UX & Android",
+                    description = "استعراض التيمات، اختيار مقعد من الخريطة، وإرسال طلب حجز.",
+                    icon = Icons.Outlined.School,
+                    isActive = !isLeaderActive,
+                    accentColor = EmeraldGreen,
+                    accentLightColor = EmeraldLight,
+                    onClick = {
+                        if (isLeaderActive) {
+                            selectedPersona = DemoPersona.SARA_STUDENT
+                            onTogglePersonaClick()
+                            Toast.makeText(context, "تم التحويل إلى: سارة علي (طالبة متقدمة)", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+            }
+
+            // 4. زر إعادة ضبط البيانات التجريبية (Reset Demo Data) في الأسفل مع نافذة تأكيد
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { showResetConfirmDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, CardBorderColor),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.White,
+                        contentColor = TextSecondary
+                    )
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.RestartAlt,
+                            contentDescription = null,
+                            tint = TextSecondary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = "إعادة ضبط المقاعد التجريبية (Reset)",
+                            fontFamily = CairoFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextSecondary,
+                            fontSize = 13.sp,
+                            maxLines = 1,
+                            softWrap = false
+                        )
                     }
                 }
             }
         }
     }
-}
 
-/**
- * 🎴 بطاقة خيار الشخصية (Persona Option Card)
- */
-@Composable
-private fun PersonaOptionCard(
-    name: String,
-    role: String,
-    permissions: String,
-    icon: ImageVector,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = if (isSelected) Peach.copy(alpha = 0.22f) else SoftBeige.copy(alpha = 0.35f),
-        border = BorderStroke(
-            width = if (isSelected) 1.5.dp else 1.dp,
-            color = if (isSelected) DeepTeal else SoftGray.copy(alpha = 0.6f)
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Surface(
-                modifier = Modifier.size(44.dp),
-                shape = CircleShape,
-                color = if (isSelected) DeepTeal else DeepNavy
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = if (isSelected) Peach else Color.White,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
+    // نافذة تأكيد إعادة ضبط البيانات لتجنب الضغط بالخطأ أثناء العرض
+    if (showResetConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetConfirmDialog = false },
+            title = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = OrangeLight,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Outlined.RestartAlt,
+                                contentDescription = null,
+                                tint = OrangePrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
                     Text(
-                        text = name,
+                        text = "تأكيد إعادة الضبط",
                         fontFamily = CairoFontFamily,
                         fontWeight = FontWeight.Bold,
-                        color = DeepNavy,
-                        fontSize = 15.sp
-                    )
-
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = if (isSelected) DeepTeal else SoftGray.copy(alpha = 0.4f)
-                    ) {
-                        Text(
-                            text = if (isSelected) "النشط حالياً ✓" else "انقر للتبديل",
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isSelected) Color.White else DeepNavy.copy(alpha = 0.7f),
-                            fontSize = 10.5.sp
-                        )
-                    }
-                }
-
-                Text(
-                    text = role,
-                    fontFamily = CairoFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    color = DeepTeal,
-                    fontSize = 12.5.sp
-                )
-
-                Text(
-                    text = permissions,
-                    fontFamily = CairoFontFamily,
-                    color = DeepNavy.copy(alpha = 0.7f),
-                    fontSize = 11.5.sp,
-                    lineHeight = 16.sp
-                )
-            }
-        }
-    }
-}
-
-/**
- * 📊 بطاقة إحصائية داخلية لغرفة التحكم (Demo Metric Card)
- */
-@Composable
-private fun DemoControlMetricCard(
-    title: String,
-    value: String,
-    icon: ImageVector,
-    iconTint: Color,
-    iconBg: Color,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier.height(78.dp),
-        shape = RoundedCornerShape(14.dp),
-        color = WarmCream.copy(alpha = 0.6f),
-        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 10.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = iconBg,
-                modifier = Modifier.size(36.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = iconTint,
-                        modifier = Modifier.size(19.dp)
+                        color = NavyDark,
+                        fontSize = 16.5.sp
                     )
                 }
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
+            },
+            text = {
                 Text(
-                    text = title,
+                    text = "هل تريد إعادة ضبط جميع المقاعد والطلبات للحالة الأولى؟ سيتم تصفير أي حجز تم أثناء العرض الحالي.",
                     fontFamily = CairoFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    color = DeepNavy.copy(alpha = 0.65f),
-                    fontSize = 11.5.sp,
-                    maxLines = 1
-                )
-                Text(
-                    text = value,
-                    fontFamily = CairoFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = DeepNavy,
+                    color = TextSecondary,
                     fontSize = 13.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    lineHeight = 18.sp
                 )
-            }
-        }
-    }
-}
-
-/**
- * 🎬 صف سيناريو المناقشة
- */
-@Composable
-private fun DemoScenarioRow(
-    stepNumber: String,
-    title: String,
-    description: String
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        color = WarmCream.copy(alpha = 0.5f),
-        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.45f))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Surface(
-                modifier = Modifier.size(28.dp),
-                shape = CircleShape,
-                color = DeepTeal
-            ) {
-                Box(contentAlignment = Alignment.Center) {
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onResetMockDataClick()
+                        showResetConfirmDialog = false
+                        Toast.makeText(context, "تمت إعادة ضبط بيانات المقاعد بنجاح ✓", Toast.LENGTH_SHORT).show()
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = NavyDark)
+                ) {
                     Text(
-                        text = stepNumber,
+                        text = "نعم، إعادة ضبط",
                         fontFamily = CairoFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         fontSize = 13.sp
                     )
                 }
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = title,
-                    fontFamily = CairoFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = DeepNavy,
-                    fontSize = 13.5.sp
-                )
-                Text(
-                    text = description,
-                    fontFamily = CairoFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    color = DeepNavy.copy(alpha = 0.75f),
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp
-                )
-            }
-        }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showResetConfirmDialog = false },
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, CardBorderColor)
+                ) {
+                    Text(
+                        text = "إلغاء",
+                        fontFamily = CairoFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        color = TextSecondary,
+                        fontSize = 13.sp
+                    )
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = Color.White
+        )
     }
 }
 
 /**
- * 💡 نقطة توجيهية داخل كارت النصائح
+ * 🎴 كارت الشخصية الكبير التفاعلي بلمسة واحدة (Single Tap Persona Card)
  */
 @Composable
-private fun DemoBulletPoint(text: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.Top
+private fun PersonaBigCard(
+    name: String,
+    roleArabic: String,
+    roleEnglish: String,
+    description: String,
+    icon: ImageVector,
+    isActive: Boolean,
+    accentColor: Color,
+    accentLightColor: Color,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isActive) accentLightColor.copy(alpha = 0.5f) else Color.White
+        ),
+        border = BorderStroke(
+            width = if (isActive) 1.8.dp else 1.dp,
+            color = if (isActive) accentColor else CardBorderColor
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isActive) 3.dp else 1.5.dp)
     ) {
-        Text(
-            text = "•",
-            fontFamily = CairoFontFamily,
-            fontWeight = FontWeight.Bold,
-            color = DeepTeal,
-            fontSize = 16.sp
-        )
-        Text(
-            text = text,
-            fontFamily = CairoFontFamily,
-            color = DeepNavy.copy(alpha = 0.85f),
-            fontSize = 13.sp,
-            lineHeight = 19.sp
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // الصف العلوي: الأيقونة، الاسم، الدور، وشارة الحالة
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // أيقونة الشخصية الدائرية
+                    Surface(
+                        modifier = Modifier.size(44.dp),
+                        shape = CircleShape,
+                        color = if (isActive) accentColor else Color(0xFFF1F5F9)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = if (isActive) Color.White else NavyDark,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = name,
+                            fontFamily = CairoFontFamily,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = NavyDark,
+                            fontSize = 16.sp,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = roleArabic,
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextSecondary,
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                            Text(
+                                text = "•",
+                                color = TextSecondary,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                text = roleEnglish,
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isActive) accentColor else TextSecondary,
+                                fontSize = 11.5.sp,
+                                maxLines = 1,
+                                softWrap = false,
+                                style = TextStyle(textDirection = TextDirection.Ltr)
+                            )
+                        }
+                    }
+                }
+
+                // شارة نشط حالياً أو زر التحويل
+                if (isActive) {
+                    Surface(
+                        modifier = Modifier.wrapContentWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        color = accentColor,
+                        shadowElevation = 1.dp
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Text(
+                                text = "نشط حالياً ✓",
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontSize = 11.5.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
+                } else {
+                    Surface(
+                        modifier = Modifier.wrapContentWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFF1F5F9),
+                        border = BorderStroke(1.dp, CardBorderColor)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "تبديل لهذا الحساب ←",
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = NavyDark,
+                                fontSize = 11.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
+                }
+            }
+
+            HorizontalDivider(
+                color = CardBorderColor.copy(alpha = 0.7f),
+                thickness = 0.8.dp
+            )
+
+            // وصف الصلاحية في سطر واحد بدون انكسار
+            Text(
+                text = description,
+                fontFamily = CairoFontFamily,
+                fontWeight = FontWeight.Medium,
+                color = if (isActive) NavyDark.copy(alpha = 0.85f) else TextSecondary,
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-private fun DemoControlCenterScreenExecutivePreview() {
+private fun DemoControlCenterScreenSimplePreview() {
     TeamSeatTheme {
         DemoControlCenterScreen()
     }
