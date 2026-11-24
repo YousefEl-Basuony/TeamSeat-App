@@ -1,13 +1,13 @@
 package com.stackmates.teamseat.Screens.explore_khaled
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,30 +16,21 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.AirlineSeatReclineNormal
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Groups
-import androidx.compose.material.icons.outlined.HourglassTop
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.SupervisorAccount
-import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material.icons.outlined.WorkspacePremium
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -52,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,28 +53,11 @@ import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.Seat
 import com.stackmates.teamseat.core.model.SeatStatus
 import com.stackmates.teamseat.core.model.Team
-import com.stackmates.teamseat.core.theme.DeepNavy
-import com.stackmates.teamseat.core.theme.DeepTeal
-import com.stackmates.teamseat.core.theme.LeaderCrownGold
-import com.stackmates.teamseat.core.theme.LightAqua
-import com.stackmates.teamseat.core.theme.Peach
-import com.stackmates.teamseat.core.theme.SeatAvailableBg
-import com.stackmates.teamseat.core.theme.SeatBookedBg
-import com.stackmates.teamseat.core.theme.SeatBookedBlue
-import com.stackmates.teamseat.core.theme.SeatLockedBg
-import com.stackmates.teamseat.core.theme.SeatLockedGray
-import com.stackmates.teamseat.core.theme.SeatPendingAmber
-import com.stackmates.teamseat.core.theme.SeatPendingBg
-import com.stackmates.teamseat.core.theme.SoftBeige
-import com.stackmates.teamseat.core.theme.SoftGray
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
-import com.stackmates.teamseat.core.theme.Turquoise
-import com.stackmates.teamseat.core.theme.WarmCream
 
 /**
  * 🔍 المسؤول عن الشاشة: خالد (Khaled) — [KHALED-3]
  * شاشة تفاصيل المشروع الشاملة قبل فتح خريطة الكراسي (Team Details Overview Screen)
- * تصميم متميز بمقاييس UI/UX احترافية وجودة عالية متوافقة مع الهوية البصرية لـ TeamSeat
  */
 @Composable
 fun TeamDetailsOverviewScreen(
@@ -91,7 +66,6 @@ fun TeamDetailsOverviewScreen(
     onOpenSeatMapClick: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
-    // حساب إحصائيات المقاعد المحدثة بناءً على قائمة المقاعد الفعلية
     val totalSeats = if (seats.isNotEmpty()) seats.size else team.totalSeats
     val bookedCount = seats.count { it.status == SeatStatus.BOOKED }
     val availableCount = seats.count { it.status == SeatStatus.AVAILABLE }
@@ -99,7 +73,8 @@ fun TeamDetailsOverviewScreen(
     val completionPercent = if (totalSeats > 0) ((bookedCount.toFloat() / totalSeats) * 100).toInt() else 0
 
     Scaffold(
-        containerColor = WarmCream,
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets.systemBars,
         topBar = {
             TeamOverviewTopBar(
                 teamCategory = team.category,
@@ -108,7 +83,6 @@ fun TeamDetailsOverviewScreen(
         },
         bottomBar = {
             TeamOverviewBottomCta(
-                availableSeatsCount = availableCount,
                 isLocked = team.isLocked,
                 onOpenSeatMapClick = onOpenSeatMapClick
             )
@@ -118,57 +92,41 @@ fun TeamDetailsOverviewScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(top = 10.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // =================================================================
-            // 1. بطاقة بطل المشروع الرئيسية (Project Hero Card)
-            // =================================================================
+            // 1. بطاقة عنوان المشروع وحالته
             item {
                 Box(modifier = Modifier.padding(horizontal = 20.dp)) {
                     ProjectHeroCard(team = team)
                 }
             }
 
-            // =================================================================
-            // 2. بطاقة قائد الفريق والهيئة الأكاديمية (Leader & Faculty Mentorship)
-            // =================================================================
+            // 2. قائد الفريق والإشراف الأكاديمي
             item {
                 Box(modifier = Modifier.padding(horizontal = 20.dp)) {
                     TeamLeaderAndMentorsCard(team = team)
                 }
             }
 
-            // =================================================================
-            // 3. بطاقة وصف فكرة المشروع وأهدافه (Project Description Card)
-            // =================================================================
+            // 3. وصف فكرة المشروع
             item {
                 Box(modifier = Modifier.padding(horizontal = 20.dp)) {
                     ProjectDescriptionCard(description = team.description)
                 }
             }
 
-            // =================================================================
-            // 4. لوحة ملخص المقاعد الشاغرة والإحصائيات (Seat Availability Metrics)
-            // =================================================================
+            // 4. ملخص إحصائيات المقاعد وتشكيل الفريق
             item {
                 Box(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    SeatAvailabilityMetricsCard(
+                    SeatAvailabilitySummaryCard(
                         totalSeats = totalSeats,
                         bookedCount = bookedCount,
                         availableCount = availableCount,
                         pendingCount = pendingCount,
-                        completionPercent = completionPercent
+                        completionPercent = completionPercent,
+                        seats = seats
                     )
-                }
-            }
-
-            // =================================================================
-            // 5. معاينة خريطة المقاعد السريعة (Compact Seat Grid Preview)
-            // =================================================================
-            item {
-                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    SeatMapPreviewSection(seats = seats)
                 }
             }
         }
@@ -184,7 +142,7 @@ private fun TeamOverviewTopBar(
     onBackClick: () -> Unit
 ) {
     Surface(
-        color = WarmCream,
+        color = MaterialTheme.colorScheme.background,
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
@@ -192,42 +150,44 @@ private fun TeamOverviewTopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 10.dp),
+                .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
                 shape = CircleShape,
                 color = Color.White,
-                border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.7f)),
-                shadowElevation = 2.dp,
-                modifier = Modifier.size(42.dp)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                shadowElevation = 0.dp,
+                modifier = Modifier.size(40.dp)
             ) {
                 IconButton(onClick = onBackClick) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "رجوع",
-                        tint = DeepNavy,
-                        modifier = Modifier.size(20.dp)
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(19.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(14.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "تفاصيل ونظرة عامة على الفريق",
+                    text = "تفاصيل الفريق",
                     style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        color = DeepNavy,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontSize = 19.sp
-                    )
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = teamCategory,
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = DeepTeal,
-                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        fontWeight = FontWeight.Medium,
                         fontSize = 12.sp
                     ),
                     maxLines = 1,
@@ -239,154 +199,75 @@ private fun TeamOverviewTopBar(
 }
 
 // =============================================================================
-// كارت بطل المشروع الفاخر (ProjectHeroCard)
+// كارت بطل المشروع الهادئ (ProjectHeroCard)
 // =============================================================================
 @Composable
 private fun ProjectHeroCard(
     team: Team
 ) {
-    Card(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        border = BorderStroke(1.2.dp, DeepTeal.copy(alpha = 0.35f))
+        shape = RoundedCornerShape(18.dp),
+        color = Color.White,
+        shadowElevation = 1.dp,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(22.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // الهيدر: شارة المقرر + شارة حالة الفريق
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = SoftBeige
+                    shape = RoundedCornerShape(50),
+                    color = if (team.isLocked) {
+                        MaterialTheme.colorScheme.secondaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    }
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.School,
-                            contentDescription = null,
-                            tint = DeepTeal,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = team.category,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = DeepTeal,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
-                            )
-                        )
-                    }
-                }
-
-                if (team.isLocked) {
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = SeatLockedBg,
-                        border = BorderStroke(0.8.dp, SeatLockedGray)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = null,
-                                tint = Color.Gray,
-                                modifier = Modifier.size(13.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "فريق مقفل",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = Color.Gray,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.5.sp
-                                )
-                            )
-                        }
-                    }
-                } else {
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = SeatAvailableBg
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.CheckCircle,
-                                contentDescription = null,
-                                tint = DeepTeal,
-                                modifier = Modifier.size(13.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "متاح للحجز",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = DeepTeal,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.5.sp
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-
-            // أيقونة المشروع واسم المشروع
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = LightAqua.copy(alpha = 0.5f),
-                    border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.3f)),
-                    modifier = Modifier.size(54.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Outlined.Terminal,
-                            contentDescription = null,
-                            tint = DeepTeal,
-                            modifier = Modifier.size(30.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(14.dp))
-
-                Column {
                     Text(
-                        text = team.projectName,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            color = DeepNavy,
-                            fontSize = 21.sp
-                        )
-                    )
-                    Text(
-                        text = "معرّف المشروع: #${team.teamId}",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = Color.Gray,
-                            fontSize = 12.sp
-                        )
+                        text = if (team.isLocked) "فريق مقفل" else "متاح للحجز",
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = if (team.isLocked) {
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            },
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.5.sp
+                        ),
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
+
+                Text(
+                    text = "#${team.teamId}",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        fontSize = 11.5.sp
+                    ),
+                    maxLines = 1,
+                    softWrap = false
+                )
             }
+
+            Text(
+                text = team.projectName,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 20.sp,
+                    lineHeight = 28.sp
+                )
+            )
         }
     }
 }
@@ -398,160 +279,124 @@ private fun ProjectHeroCard(
 private fun TeamLeaderAndMentorsCard(
     team: Team
 ) {
-    Card(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.6f))
+        shape = RoundedCornerShape(18.dp),
+        color = Color.White,
+        shadowElevation = 1.dp,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // بيانات قائد الفريق
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = LeaderCrownGold.copy(alpha = 0.35f),
-                    border = BorderStroke(1.5.dp, LeaderCrownGold),
-                    modifier = Modifier.size(50.dp)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    modifier = Modifier.size(40.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Outlined.WorkspacePremium,
                             contentDescription = null,
-                            tint = DeepNavy,
-                            modifier = Modifier.size(26.dp)
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.width(14.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = team.leaderName,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = DeepNavy,
-                                fontSize = 16.5.sp
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
                     Text(
-                        text = "قائد ومؤسس الفريق 👑",
+                        text = team.leaderName,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 15.5.sp
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = "قائد الفريق",
                         style = MaterialTheme.typography.bodySmall.copy(
-                            color = DeepTeal,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 12.5.sp
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 12.sp
                         )
                     )
                 }
             }
 
-            // خط فاصل خفيف
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(SoftGray.copy(alpha = 0.4f))
-            )
-
-            // الإشراف الأكاديمي (الدكتور والمعيدة)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Surface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 62.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = WarmCream.copy(alpha = 0.8f),
-                    border = BorderStroke(0.8.dp, SoftGray.copy(alpha = 0.6f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.SupervisorAccount,
-                            contentDescription = null,
-                            tint = DeepTeal,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                text = "المشرف الأكاديمي",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = Color.Gray,
-                                    fontSize = 10.5.sp
-                                )
-                            )
-                            Text(
-                                text = team.supervisorDoctor,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 12.sp
-                                ),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
+                MentorMiniCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Outlined.SupervisorAccount,
+                    role = "المشرف الأكاديمي",
+                    name = team.supervisorDoctor
+                )
+                MentorMiniCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Outlined.Person,
+                    role = "المعيدة المشرفة",
+                    name = team.teachingAssistant
+                )
+            }
+        }
+    }
+}
 
-                Surface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 62.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = WarmCream.copy(alpha = 0.8f),
-                    border = BorderStroke(0.8.dp, SoftGray.copy(alpha = 0.6f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Person,
-                            contentDescription = null,
-                            tint = DeepTeal,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                text = "المعيدة المشرفة",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = Color.Gray,
-                                    fontSize = 10.5.sp
-                                )
-                            )
-                            Text(
-                                text = team.teachingAssistant,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 12.sp
-                                ),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
+@Composable
+private fun MentorMiniCard(
+    modifier: Modifier = Modifier,
+    icon: ImageVector,
+    role: String,
+    name: String
+) {
+    Surface(
+        modifier = modifier.heightIn(min = 56.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+    ) {
+        Row(
+            modifier = Modifier.padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
+                Text(
+                    text = role,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        fontSize = 10.5.sp
+                    )
+                )
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 12.sp
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
@@ -564,43 +409,34 @@ private fun TeamLeaderAndMentorsCard(
 private fun ProjectDescriptionCard(
     description: String
 ) {
-    Card(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.6f))
+        shape = RoundedCornerShape(18.dp),
+        color = Color.White,
+        shadowElevation = 1.dp,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+                .padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Outlined.Info,
-                    contentDescription = null,
-                    tint = DeepTeal,
-                    modifier = Modifier.size(18.dp)
+            Text(
+                text = "عن فكرة المشروع",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 15.5.sp
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "عن فكرة المشروع وأهدافه",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = DeepNavy,
-                        fontSize = 16.sp
-                    )
-                )
-            }
+            )
 
             Text(
                 text = description,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    color = Color.DarkGray,
-                    fontSize = 14.5.sp,
-                    lineHeight = 23.sp
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                    fontSize = 14.sp,
+                    lineHeight = 22.sp
                 )
             )
         }
@@ -608,234 +444,100 @@ private fun ProjectDescriptionCard(
 }
 
 // =============================================================================
-// بطاقة إحصائيات المقاعد الشاملة (SeatAvailabilityMetricsCard)
+// بطاقة ملخص المقاعد وتشكيل الفريق (SeatAvailabilitySummaryCard)
 // =============================================================================
 @Composable
-private fun SeatAvailabilityMetricsCard(
+private fun SeatAvailabilitySummaryCard(
     totalSeats: Int,
     bookedCount: Int,
     availableCount: Int,
     pendingCount: Int,
-    completionPercent: Int
+    completionPercent: Int,
+    seats: List<Seat>
 ) {
-    Card(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.6f))
+        shape = RoundedCornerShape(18.dp),
+        color = Color.White,
+        shadowElevation = 1.dp,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // الهيدر مع نسبة الاكتمال الكلية
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
-                    Text(
-                        text = "حالة إشغال المقاعد",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            color = DeepNavy,
-                            fontSize = 17.sp
-                        )
+                Text(
+                    text = "إشغال المقاعد",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 16.sp
                     )
-                    Text(
-                        text = "تم اعتماد $bookedCount من أصل $totalSeats مقاعد رسمياً",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = Color.Gray,
-                            fontSize = 12.sp
-                        )
-                    )
-                }
+                )
 
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = LightAqua.copy(alpha = 0.6f),
-                    border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.3f))
-                ) {
-                    Text(
-                        text = "$completionPercent% اكتمال",
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = DeepTeal,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.5.sp
-                        )
+                Text(
+                    text = "$completionPercent% ($bookedCount/$totalSeats)",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.5.sp
                     )
-                }
+                )
             }
 
-            // شريط التقدم المرئي
             LinearProgressIndicator(
                 progress = { completionPercent / 100f },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(7.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = DeepTeal,
-                trackColor = SoftBeige
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp)),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
             )
 
-            // شبكة المقاييس 2x2
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    SeatMetricBox(
-                        modifier = Modifier.weight(1f),
-                        label = "مقاعد شاغرة",
-                        value = "$availableCount متاح",
-                        icon = Icons.Outlined.AirlineSeatReclineNormal,
-                        iconTint = Turquoise,
-                        bgColor = SeatAvailableBg
-                    )
-                    SeatMetricBox(
-                        modifier = Modifier.weight(1f),
-                        label = "أعضاء معتمدين",
-                        value = "$bookedCount طلاب",
-                        icon = Icons.Default.Verified,
-                        iconTint = DeepNavy,
-                        bgColor = SeatBookedBg
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    SeatMetricBox(
-                        modifier = Modifier.weight(1f),
-                        label = "قيد المراجعة",
-                        value = "$pendingCount طلبات",
-                        icon = Icons.Outlined.HourglassTop,
-                        iconTint = SeatPendingAmber,
-                        bgColor = SeatPendingBg
-                    )
-                    SeatMetricBox(
-                        modifier = Modifier.weight(1f),
-                        label = "إجمالي السعة",
-                        value = "$totalSeats مقاعد",
-                        icon = Icons.Outlined.Groups,
-                        iconTint = DeepTeal,
-                        bgColor = SoftBeige
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SeatMetricBox(
-    modifier: Modifier = Modifier,
-    label: String,
-    value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    iconTint: Color,
-    bgColor: Color
-) {
-    Surface(
-        modifier = modifier.heightIn(min = 66.dp),
-        shape = RoundedCornerShape(14.dp),
-        color = bgColor.copy(alpha = 0.7f),
-        border = BorderStroke(0.8.dp, SoftGray.copy(alpha = 0.5f))
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = DeepNavy,
-                        fontSize = 13.5.sp
-                    )
-                )
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = Color.Gray,
-                        fontSize = 11.sp
-                    )
-                )
-            }
-        }
-    }
-}
-
-// =============================================================================
-// قسم المعاينة السريعة للمقاعد (SeatMapPreviewSection)
-// =============================================================================
-@Composable
-private fun SeatMapPreviewSection(
-    seats: List<Seat>
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.6f))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            // الهيدر ودليل الألوان
+            // إحصائيات مختصرة في صف متوازن
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "تشكيل المقاعد والتخصصات",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        color = DeepNavy,
-                        fontSize = 17.sp
-                    )
+                SeatStatPill(
+                    modifier = Modifier.weight(1f),
+                    label = "متاح",
+                    value = "$availableCount",
+                    tintColor = MaterialTheme.colorScheme.primary
                 )
-
-                // مفتاح الألوان المصغر
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    MiniLegend(label = "متاح", color = Turquoise)
-                    MiniLegend(label = "معتمد", color = DeepNavy)
-                    MiniLegend(label = "انتظار", color = SeatPendingAmber)
-                }
+                SeatStatPill(
+                    modifier = Modifier.weight(1f),
+                    label = "معتمد",
+                    value = "$bookedCount",
+                    tintColor = MaterialTheme.colorScheme.onSurface
+                )
+                SeatStatPill(
+                    modifier = Modifier.weight(1f),
+                    label = "انتظار",
+                    value = "$pendingCount",
+                    tintColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
-            // قائمة المقاعد كبطاقات تذاكر مصغرة
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+            )
+
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 seats.forEach { seat ->
-                    MiniSeatTicket(seat = seat)
+                    MiniSeatRow(seat = seat)
                 }
             }
         }
@@ -843,116 +545,107 @@ private fun SeatMapPreviewSection(
 }
 
 @Composable
-private fun MiniLegend(label: String, color: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .background(color, CircleShape)
-        )
-        Spacer(modifier = Modifier.width(3.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 10.sp,
-                color = Color.Gray
+private fun SeatStatPill(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String,
+    tintColor: Color
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.06f)
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = tintColor,
+                    fontSize = 15.sp
+                )
             )
-        )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    fontSize = 11.sp
+                )
+            )
+        }
     }
 }
 
 @Composable
-private fun MiniSeatTicket(
+private fun MiniSeatRow(
     seat: Seat
 ) {
-    val statusBg = when (seat.status) {
-        SeatStatus.BOOKED -> SeatBookedBg
-        SeatStatus.AVAILABLE -> SeatAvailableBg
-        SeatStatus.PENDING -> SeatPendingBg
-        SeatStatus.LOCKED -> SoftBeige
-    }
-
-    val statusColor = when (seat.status) {
-        SeatStatus.BOOKED -> DeepNavy
-        SeatStatus.AVAILABLE -> DeepTeal
-        SeatStatus.PENDING -> SeatPendingAmber
-        SeatStatus.LOCKED -> Color.Gray
-    }
-
-    val statusLabel = when (seat.status) {
+    val statusText = when (seat.status) {
         SeatStatus.BOOKED -> if (seat.assignedStudentName != null) "معتمد: ${seat.assignedStudentName?.substringBefore(" ")}" else "معتمد"
-        SeatStatus.AVAILABLE -> "شاغر للحجز 🟢"
-        SeatStatus.PENDING -> "قيد المراجعة ⏳"
-        SeatStatus.LOCKED -> "مقفل 🔒"
+        SeatStatus.AVAILABLE -> "متاح للحجز"
+        SeatStatus.PENDING -> "قيد المراجعة"
+        SeatStatus.LOCKED -> "مقفل"
+    }
+
+    val badgeBg = when (seat.status) {
+        SeatStatus.AVAILABLE -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        SeatStatus.PENDING -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.25f)
+        else -> MaterialTheme.colorScheme.secondaryContainer
+    }
+
+    val badgeText = when (seat.status) {
+        SeatStatus.AVAILABLE -> MaterialTheme.colorScheme.primary
+        SeatStatus.PENDING -> MaterialTheme.colorScheme.onSurface
+        else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
     }
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 52.dp),
+            .heightIn(min = 48.dp),
         shape = RoundedCornerShape(12.dp),
-        color = statusBg.copy(alpha = 0.5f),
-        border = BorderStroke(0.8.dp, SoftGray.copy(alpha = 0.6f))
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.04f)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 9.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            Text(
+                text = seat.roleRequired,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 13.5.sp
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = badgeBg
             ) {
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = statusBg,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = String.format("%02d", seat.seatNumber),
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.ExtraBold,
-                                color = statusColor,
-                                fontSize = 12.sp
-                            )
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = seat.roleRequired,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = DeepNavy,
-                                fontSize = 13.5.sp
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        if (seat.isLeader) {
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "👑",
-                                fontSize = 12.sp
-                            )
-                        }
-                    }
-                    Text(
-                        text = statusLabel,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = statusColor,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 11.5.sp
-                        )
-                    )
-                }
+                Text(
+                    text = statusText,
+                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = badgeText,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 11.sp
+                    ),
+                    maxLines = 1,
+                    softWrap = false
+                )
             }
         }
     }
@@ -963,54 +656,62 @@ private fun MiniSeatTicket(
 // =============================================================================
 @Composable
 private fun TeamOverviewBottomCta(
-    availableSeatsCount: Int,
     isLocked: Boolean,
     onOpenSeatMapClick: () -> Unit
 ) {
     Surface(
         color = Color.White,
-        shadowElevation = 16.dp,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
+        shadowElevation = 2.dp,
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 14.dp)
+                .navigationBarsPadding()
         ) {
-            Button(
-                onClick = onOpenSeatMapClick,
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            )
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = DeepTeal),
-                shape = RoundedCornerShape(28.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 8.dp)
+                    .padding(horizontal = 20.dp, vertical = 14.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.AirlineSeatReclineNormal,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(22.dp)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = if (isLocked) "استعراض خريطة المقاعد المعتمدة" else "افتح خريطة المقاعد واحجز دورك 💺",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        fontSize = 16.sp
+                Button(
+                    onClick = onOpenSeatMapClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp, pressedElevation = 3.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.AirlineSeatReclineNormal,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
                     )
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isLocked) "استعراض خريطة المقاعد" else "افتح خريطة المقاعد واحجز مقعدك",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            fontSize = 14.5.sp
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }
