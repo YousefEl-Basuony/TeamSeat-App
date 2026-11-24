@@ -110,10 +110,7 @@ fun EditTeamSeatsScreen(
     val editableSeats = remember { mutableStateListOf(*seats.toTypedArray()) }
     var showSavedMessage by remember { mutableStateOf(false) }
     var selectedFilter by remember { mutableStateOf("الكل") }
-
-
-
-     val totalCount = editableSeats.size
+    val totalCount = editableSeats.size
     val bookedCount = editableSeats.count { it.status == SeatStatus.BOOKED }
     val availableCount = editableSeats.count { it.status == SeatStatus.AVAILABLE }
     val pendingCount = editableSeats.count { it.status == SeatStatus.PENDING }
