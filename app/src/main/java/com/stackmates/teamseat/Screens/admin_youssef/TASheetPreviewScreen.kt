@@ -40,6 +40,9 @@ import com.stackmates.teamseat.core.model.SeatStatus
 import com.stackmates.teamseat.core.model.Team
 import com.stackmates.teamseat.core.theme.*
 import com.stackmates.teamseat.core.utils.PdfExporter
+import com.stackmates.teamseat.ui.components.StaggeredAnimatedItem
+import com.stackmates.teamseat.ui.components.bounceClick
+import com.stackmates.teamseat.ui.components.rememberAnimatedProgress
 import java.io.File
 
 /**
@@ -138,6 +141,11 @@ fun TASheetPreviewScreen(
     val totalCount = rosterMembers.size
     val bookedCount = rosterMembers.count { it.isApproved }
     val isComplete = bookedCount == totalCount
+    val animatedProgress by rememberAnimatedProgress(
+        targetProgress = if (totalCount > 0) bookedCount.toFloat() / totalCount else 0f,
+        durationMillis = 800
+    )
+    val animatedPercent = (animatedProgress * 100).toInt()
 
     Scaffold(
         containerColor = WarmCream,
@@ -236,26 +244,26 @@ fun TASheetPreviewScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 1. زر تصدير كشف PDF بألوان التطبيق المعتمدة (DeepNavy)
-                    Button(
-                        onClick = {
-                            isExporting = true
-                            val result = PdfExporter.exportTeamSheetPdf(context, team, pdfSeats)
-                            isExporting = false
-                            result.onSuccess { file ->
-                                exportedFile = file
-                                showExportSuccessDialog = true
-                                onExportPdfClick()
-                            }.onFailure { e ->
-                                Toast.makeText(context, "فشل تصدير الملف: ${e.message}", Toast.LENGTH_LONG).show()
-                            }
-                        },
-                        enabled = !isExporting,
+                    // 1. زر تصدير كشف PDF بألوان التطبيق المعتمدة (DeepNavy) مع bounceClick
+                    Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = DeepNavy)
+                            .height(52.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(DeepNavy)
+                            .bounceClick(enabled = !isExporting) {
+                                isExporting = true
+                                val result = PdfExporter.exportTeamSheetPdf(context, team, pdfSeats)
+                                isExporting = false
+                                result.onSuccess { file ->
+                                    exportedFile = file
+                                    showExportSuccessDialog = true
+                                    onExportPdfClick()
+                                }.onFailure { e ->
+                                    Toast.makeText(context, "فشل تصدير الملف: ${e.message}", Toast.LENGTH_LONG).show()
+                                }
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
                         if (isExporting) {
                             CircularProgressIndicator(
@@ -287,14 +295,15 @@ fun TASheetPreviewScreen(
                         }
                     }
 
-                    // 2. زر اعتماد وقفل التيم بألوان التطبيق المعتمدة (DeepTeal)
-                    Button(
-                        onClick = onLockTeamClick,
+                    // 2. زر اعتماد وقفل التيم بألوان التطبيق المعتمدة (DeepTeal) مع bounceClick
+                    Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = DeepTeal)
+                            .height(52.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(DeepTeal)
+                            .bounceClick(onClick = onLockTeamClick),
+                        contentAlignment = Alignment.Center
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -447,7 +456,7 @@ fun TASheetPreviewScreen(
                                     fontSize = 12.sp
                                 )
                                 Text(
-                                    text = "$bookedCount من $totalCount مقاعد معتمدة (100%)",
+                                    text = "$bookedCount من $totalCount مقاعد معتمدة ($animatedPercent%)",
                                     fontFamily = CairoFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     color = DeepTeal,
@@ -458,7 +467,7 @@ fun TASheetPreviewScreen(
                             }
 
                             LinearProgressIndicator(
-                                progress = { if (totalCount > 0) bookedCount.toFloat() / totalCount else 0f },
+                                progress = { animatedProgress },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(7.dp)
@@ -562,10 +571,12 @@ fun TASheetPreviewScreen(
 
                         HorizontalDivider(color = SoftGray.copy(alpha = 0.4f), thickness = 0.8.dp)
 
-                        // عرض الأعضاء الـ 6 في بطاقات صفّية منظمة (Compact Clean Rows)
+                        // عرض الأعضاء الـ 6 في بطاقات صفّية منظمة بظهور متتابع (50ms * index)
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            rosterMembers.forEach { member ->
-                                CleanRosterMemberRow(member = member)
+                            rosterMembers.forEachIndexed { index, member ->
+                                StaggeredAnimatedItem(index = index) {
+                                    CleanRosterMemberRow(member = member)
+                                }
                             }
                         }
                     }

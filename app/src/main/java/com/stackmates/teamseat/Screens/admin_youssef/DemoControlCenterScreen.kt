@@ -1,8 +1,15 @@
 package com.stackmates.teamseat.Screens.admin_youssef
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,6 +35,7 @@ import com.stackmates.teamseat.core.model.DemoPersona
 import com.stackmates.teamseat.core.model.User
 import com.stackmates.teamseat.core.theme.CairoFontFamily
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
+import com.stackmates.teamseat.ui.components.bounceClick
 
 // الألوان المحددة بدقة للتصميم فائق البساطة (Ultra-Minimalist Palette)
 private val ScreenBg = Color(0xFFF8FAFC)
@@ -109,6 +117,38 @@ fun DemoControlCenterScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    // شريط الحالة المتحرك عند التبديل بين أحمد وسارة
+                    AnimatedContent(
+                        targetState = isLeaderActive,
+                        transitionSpec = {
+                            (slideInHorizontally(tween(260)) { it / 5 } + fadeIn(tween(260)))
+                                .togetherWith(slideOutHorizontally(tween(200)) { -it / 5 } + fadeOut(tween(200)))
+                        },
+                        label = "activePersonaBannerTransition"
+                    ) { leaderActive ->
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            color = OrangeWarmBg,
+                            border = BorderStroke(1.dp, OrangeWarm.copy(alpha = 0.45f))
+                        ) {
+                            Text(
+                                text = if (leaderActive) {
+                                    "الحساب الشغال دلوقتي: أحمد محمود (قائد التيم)"
+                                } else {
+                                    "الحساب الشغال دلوقتي: سارة علي (عضو / متقدم)"
+                                },
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary,
+                                fontSize = 13.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
+
                     // 1. كارت أحمد محمود (قائد الفريق)
                     AccountSwitchCard(
                         name = "أحمد محمود",
@@ -119,7 +159,7 @@ fun DemoControlCenterScreen(
                             if (!isLeaderActive) {
                                 selectedPersona = DemoPersona.AHMED_LEADER
                                 onTogglePersonaClick()
-                                Toast.makeText(context, "تم التبديل إلى حساب قائد الفريق", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "تم التبديل لحساب قائد التيم", Toast.LENGTH_SHORT).show()
                             }
                         }
                     )
@@ -134,102 +174,127 @@ fun DemoControlCenterScreen(
                             if (isLeaderActive) {
                                 selectedPersona = DemoPersona.SARA_STUDENT
                                 onTogglePersonaClick()
-                                Toast.makeText(context, "تم التبديل إلى حساب الطالبة (سارة)", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "تم التبديل لحساب سارة", Toast.LENGTH_SHORT).show()
                             }
                         }
                     )
                 }
 
                 // 3. الزر السفلي البسيط: إعادة ضبط التجربة
-                OutlinedButton(
-                    onClick = { showResetDialog = true },
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp),
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .bounceClick { showResetDialog = true },
                     shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, BorderInactive),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = CardWhite,
-                        contentColor = TextSecondary
-                    )
+                    color = CardWhite,
+                    border = BorderStroke(1.dp, BorderInactive)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Refresh,
-                            contentDescription = null,
-                            tint = TextSecondary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = "إعادة ضبط التجربة",
-                            fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            color = TextSecondary,
-                            maxLines = 1,
-                            softWrap = false
-                        )
+                    Box(contentAlignment = Alignment.Center) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Refresh,
+                                contentDescription = null,
+                                tint = TextSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = "إعادة ضبط التجربة",
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = TextSecondary,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
                     }
                 }
             }
         }
 
-        // نافذة تأكيد إعادة ضبط التجربة
+        // ModalBottomSheet لتأكيد إعادة ضبط التجربة
         if (showResetDialog) {
-            AlertDialog(
+            ModalBottomSheet(
                 onDismissRequest = { showResetDialog = false },
                 containerColor = CardWhite,
-                shape = RoundedCornerShape(20.dp),
-                title = {
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
                     Text(
                         text = "إعادة ضبط التجربة",
                         fontFamily = CairoFontFamily,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         color = TextPrimary,
                         fontSize = 17.sp
                     )
-                },
-                text = {
                     Text(
-                        text = "هل تريد استرجاع الحالة الافتراضية للمقاعد والطلبات؟",
+                        text = "عايز ترجّع المقاعد والطلبات لحالتها الأساسية من الأول؟",
                         fontFamily = CairoFontFamily,
                         fontWeight = FontWeight.Normal,
                         color = TextSecondary,
                         fontSize = 14.sp
                     )
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            showResetDialog = false
-                            onResetMockDataClick()
-                            Toast.makeText(context, "تمت إعادة ضبط التجربة بنجاح", Toast.LENGTH_SHORT).show()
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = TextPrimary),
-                        shape = RoundedCornerShape(10.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(
-                            text = "تأكيد",
-                            fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            color = CardWhite
-                        )
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(46.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(TextPrimary)
+                                .bounceClick {
+                                    showResetDialog = false
+                                    onResetMockDataClick()
+                                    Toast.makeText(context, "تمام! التجربة رجعت زي الأول", Toast.LENGTH_SHORT).show()
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "تأكيد الضبط",
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = CardWhite,
+                                fontSize = 14.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(46.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(ScreenBg)
+                                .bounceClick { showResetDialog = false },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "إلغاء",
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextSecondary,
+                                fontSize = 14.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
                     }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showResetDialog = false }) {
-                        Text(
-                            text = "إلغاء",
-                            fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            color = TextSecondary
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
-            )
+            }
         }
     }
 }
@@ -250,7 +315,7 @@ private fun AccountSwitchCard(
             .fillMaxWidth()
             .height(88.dp)
             .clip(RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick),
+            .bounceClick(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         color = if (isActive) OrangeWarmBg else CardWhite,
         border = BorderStroke(
@@ -313,52 +378,61 @@ private fun AccountSwitchCard(
                 }
             }
 
-            // الجانب الأيسر: شارة نشط أو زر تبديل
-            if (isActive) {
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = OrangeWarm,
-                    modifier = Modifier.wrapContentWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+            // الجانب الأيسر: شارة نشط أو زر تبديل بحركة ناعمة
+            AnimatedContent(
+                targetState = isActive,
+                transitionSpec = {
+                    (slideInHorizontally(tween(220)) { -it / 4 } + fadeIn(tween(220)))
+                        .togetherWith(slideOutHorizontally(tween(180)) { it / 4 } + fadeOut(tween(180)))
+                },
+                label = "personaBadgeTransition"
+            ) { active ->
+                if (active) {
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = OrangeWarm,
+                        modifier = Modifier.wrapContentWidth()
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(14.dp)
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = "نشط",
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
+                } else {
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = ScreenBg,
+                        border = BorderStroke(1.dp, BorderInactive),
+                        modifier = Modifier.wrapContentWidth()
+                    ) {
                         Text(
-                            text = "نشط",
+                            text = "تبديل",
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                             fontFamily = CairoFontFamily,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = TextPrimary,
                             fontSize = 12.sp,
                             maxLines = 1,
                             softWrap = false
                         )
                     }
-                }
-            } else {
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = ScreenBg,
-                    border = BorderStroke(1.dp, BorderInactive),
-                    modifier = Modifier.wrapContentWidth()
-                ) {
-                    Text(
-                        text = "تبديل",
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                        fontFamily = CairoFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary,
-                        fontSize = 12.sp,
-                        maxLines = 1,
-                        softWrap = false
-                    )
                 }
             }
         }
