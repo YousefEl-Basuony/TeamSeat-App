@@ -36,7 +36,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -44,15 +43,32 @@ import androidx.compose.ui.unit.sp
 import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.NotificationItem
 import com.stackmates.teamseat.core.model.NotificationType
-import com.stackmates.teamseat.core.theme.*
+import com.stackmates.teamseat.core.theme.CairoFontFamily
+import com.stackmates.teamseat.core.theme.TeamSeatTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+// =============================================================================
+// 🎨 باليت الألوان المحددة بدقة طبقاً للمواصفات الرسمية المطلوبة:
+// (خلفية بيج كريمي ناعم #FBF7F2، كروت بيضاء #FFFFFF،
+// أزرار وشارات أخضر تركواز داكن #136F78، لمسات دافئة ناعمة #F5E6D3)
+// =============================================================================
+private val ScreenBg = Color(0xFFFBF7F2)       // بيج كريمي ناعم
+private val CardWhite = Color(0xFFFFFFFF)      // كروت بيضاء ناصعة
+private val DeepTealColor = Color(0xFF136F78)  // أخضر تركواز داكن
+private val SoftWarmBeige = Color(0xFFF5E6D3)  // لمسات دافئة ناعمة
+private val DarkTextColor = Color(0xFF0F292E)  // النص الأساسي
+private val BorderMuted = Color(0xFFE5DFD7)    // حدود ناعمة ومريحة
 
 /**
  * ⚡ المسؤول عن الشاشة: حسام (Hossam) — [HOSSAM-4]
  * شاشة مركز الإشعارات الفورية (Notifications Screen)
- * معاد تصميمها بالكامل وفق هوية ألوان TeamSeat الرسمية (Color.kt)
- * مع خط Cairo ونظام الكروت النظيفة المريحة للعين بدون أي تداخل أو تدرجات باهتة.
+ * تم ضبط المقاسات، والمسافات، والمحاذاة بدقة متناهية:
+ * 1. شريط فلتر أفقي بـ LazyRow قابل للتمرير وبدون أي إيموجي مزدحم وبـ wrapContentWidth.
+ * 2. إلغاء الإطار المزدوج تماماً واعتماد كارت موحد بـ padding(16.dp).
+ * 3. رأس كارت منظم: أيقونة (42.dp) على اليمين، عنوان (15.sp) بدون تكرار إيموجي، وشارة (26.dp) على اليسار.
+ * 4. محاذاة نص الإشعار والوقت بمسافة (54.dp) من يمين الكارت ليبدأ أسفل العنوان مباشرة.
+ * 5. إيقاع بصري موحد: هامش جانبي 16.dp، ومسافة بين الكروت 12.dp.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,10 +85,10 @@ fun NotificationsScreen(
     val scope = rememberCoroutineScope()
 
     val filteredList = when (selectedFilter) {
-        "قبول 🎉" -> notificationList.filter { it.type == NotificationType.ACCEPTED }
-        "طلبات 📩" -> notificationList.filter { it.type == NotificationType.NEW_REQUEST }
-        "اعتماد 🔒" -> notificationList.filter { it.type == NotificationType.TEAM_LOCKED }
-        "مرفوض ❌" -> notificationList.filter { it.type == NotificationType.REJECTED }
+        "قبول" -> notificationList.filter { it.type == NotificationType.ACCEPTED }
+        "طلبات" -> notificationList.filter { it.type == NotificationType.NEW_REQUEST }
+        "اعتماد" -> notificationList.filter { it.type == NotificationType.TEAM_LOCKED }
+        "مرفوض" -> notificationList.filter { it.type == NotificationType.REJECTED }
         else -> notificationList
     }
 
@@ -80,7 +96,7 @@ fun NotificationsScreen(
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Scaffold(
-            containerColor = WarmCream,
+            containerColor = ScreenBg,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
@@ -90,8 +106,8 @@ fun NotificationsScreen(
                                 text = "مركز الإشعارات",
                                 fontFamily = CairoFontFamily,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = DeepNavy,
-                                fontSize = 19.sp,
+                                color = DarkTextColor,
+                                fontSize = 18.5.sp,
                                 maxLines = 1,
                                 softWrap = false
                             )
@@ -99,8 +115,8 @@ fun NotificationsScreen(
                                 text = "التنبيهات الفورية وحالة طلباتك",
                                 fontFamily = CairoFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                color = DeepTeal,
-                                fontSize = 12.5.sp,
+                                color = DeepTealColor,
+                                fontSize = 12.sp,
                                 maxLines = 1,
                                 softWrap = false
                             )
@@ -110,17 +126,17 @@ fun NotificationsScreen(
                         Surface(
                             modifier = Modifier
                                 .padding(start = 12.dp, end = 6.dp)
-                                .size(42.dp),
+                                .size(40.dp),
                             shape = CircleShape,
-                            color = Color.White,
-                            shadowElevation = 2.dp,
-                            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.6f))
+                            color = CardWhite,
+                            shadowElevation = 1.5.dp,
+                            border = BorderStroke(1.dp, BorderMuted)
                         ) {
                             IconButton(onClick = onBackClick) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                     contentDescription = "رجوع",
-                                    tint = DeepNavy,
+                                    tint = DarkTextColor,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -132,6 +148,7 @@ fun NotificationsScreen(
                                 modifier = Modifier
                                     .padding(end = 12.dp)
                                     .height(36.dp)
+                                    .clip(RoundedCornerShape(18.dp))
                                     .clickable {
                                         for (i in notificationList.indices) {
                                             notificationList[i] = notificationList[i].copy(isRead = true)
@@ -144,26 +161,27 @@ fun NotificationsScreen(
                                         }
                                     },
                                 shape = RoundedCornerShape(18.dp),
-                                color = LightAqua.copy(alpha = 0.5f),
-                                border = BorderStroke(1.dp, Turquoise.copy(alpha = 0.6f))
+                                color = CardWhite,
+                                shadowElevation = 1.dp,
+                                border = BorderStroke(1.dp, DeepTealColor.copy(alpha = 0.4f))
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.DoneAll,
-                                        contentDescription = "قراءة الكل",
-                                        tint = DeepTeal,
+                                        contentDescription = "مقروء",
+                                        tint = DeepTealColor,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
-                                        text = "مقروء",
+                                        text = "مقروء ✓✓",
                                         fontFamily = CairoFontFamily,
                                         fontWeight = FontWeight.Bold,
-                                        color = DeepTeal,
-                                        fontSize = 12.sp,
+                                        color = DeepTealColor,
+                                        fontSize = 11.5.sp,
                                         maxLines = 1,
                                         softWrap = false
                                     )
@@ -171,7 +189,7 @@ fun NotificationsScreen(
                             }
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = WarmCream)
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = ScreenBg)
                 )
             }
         ) { innerPadding ->
@@ -179,12 +197,12 @@ fun NotificationsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
 
                 // =========================================================================
-                // 0. بانر التحديد كمقروء (Success Banner)
+                // 0. بانر التحديد كمقروء (Success Feedback Banner)
                 // =========================================================================
                 item {
                     AnimatedVisibility(
@@ -195,8 +213,8 @@ fun NotificationsScreen(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(14.dp),
-                            color = LightAqua.copy(alpha = 0.35f),
-                            border = BorderStroke(1.dp, Turquoise.copy(alpha = 0.6f))
+                            color = SoftWarmBeige.copy(alpha = 0.6f),
+                            border = BorderStroke(1.dp, DeepTealColor.copy(alpha = 0.4f))
                         ) {
                             Row(
                                 modifier = Modifier
@@ -207,24 +225,24 @@ fun NotificationsScreen(
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(28.dp)
+                                        .size(26.dp)
                                         .clip(CircleShape)
-                                        .background(DeepTeal),
+                                        .background(DeepTealColor),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Check,
                                         contentDescription = null,
                                         tint = Color.White,
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(15.dp)
                                     )
                                 }
                                 Text(
                                     text = "تم تعليم كافة التنبيهات كمقروءة بنجاح ✓",
                                     fontFamily = CairoFontFamily,
                                     fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 13.sp
+                                    color = DarkTextColor,
+                                    fontSize = 12.5.sp
                                 )
                             }
                         }
@@ -232,15 +250,15 @@ fun NotificationsScreen(
                 }
 
                 // =========================================================================
-                // 1. بطاقة ملخص الإشعارات وفلاتر التصفية
+                // 1. بطاقة الملخص وفلاتر التصفية الخمسة
                 // =========================================================================
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
+                        colors = CardDefaults.cardColors(containerColor = CardWhite),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
+                        border = BorderStroke(1.dp, BorderMuted)
                     ) {
                         Column(
                             modifier = Modifier
@@ -258,17 +276,17 @@ fun NotificationsScreen(
                                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     Surface(
-                                        modifier = Modifier.size(42.dp),
+                                        modifier = Modifier.size(40.dp),
                                         shape = CircleShape,
-                                        color = LightAqua.copy(alpha = 0.45f),
-                                        border = BorderStroke(1.dp, Turquoise.copy(alpha = 0.4f))
+                                        color = SoftWarmBeige.copy(alpha = 0.65f),
+                                        border = BorderStroke(1.dp, BorderMuted)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
                                             Icon(
                                                 imageVector = Icons.Default.NotificationsActive,
                                                 contentDescription = null,
-                                                tint = DeepTeal,
-                                                modifier = Modifier.size(22.dp)
+                                                tint = DeepTealColor,
+                                                modifier = Modifier.size(21.dp)
                                             )
                                         }
                                     }
@@ -278,8 +296,8 @@ fun NotificationsScreen(
                                             text = "جميع التنبيهات",
                                             fontFamily = CairoFontFamily,
                                             fontWeight = FontWeight.ExtraBold,
-                                            color = DeepNavy,
-                                            fontSize = 16.5.sp,
+                                            color = DarkTextColor,
+                                            fontSize = 16.sp,
                                             maxLines = 1,
                                             softWrap = false
                                         )
@@ -287,7 +305,7 @@ fun NotificationsScreen(
                                             text = if (unreadCount > 0) "لديك $unreadCount تنبيهات غير مقروءة" else "جميع الإشعارات مقروءة",
                                             fontFamily = CairoFontFamily,
                                             fontWeight = FontWeight.Medium,
-                                            color = DeepNavy.copy(alpha = 0.65f),
+                                            color = DarkTextColor.copy(alpha = 0.65f),
                                             fontSize = 12.sp,
                                             maxLines = 1,
                                             softWrap = false
@@ -298,15 +316,15 @@ fun NotificationsScreen(
                                 if (unreadCount > 0) {
                                     Surface(
                                         shape = RoundedCornerShape(12.dp),
-                                        color = Peach.copy(alpha = 0.5f),
-                                        border = BorderStroke(1.dp, Peach)
+                                        color = SoftWarmBeige,
+                                        border = BorderStroke(1.dp, BorderMuted)
                                     ) {
                                         Text(
                                             text = "$unreadCount جديد",
                                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                             fontFamily = CairoFontFamily,
                                             fontWeight = FontWeight.Bold,
-                                            color = DeepNavy,
+                                            color = DarkTextColor,
                                             fontSize = 11.5.sp,
                                             maxLines = 1,
                                             softWrap = false
@@ -315,36 +333,39 @@ fun NotificationsScreen(
                                 }
                             }
 
-                            HorizontalDivider(color = SoftGray.copy(alpha = 0.4f), thickness = 0.8.dp)
+                            HorizontalDivider(color = BorderMuted.copy(alpha = 0.7f), thickness = 0.8.dp)
 
-                            // أشرطة الفلترة السريعة
-                            val filterOptions = listOf("الكل", "قبول 🎉", "طلبات 📩", "اعتماد 🔒", "مرفوض ❌")
+                            // شريط الفلتر الأفقي بخمس شرائح واضحة بدون إيموجي وبدون أي انقصاص
+                            val filterOptions = listOf("الكل", "قبول", "طلبات", "اعتماد", "مرفوض")
                             LazyRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentPadding = PaddingValues(horizontal = 4.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 items(filterOptions) { filter ->
                                     val isSelected = selectedFilter == filter
                                     Surface(
                                         modifier = Modifier
-                                            .height(34.dp)
+                                            .height(36.dp)
+                                            .wrapContentWidth()
                                             .clip(RoundedCornerShape(12.dp))
                                             .clickable { selectedFilter = filter },
                                         shape = RoundedCornerShape(12.dp),
-                                        color = if (isSelected) DeepTeal else SoftBeige.copy(alpha = 0.5f),
+                                        color = if (isSelected) DeepTealColor else ScreenBg,
                                         border = BorderStroke(
                                             width = 1.dp,
-                                            color = if (isSelected) DeepTeal else SoftGray.copy(alpha = 0.6f)
+                                            color = if (isSelected) DeepTealColor else BorderMuted
                                         )
                                     ) {
                                         Box(
-                                            modifier = Modifier.padding(horizontal = 12.dp),
+                                            modifier = Modifier.padding(horizontal = 14.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
                                                 text = filter,
                                                 fontFamily = CairoFontFamily,
                                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                                color = if (isSelected) Color.White else DeepNavy,
+                                                color = if (isSelected) Color.White else DarkTextColor,
                                                 fontSize = 12.5.sp,
                                                 maxLines = 1,
                                                 softWrap = false
@@ -366,29 +387,29 @@ fun NotificationsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 16.dp),
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
+                            shape = RoundedCornerShape(18.dp),
+                            colors = CardDefaults.cardColors(containerColor = CardWhite),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
+                            border = BorderStroke(1.dp, BorderMuted)
                         ) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(32.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
                                 Surface(
-                                    modifier = Modifier.size(64.dp),
+                                    modifier = Modifier.size(60.dp),
                                     shape = CircleShape,
-                                    color = LightAqua.copy(alpha = 0.4f)
+                                    color = SoftWarmBeige.copy(alpha = 0.5f)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             imageVector = Icons.Default.NotificationsNone,
                                             contentDescription = null,
-                                            tint = DeepTeal,
-                                            modifier = Modifier.size(32.dp)
+                                            tint = DeepTealColor,
+                                            modifier = Modifier.size(30.dp)
                                         )
                                     }
                                 }
@@ -397,62 +418,66 @@ fun NotificationsScreen(
                                     text = "لا توجد إشعارات في هذا التصنيف",
                                     fontFamily = CairoFontFamily,
                                     fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 16.5.sp,
+                                    color = DarkTextColor,
+                                    fontSize = 16.sp,
                                     textAlign = TextAlign.Center
                                 )
 
                                 Text(
                                     text = "جميع التنبيهات الفورية الخاصة بطلبات الحجز والاعتمادات تظهر هنا فور وصولها.",
                                     fontFamily = CairoFontFamily,
-                                    color = DeepNavy.copy(alpha = 0.7f),
-                                    fontSize = 13.sp,
+                                    color = DarkTextColor.copy(alpha = 0.65f),
+                                    fontSize = 12.5.sp,
                                     textAlign = TextAlign.Center,
-                                    lineHeight = 20.sp
+                                    lineHeight = 19.sp
                                 )
                             }
                         }
                     }
                 } else {
                     // =========================================================================
-                    // 3. بطاقات الإشعارات النظيفة الفاخرة (Clean White Cards)
+                    // 3. بطاقات الإشعارات المنظمة (بدون أي إطار مزدوج وبمحاذاة 54.dp متناسقة)
                     // =========================================================================
                     items(
                         items = filteredList,
                         key = { it.id }
                     ) { item ->
-                        val (icon, iconBg, iconTint, tagText, tagBg, tagTextColor) = when (item.type) {
+                        val visual = when (item.type) {
                             NotificationType.ACCEPTED -> NotificationVisual(
                                 icon = Icons.Default.CheckCircle,
-                                iconBg = LightAqua.copy(alpha = 0.45f),
-                                iconTint = DeepTeal,
+                                iconBg = DeepTealColor.copy(alpha = 0.12f),
+                                iconTint = DeepTealColor,
                                 tagText = "تم القبول ✓",
-                                tagBg = LightAqua.copy(alpha = 0.4f),
-                                tagTextColor = DeepTeal
+                                tagBg = DeepTealColor.copy(alpha = 0.1f),
+                                tagBorder = DeepTealColor.copy(alpha = 0.35f),
+                                tagTextColor = DeepTealColor
                             )
                             NotificationType.NEW_REQUEST -> NotificationVisual(
                                 icon = Icons.Default.HourglassTop,
-                                iconBg = Peach.copy(alpha = 0.45f),
-                                iconTint = DeepNavy,
-                                tagText = "طلب جديد ⏳",
-                                tagBg = Peach.copy(alpha = 0.4f),
-                                tagTextColor = DeepNavy
+                                iconBg = SoftWarmBeige,
+                                iconTint = Color(0xFFD97706),
+                                tagText = "طلب جديد",
+                                tagBg = SoftWarmBeige,
+                                tagBorder = Color(0xFFD97706).copy(alpha = 0.35f),
+                                tagTextColor = Color(0xFFB45309)
                             )
                             NotificationType.TEAM_LOCKED -> NotificationVisual(
                                 icon = Icons.Default.Lock,
-                                iconBg = SoftBeige.copy(alpha = 0.6f),
-                                iconTint = DeepNavy,
-                                tagText = "معتمد ومقفل 🔒",
-                                tagBg = SoftBeige.copy(alpha = 0.7f),
-                                tagTextColor = DeepNavy
+                                iconBg = DeepTealColor.copy(alpha = 0.12f),
+                                iconTint = DeepTealColor,
+                                tagText = "معتمد ومقفل",
+                                tagBg = DeepTealColor.copy(alpha = 0.1f),
+                                tagBorder = DeepTealColor.copy(alpha = 0.35f),
+                                tagTextColor = DeepTealColor
                             )
                             NotificationType.REJECTED -> NotificationVisual(
                                 icon = Icons.Default.ErrorOutline,
-                                iconBg = Color(0xFFFFEBEE),
-                                iconTint = Color(0xFFC62828),
-                                tagText = "طلب مرفوض ✕",
-                                tagBg = Color(0xFFFFEBEE),
-                                tagTextColor = Color(0xFFC62828)
+                                iconBg = Color(0xFFFFECEC),
+                                iconTint = Color(0xFFDC2626),
+                                tagText = "مرفوض ✕",
+                                tagBg = Color(0xFFFFECEC),
+                                tagBorder = Color(0xFFDC2626).copy(alpha = 0.35f),
+                                tagTextColor = Color(0xFFDC2626)
                             )
                         }
 
@@ -468,124 +493,132 @@ fun NotificationsScreen(
                                 },
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = if (!item.isRead) LightAqua.copy(alpha = 0.1f) else Color.White
+                                containerColor = if (!item.isRead) DeepTealColor.copy(alpha = 0.03f) else CardWhite
                             ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                             border = BorderStroke(
                                 width = if (!item.isRead) 1.5.dp else 1.dp,
-                                color = if (!item.isRead) Turquoise.copy(alpha = 0.8f) else SoftGray.copy(alpha = 0.5f)
+                                color = if (!item.isRead) DeepTealColor else BorderMuted
                             )
                         ) {
-                            Row(
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(14.dp),
-                                verticalAlignment = Alignment.Top,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                // أيقونة الإشعار الدائرية
-                                Surface(
-                                    modifier = Modifier.size(44.dp),
-                                    shape = CircleShape,
-                                    color = iconBg,
-                                    border = BorderStroke(1.dp, iconTint.copy(alpha = 0.25f))
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            imageVector = icon,
-                                            contentDescription = null,
-                                            tint = iconTint,
-                                            modifier = Modifier.size(22.dp)
-                                        )
-                                    }
-                                }
-
-                                // تفاصيل الإشعار
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                // 1. رأس كارت الإشعار: أيقونة (42.dp) + عنوان (15.sp) + شارة (26.dp)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                        modifier = Modifier.weight(1f),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
+                                        // الأيقونة الدائرية (42.dp) على أقصى اليمين
+                                        Surface(
+                                            modifier = Modifier.size(42.dp),
+                                            shape = CircleShape,
+                                            color = visual.iconBg,
+                                            border = BorderStroke(1.dp, visual.iconTint.copy(alpha = 0.25f))
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    imageVector = visual.icon,
+                                                    contentDescription = null,
+                                                    tint = visual.iconTint,
+                                                    modifier = Modifier.size(22.dp)
+                                                )
+                                            }
+                                        }
+
+                                        // العنوان الرئيسي بدون أي إيموجي مكرر
                                         Text(
                                             text = item.title,
                                             fontFamily = CairoFontFamily,
                                             fontWeight = FontWeight.Bold,
-                                            color = DeepNavy,
-                                            fontSize = 14.5.sp,
+                                            color = DarkTextColor,
+                                            fontSize = 15.sp,
                                             maxLines = 1,
-                                            softWrap = false,
-                                            modifier = Modifier.weight(1f)
+                                            softWrap = false
                                         )
+                                    }
 
-                                        Spacer(modifier = Modifier.width(6.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
 
-                                        // شارة نوع الإشعار
-                                        Surface(
-                                            shape = RoundedCornerShape(8.dp),
-                                            color = tagBg,
-                                            border = BorderStroke(0.6.dp, tagTextColor.copy(alpha = 0.3f))
+                                    // شارة الحالة على أقصى اليسار بارتفاع 26.dp في سطر واحد
+                                    Surface(
+                                        modifier = Modifier.height(26.dp),
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = visual.tagBg,
+                                        border = BorderStroke(0.8.dp, visual.tagBorder)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.padding(horizontal = 9.dp),
+                                            contentAlignment = Alignment.Center
                                         ) {
                                             Text(
-                                                text = tagText,
-                                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.5.dp),
+                                                text = visual.tagText,
                                                 fontFamily = CairoFontFamily,
                                                 fontWeight = FontWeight.Bold,
-                                                color = tagTextColor,
+                                                color = visual.tagTextColor,
                                                 fontSize = 11.sp,
                                                 maxLines = 1,
                                                 softWrap = false
                                             )
                                         }
                                     }
+                                }
 
-                                    Text(
-                                        text = item.message,
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Normal,
-                                        color = DeepNavy.copy(alpha = 0.8f),
-                                        fontSize = 12.5.sp,
-                                        lineHeight = 18.5.sp
-                                    )
+                                // 2. نص الإشعار بمحاذاة 54.dp ليبدأ أسفل العنوان مباشرة
+                                Text(
+                                    text = item.message,
+                                    modifier = Modifier.padding(start = 54.dp),
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    color = DarkTextColor.copy(alpha = 0.85f),
+                                    fontSize = 13.sp,
+                                    lineHeight = 19.5.sp
+                                )
 
-                                    Spacer(modifier = Modifier.height(4.dp))
-
+                                // 3. أسفل الكارت: الوقت + نقطة الإشعار غير المقروء (8.dp)
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 54.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(5.dp)
                                     ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Schedule,
-                                                contentDescription = null,
-                                                tint = Turquoise,
-                                                modifier = Modifier.size(13.dp)
-                                            )
-                                            Text(
-                                                text = item.timeAgo,
-                                                fontFamily = CairoFontFamily,
-                                                fontWeight = FontWeight.Medium,
-                                                color = DeepNavy.copy(alpha = 0.6f),
-                                                fontSize = 11.sp,
-                                                maxLines = 1,
-                                                softWrap = false
-                                            )
-                                        }
+                                        Icon(
+                                            imageVector = Icons.Default.Schedule,
+                                            contentDescription = null,
+                                            tint = DeepTealColor,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Text(
+                                            text = item.timeAgo,
+                                            fontFamily = CairoFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                            color = DarkTextColor.copy(alpha = 0.6f),
+                                            fontSize = 11.5.sp,
+                                            maxLines = 1,
+                                            softWrap = false
+                                        )
+                                    }
 
-                                        if (!item.isRead) {
-                                            Surface(
-                                                shape = CircleShape,
-                                                color = Turquoise,
-                                                modifier = Modifier.size(7.dp)
-                                            ) {}
-                                        }
+                                    if (!item.isRead) {
+                                        Surface(
+                                            modifier = Modifier.size(8.dp),
+                                            shape = CircleShape,
+                                            color = DeepTealColor
+                                        ) {}
                                     }
                                 }
                             }
@@ -594,7 +627,7 @@ fun NotificationsScreen(
                 }
 
                 // =========================================================================
-                // 4. زر مسح كافة الإشعارات (Clear All Action)
+                // 4. زر مسح جميع الإشعارات بالكامل
                 // =========================================================================
                 if (notificationList.isNotEmpty()) {
                     item {
@@ -603,30 +636,30 @@ fun NotificationsScreen(
                             onClick = { showClearConfirmDialog = true },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(46.dp),
+                                .height(48.dp),
                             shape = RoundedCornerShape(14.dp),
-                            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.6f)),
+                            border = BorderStroke(1.dp, Color(0xFFEF5350).copy(alpha = 0.6f)),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = Color.White,
-                                contentColor = DeepNavy
+                                containerColor = CardWhite,
+                                contentColor = Color(0xFFD32F2F)
                             )
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.DeleteOutline,
                                     contentDescription = null,
-                                    tint = Color(0xFFC62828),
-                                    modifier = Modifier.size(17.dp)
+                                    tint = Color(0xFFD32F2F),
+                                    modifier = Modifier.size(18.dp)
                                 )
                                 Text(
                                     text = "مسح جميع الإشعارات",
                                     fontFamily = CairoFontFamily,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
-                                    color = Color(0xFFC62828),
+                                    fontSize = 13.5.sp,
+                                    color = Color(0xFFD32F2F),
                                     maxLines = 1,
                                     softWrap = false
                                 )
@@ -641,23 +674,23 @@ fun NotificationsScreen(
             if (showClearConfirmDialog) {
                 AlertDialog(
                     onDismissRequest = { showClearConfirmDialog = false },
-                    containerColor = Color.White,
+                    containerColor = CardWhite,
                     shape = RoundedCornerShape(20.dp),
                     title = {
                         Text(
                             text = "مسح جميع الإشعارات",
                             fontFamily = CairoFontFamily,
                             fontWeight = FontWeight.Bold,
-                            color = DeepNavy,
+                            color = DarkTextColor,
                             fontSize = 17.sp
                         )
                     },
                     text = {
                         Text(
-                            text = "هل أنت متأكد من مسح قائمة التنبيهات بالكامل؟ لا يمكن استرجاعها بعد الحذف.",
+                            text = "هل أنت متأكد من مسح قائمة التنبيهات بالكامل؟ لن تتمكن من استرجاعها بعد الحذف.",
                             fontFamily = CairoFontFamily,
                             fontWeight = FontWeight.Normal,
-                            color = DeepNavy.copy(alpha = 0.75f),
+                            color = DarkTextColor.copy(alpha = 0.75f),
                             fontSize = 13.5.sp
                         )
                     },
@@ -670,7 +703,7 @@ fun NotificationsScreen(
                                     snackbarHostState.showSnackbar("تم مسح قائمة الإشعارات بالكامل 🗑️")
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828)),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
                             shape = RoundedCornerShape(10.dp)
                         ) {
                             Text(
@@ -687,7 +720,7 @@ fun NotificationsScreen(
                                 text = "إلغاء",
                                 fontFamily = CairoFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                color = DeepNavy
+                                color = DarkTextColor
                             )
                         }
                     }
@@ -698,7 +731,7 @@ fun NotificationsScreen(
 }
 
 /**
- * بنية بيانات لنمط كل نوع إشعار
+ * بنية بيانات لنمط وشارة كل نوع إشعار
  */
 private data class NotificationVisual(
     val icon: ImageVector,
@@ -706,12 +739,13 @@ private data class NotificationVisual(
     val iconTint: Color,
     val tagText: String,
     val tagBg: Color,
+    val tagBorder: Color,
     val tagTextColor: Color
 )
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-private fun NotificationsScreenEnhancedPreview() {
+private fun NotificationsScreenPrecisionPreview() {
     TeamSeatTheme {
         NotificationsScreen()
     }
