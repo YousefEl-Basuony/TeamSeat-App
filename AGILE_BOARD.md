@@ -31,10 +31,10 @@
 ---
 
 ## ⚡ 4. مهام حسام (Hossam) — `Screens/requests_hossam`
-* [ ] **[HOSSAM-1] `MyProfileScreen.kt` (2 pts):** شاشة ملفي الشخصي وتعديل المهارات ورابط GitHub وحالة الانضمام.
-* [ ] **[HOSSAM-2] `StudentPublicProfileSheet.kt` (2 pts):** بطاقة منبثقة لمعاينة بروفايل أي طالب متقدم قبل قبوله.
-* [ ] **[HOSSAM-3] `MyApplicationsScreen.kt` (3 pts):** متابعة طلباتي المعلقة (حد أقصى 3) مع عداد الـ 48 ساعة وسحب الطلب.
-* [ ] **[HOSSAM-4] `NotificationsScreen.kt` (2 pts):** سجل الإشعارات الفورية الملونة (قبول، رفض، تنبيه).
+* [x] **[HOSSAM-1] `MyProfileScreen.kt` (2 pts):** شاشة ملفي الشخصي وتعديل المهارات ورابط GitHub وحالة الانضمام.
+* [x] **[HOSSAM-2] `StudentPublicProfileSheet.kt` (2 pts):** بطاقة منبثقة لمعاينة بروفايل أي طالب متقدم قبل قبوله.
+* [x] **[HOSSAM-3] `MyApplicationsScreen.kt` (3 pts):** متابعة طلباتي المعلقة (حد أقصى 3) مع عداد الـ 48 ساعة وسحب الطلب.
+* [x] **[HOSSAM-4] `NotificationsScreen.kt` (2 pts):** سجل الإشعارات الفورية الملونة (قبول، رفض، تنبيه).
 
 ---
 
