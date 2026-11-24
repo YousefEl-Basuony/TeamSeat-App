@@ -8,18 +8,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -27,69 +16,43 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MarkEmailRead
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.NotificationItem
 import com.stackmates.teamseat.core.model.NotificationType
-import com.stackmates.teamseat.core.theme.DeepNavy
-import com.stackmates.teamseat.core.theme.DeepTeal
-import com.stackmates.teamseat.core.theme.LightAqua
-import com.stackmates.teamseat.core.theme.Peach
-import com.stackmates.teamseat.core.theme.SeatAvailableBg
-import com.stackmates.teamseat.core.theme.SoftBeige
-import com.stackmates.teamseat.core.theme.SoftGray
-import com.stackmates.teamseat.core.theme.TeamSeatTheme
-import com.stackmates.teamseat.core.theme.Turquoise
-import com.stackmates.teamseat.core.theme.WarmCream
+import com.stackmates.teamseat.core.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
  * ⚡ المسؤول عن الشاشة: حسام (Hossam) — [HOSSAM-4]
  * شاشة مركز الإشعارات الفورية (Notifications Screen)
- * تصميم متسق مع هوية TeamSeat الرسمية وألوانها المتناسقة
+ * معاد تصميمها بالكامل وفق هوية ألوان TeamSeat الرسمية (Color.kt)
+ * مع خط Cairo ونظام الكروت النظيفة المريحة للعين بدون أي تداخل أو تدرجات باهتة.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,6 +63,7 @@ fun NotificationsScreen(
     val notificationList = remember { mutableStateListOf(*notifications.toTypedArray()) }
     var selectedFilter by remember { mutableStateOf("الكل") }
     var showMarkedAllBanner by remember { mutableStateOf(false) }
+    var showClearConfirmDialog by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -114,558 +78,641 @@ fun NotificationsScreen(
 
     val unreadCount = notificationList.count { !it.isRead }
 
-    Scaffold(
-        containerColor = WarmCream,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "مركز الإشعارات",
-                            style = MaterialTheme.typography.titleLarge.copy(
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        Scaffold(
+            containerColor = WarmCream,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text(
+                                text = "مركز الإشعارات",
+                                fontFamily = CairoFontFamily,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = DeepNavy,
-                                fontSize = 21.sp
+                                fontSize = 19.sp,
+                                maxLines = 1,
+                                softWrap = false
                             )
-                        )
-                        Text(
-                            text = "التنبيهات الفورية وحالة طلباتك",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = DeepTeal,
+                            Text(
+                                text = "التنبيهات الفورية وحالة طلباتك",
+                                fontFamily = CairoFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp
-                            )
-                        )
-                    }
-                },
-                navigationIcon = {
-                    Surface(
-                        modifier = Modifier
-                            .padding(start = 12.dp, end = 8.dp)
-                            .size(42.dp),
-                        shape = CircleShape,
-                        color = Color.White,
-                        shadowElevation = 2.dp,
-                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
-                    ) {
-                        IconButton(onClick = onBackClick) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "رجوع",
-                                tint = DeepNavy,
-                                modifier = Modifier.size(20.dp)
+                                color = DeepTeal,
+                                fontSize = 12.5.sp,
+                                maxLines = 1,
+                                softWrap = false
                             )
                         }
-                    }
-                },
-                actions = {
-                    if (unreadCount > 0) {
+                    },
+                    navigationIcon = {
                         Surface(
                             modifier = Modifier
-                                .padding(end = 12.dp)
-                                .height(36.dp)
-                                .clickable {
-                                    for (i in notificationList.indices) {
-                                        notificationList[i] = notificationList[i].copy(isRead = true)
-                                    }
-                                    showMarkedAllBanner = true
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar("تم تعليم جميع الإشعارات كمقروءة ✓")
-                                        delay(3000)
-                                        showMarkedAllBanner = false
-                                    }
-                                },
-                            shape = RoundedCornerShape(18.dp),
-                            color = LightAqua.copy(alpha = 0.5f),
-                            border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.3f))
+                                .padding(start = 12.dp, end = 6.dp)
+                                .size(42.dp),
+                            shape = CircleShape,
+                            color = Color.White,
+                            shadowElevation = 2.dp,
+                            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.6f))
+                        ) {
+                            IconButton(onClick = onBackClick) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "رجوع",
+                                    tint = DeepNavy,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    },
+                    actions = {
+                        if (unreadCount > 0) {
+                            Surface(
+                                modifier = Modifier
+                                    .padding(end = 12.dp)
+                                    .height(36.dp)
+                                    .clickable {
+                                        for (i in notificationList.indices) {
+                                            notificationList[i] = notificationList[i].copy(isRead = true)
+                                        }
+                                        showMarkedAllBanner = true
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("تم تعليم جميع الإشعارات كمقروءة ✓")
+                                            delay(2500)
+                                            showMarkedAllBanner = false
+                                        }
+                                    },
+                                shape = RoundedCornerShape(18.dp),
+                                color = LightAqua.copy(alpha = 0.5f),
+                                border = BorderStroke(1.dp, Turquoise.copy(alpha = 0.6f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.DoneAll,
+                                        contentDescription = "قراءة الكل",
+                                        tint = DeepTeal,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = "مقروء",
+                                        fontFamily = CairoFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = DeepTeal,
+                                        fontSize = 12.sp,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = WarmCream)
+                )
+            }
+        ) { innerPadding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+
+                // =========================================================================
+                // 0. بانر التحديد كمقروء (Success Banner)
+                // =========================================================================
+                item {
+                    AnimatedVisibility(
+                        visible = showMarkedAllBanner,
+                        enter = slideInVertically() + fadeIn(),
+                        exit = slideOutVertically() + fadeOut()
+                    ) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            color = LightAqua.copy(alpha = 0.35f),
+                            border = BorderStroke(1.dp, Turquoise.copy(alpha = 0.6f))
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.MarkEmailRead,
-                                    contentDescription = "قراءة الكل",
-                                    tint = DeepTeal,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "مقروء",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = DeepTeal
-                                    )
-                                )
-                            }
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = WarmCream)
-            )
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-
-            // =========================================================================
-            // 0. إشعار تم التحديد كمقروء (Banner)
-            // =========================================================================
-            item {
-                AnimatedVisibility(
-                    visible = showMarkedAllBanner,
-                    enter = slideInVertically() + fadeIn(),
-                    exit = slideOutVertically() + fadeOut()
-                ) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = SeatAvailableBg),
-                        shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.4f))
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
                                 modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(CircleShape)
-                                    .background(DeepTeal),
-                                contentAlignment = Alignment.Center
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = "تم تعليم كافة التنبيهات كمقروءة بنجاح ✨",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-
-            // =========================================================================
-            // 1. ملخص الإشعارات وأشرطة الفلترة (Summary & Filter Chips Bar)
-            // =========================================================================
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.4f))
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
                                     modifier = Modifier
-                                        .size(38.dp)
+                                        .size(28.dp)
                                         .clip(CircleShape)
-                                        .background(LightAqua.copy(alpha = 0.5f)),
+                                        .background(DeepTeal),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.NotificationsActive,
+                                        imageVector = Icons.Default.Check,
                                         contentDescription = null,
-                                        tint = DeepTeal,
-                                        modifier = Modifier.size(20.dp)
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
                                     )
                                 }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(
-                                        text = "جميع التنبيهات",
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = DeepNavy,
-                                            fontSize = 17.sp
-                                        )
-                                    )
-                                    Text(
-                                        text = if (unreadCount > 0) "لديك $unreadCount تنبيهات غير مقروءة" else "جميع الإشعارات مقروءة",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            color = DeepNavy.copy(alpha = 0.65f),
-                                            fontSize = 12.sp
-                                        )
-                                    )
-                                }
-                            }
-
-                            if (unreadCount > 0) {
-                                Surface(
-                                    shape = RoundedCornerShape(14.dp),
-                                    color = Peach,
-                                    border = BorderStroke(1.dp, DeepNavy.copy(alpha = 0.15f))
-                                ) {
-                                    Text(
-                                        text = "$unreadCount جديد",
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = DeepNavy,
-                                            fontSize = 12.sp
-                                        )
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        // أشرطة الفلترة السريعة
-                        val filterOptions = listOf("الكل", "قبول 🎉", "طلبات 📩", "اعتماد 🔒", "مرفوض ❌")
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(filterOptions) { filter ->
-                                val isSelected = selectedFilter == filter
-                                FilterChip(
-                                    selected = isSelected,
-                                    onClick = { selectedFilter = filter },
-                                    label = {
-                                        Text(
-                                            text = filter,
-                                            style = MaterialTheme.typography.bodyMedium.copy(
-                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                                fontSize = 13.5.sp
-                                            )
-                                        )
-                                    },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = DeepTeal,
-                                        selectedLabelColor = WarmCream,
-                                        containerColor = SoftBeige.copy(alpha = 0.6f),
-                                        labelColor = DeepNavy
-                                    ),
-                                    border = FilterChipDefaults.filterChipBorder(
-                                        enabled = true,
-                                        selected = isSelected,
-                                        borderColor = SoftGray,
-                                        selectedBorderColor = DeepTeal,
-                                        borderWidth = 1.dp
-                                    ),
-                                    shape = RoundedCornerShape(12.dp)
+                                Text(
+                                    text = "تم تعليم كافة التنبيهات كمقروءة بنجاح ✓",
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DeepNavy,
+                                    fontSize = 13.sp
                                 )
                             }
                         }
                     }
                 }
-            }
 
-            // =========================================================================
-            // 2. حالة عدم وجود إشعارات (Empty State)
-            // =========================================================================
-            if (filteredList.isEmpty()) {
+                // =========================================================================
+                // 1. بطاقة ملخص الإشعارات وفلاتر التصفية
+                // =========================================================================
                 item {
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 20.dp),
-                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.4f))
+                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(72.dp)
-                                    .clip(CircleShape)
-                                    .background(LightAqua.copy(alpha = 0.4f)),
-                                contentAlignment = Alignment.Center
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.NotificationsNone,
-                                    contentDescription = null,
-                                    tint = DeepTeal,
-                                    modifier = Modifier.size(38.dp)
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Surface(
+                                        modifier = Modifier.size(42.dp),
+                                        shape = CircleShape,
+                                        color = LightAqua.copy(alpha = 0.45f),
+                                        border = BorderStroke(1.dp, Turquoise.copy(alpha = 0.4f))
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Default.NotificationsActive,
+                                                contentDescription = null,
+                                                tint = DeepTeal,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                                        Text(
+                                            text = "جميع التنبيهات",
+                                            fontFamily = CairoFontFamily,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = DeepNavy,
+                                            fontSize = 16.5.sp,
+                                            maxLines = 1,
+                                            softWrap = false
+                                        )
+                                        Text(
+                                            text = if (unreadCount > 0) "لديك $unreadCount تنبيهات غير مقروءة" else "جميع الإشعارات مقروءة",
+                                            fontFamily = CairoFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                            color = DeepNavy.copy(alpha = 0.65f),
+                                            fontSize = 12.sp,
+                                            maxLines = 1,
+                                            softWrap = false
+                                        )
+                                    }
+                                }
+
+                                if (unreadCount > 0) {
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = Peach.copy(alpha = 0.5f),
+                                        border = BorderStroke(1.dp, Peach)
+                                    ) {
+                                        Text(
+                                            text = "$unreadCount جديد",
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                            fontFamily = CairoFontFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            color = DeepNavy,
+                                            fontSize = 11.5.sp,
+                                            maxLines = 1,
+                                            softWrap = false
+                                        )
+                                    }
+                                }
                             }
 
-                            Text(
-                                text = "لا توجد إشعارات حالياً",
-                                style = MaterialTheme.typography.headlineSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 20.sp
-                                ),
-                                textAlign = TextAlign.Center
-                            )
+                            HorizontalDivider(color = SoftGray.copy(alpha = 0.4f), thickness = 0.8.dp)
 
-                            Text(
-                                text = "جميع التنبيهات الفورية الخاصة بطلبات الحجز واعتمدات الفرق ستظهر لك هنا فور وصولها.",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = DeepNavy.copy(alpha = 0.7f),
-                                    lineHeight = 22.sp
-                                ),
-                                textAlign = TextAlign.Center
-                            )
+                            // أشرطة الفلترة السريعة
+                            val filterOptions = listOf("الكل", "قبول 🎉", "طلبات 📩", "اعتماد 🔒", "مرفوض ❌")
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(filterOptions) { filter ->
+                                    val isSelected = selectedFilter == filter
+                                    Surface(
+                                        modifier = Modifier
+                                            .height(34.dp)
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .clickable { selectedFilter = filter },
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = if (isSelected) DeepTeal else SoftBeige.copy(alpha = 0.5f),
+                                        border = BorderStroke(
+                                            width = 1.dp,
+                                            color = if (isSelected) DeepTeal else SoftGray.copy(alpha = 0.6f)
+                                        )
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.padding(horizontal = 12.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = filter,
+                                                fontFamily = CairoFontFamily,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                color = if (isSelected) Color.White else DeepNavy,
+                                                fontSize = 12.5.sp,
+                                                maxLines = 1,
+                                                softWrap = false
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-            } else {
-                // =========================================================================
-                // 3. قائمة الإشعارات (Notification Cards List)
-                // =========================================================================
-                items(
-                    items = filteredList,
-                    key = { it.id }
-                ) { item ->
-                    val style = when (item.type) {
-                        NotificationType.ACCEPTED -> NotificationIconStyle(
-                            Icons.Default.CheckCircle,
-                            LightAqua.copy(alpha = 0.6f),
-                            DeepTeal,
-                            "تم القبول 🎉",
-                            SeatAvailableBg
-                        )
-                        NotificationType.NEW_REQUEST -> NotificationIconStyle(
-                            Icons.Default.HourglassTop,
-                            Peach.copy(alpha = 0.5f),
-                            Color(0xFFD84315),
-                            "طلب حجز جديد 📩",
-                            Peach.copy(alpha = 0.4f)
-                        )
-                        NotificationType.TEAM_LOCKED -> NotificationIconStyle(
-                            Icons.Default.Lock,
-                            LightAqua.copy(alpha = 0.5f),
-                            DeepNavy,
-                            "اعتماد التيم 🔒",
-                            LightAqua.copy(alpha = 0.5f)
-                        )
-                        NotificationType.REJECTED -> NotificationIconStyle(
-                            Icons.Default.ErrorOutline,
-                            Color(0xFFFFF0F0),
-                            Color(0xFFD32F2F),
-                            "طلب مرفوض ❌",
-                            Color(0xFFFCDDEC)
-                        )
-                    }
 
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                val index = notificationList.indexOfFirst { it.id == item.id }
-                                if (index != -1) {
-                                    notificationList[index] = item.copy(isRead = true)
-                                }
-                            },
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (!item.isRead) LightAqua.copy(alpha = 0.15f) else Color.White
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        border = BorderStroke(
-                            width = if (!item.isRead) 1.5.dp else 1.dp,
-                            color = if (!item.isRead) DeepTeal.copy(alpha = 0.5f) else SoftGray.copy(alpha = 0.4f)
-                        )
-                    ) {
-                        Row(
+                // =========================================================================
+                // 2. حالة عدم وجود إشعارات (Empty State)
+                // =========================================================================
+                if (filteredList.isEmpty()) {
+                    item {
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.Top
+                                .padding(vertical = 16.dp),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
                         ) {
-                            // أيكونة نوع الإشعار
-                            Box(
+                            Column(
                                 modifier = Modifier
-                                    .size(46.dp)
-                                    .clip(CircleShape)
-                                    .background(style.iconBg),
-                                contentAlignment = Alignment.Center
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Icon(
-                                    imageVector = style.icon,
-                                    contentDescription = null,
-                                    tint = style.iconTint,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(14.dp))
-
-                            // المحتوى التفصيلي
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                                Surface(
+                                    modifier = Modifier.size(64.dp),
+                                    shape = CircleShape,
+                                    color = LightAqua.copy(alpha = 0.4f)
                                 ) {
-                                    Text(
-                                        text = item.title,
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = DeepNavy,
-                                            fontSize = 16.5.sp
-                                        ),
-                                        modifier = Modifier.weight(1f)
-                                    )
-
-                                    Surface(
-                                        shape = RoundedCornerShape(12.dp),
-                                        color = style.tagBg
-                                    ) {
-                                        Text(
-                                            text = style.typeTag,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                color = DeepNavy,
-                                                fontSize = 11.5.sp
-                                            )
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.NotificationsNone,
+                                            contentDescription = null,
+                                            tint = DeepTeal,
+                                            modifier = Modifier.size(32.dp)
                                         )
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(6.dp))
-
                                 Text(
-                                    text = item.message,
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        color = DeepNavy.copy(alpha = 0.82f),
-                                        fontSize = 14.sp,
-                                        lineHeight = 21.sp
-                                    )
+                                    text = "لا توجد إشعارات في هذا التصنيف",
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DeepNavy,
+                                    fontSize = 16.5.sp,
+                                    textAlign = TextAlign.Center
                                 )
 
-                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(
+                                    text = "جميع التنبيهات الفورية الخاصة بطلبات الحجز والاعتمادات تظهر هنا فور وصولها.",
+                                    fontFamily = CairoFontFamily,
+                                    color = DeepNavy.copy(alpha = 0.7f),
+                                    fontSize = 13.sp,
+                                    textAlign = TextAlign.Center,
+                                    lineHeight = 20.sp
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    // =========================================================================
+                    // 3. بطاقات الإشعارات النظيفة الفاخرة (Clean White Cards)
+                    // =========================================================================
+                    items(
+                        items = filteredList,
+                        key = { it.id }
+                    ) { item ->
+                        val (icon, iconBg, iconTint, tagText, tagBg, tagTextColor) = when (item.type) {
+                            NotificationType.ACCEPTED -> NotificationVisual(
+                                icon = Icons.Default.CheckCircle,
+                                iconBg = LightAqua.copy(alpha = 0.45f),
+                                iconTint = DeepTeal,
+                                tagText = "تم القبول ✓",
+                                tagBg = LightAqua.copy(alpha = 0.4f),
+                                tagTextColor = DeepTeal
+                            )
+                            NotificationType.NEW_REQUEST -> NotificationVisual(
+                                icon = Icons.Default.HourglassTop,
+                                iconBg = Peach.copy(alpha = 0.45f),
+                                iconTint = DeepNavy,
+                                tagText = "طلب جديد ⏳",
+                                tagBg = Peach.copy(alpha = 0.4f),
+                                tagTextColor = DeepNavy
+                            )
+                            NotificationType.TEAM_LOCKED -> NotificationVisual(
+                                icon = Icons.Default.Lock,
+                                iconBg = SoftBeige.copy(alpha = 0.6f),
+                                iconTint = DeepNavy,
+                                tagText = "معتمد ومقفل 🔒",
+                                tagBg = SoftBeige.copy(alpha = 0.7f),
+                                tagTextColor = DeepNavy
+                            )
+                            NotificationType.REJECTED -> NotificationVisual(
+                                icon = Icons.Default.ErrorOutline,
+                                iconBg = Color(0xFFFFEBEE),
+                                iconTint = Color(0xFFC62828),
+                                tagText = "طلب مرفوض ✕",
+                                tagBg = Color(0xFFFFEBEE),
+                                tagTextColor = Color(0xFFC62828)
+                            )
+                        }
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .clickable {
+                                    val index = notificationList.indexOfFirst { it.id == item.id }
+                                    if (index != -1) {
+                                        notificationList[index] = item.copy(isRead = true)
+                                    }
+                                },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (!item.isRead) LightAqua.copy(alpha = 0.1f) else Color.White
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
+                            border = BorderStroke(
+                                width = if (!item.isRead) 1.5.dp else 1.dp,
+                                color = if (!item.isRead) Turquoise.copy(alpha = 0.8f) else SoftGray.copy(alpha = 0.5f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                // أيقونة الإشعار الدائرية
+                                Surface(
+                                    modifier = Modifier.size(44.dp),
+                                    shape = CircleShape,
+                                    color = iconBg,
+                                    border = BorderStroke(1.dp, iconTint.copy(alpha = 0.25f))
                                 ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(contentAlignment = Alignment.Center) {
                                         Icon(
-                                            imageVector = Icons.Default.Schedule,
+                                            imageVector = icon,
                                             contentDescription = null,
-                                            tint = Turquoise,
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = item.timeAgo,
-                                            style = MaterialTheme.typography.bodySmall.copy(
-                                                color = DeepNavy.copy(alpha = 0.6f),
-                                                fontSize = 12.sp
-                                            )
+                                            tint = iconTint,
+                                            modifier = Modifier.size(22.dp)
                                         )
                                     }
+                                }
 
-                                    if (!item.isRead) {
+                                // تفاصيل الإشعار
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = item.title,
+                                            fontFamily = CairoFontFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            color = DeepNavy,
+                                            fontSize = 14.5.sp,
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            modifier = Modifier.weight(1f)
+                                        )
+
+                                        Spacer(modifier = Modifier.width(6.dp))
+
+                                        // شارة نوع الإشعار
                                         Surface(
-                                            shape = CircleShape,
-                                            color = Turquoise,
-                                            modifier = Modifier.size(8.dp)
-                                        ) {}
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = tagBg,
+                                            border = BorderStroke(0.6.dp, tagTextColor.copy(alpha = 0.3f))
+                                        ) {
+                                            Text(
+                                                text = tagText,
+                                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.5.dp),
+                                                fontFamily = CairoFontFamily,
+                                                fontWeight = FontWeight.Bold,
+                                                color = tagTextColor,
+                                                fontSize = 11.sp,
+                                                maxLines = 1,
+                                                softWrap = false
+                                            )
+                                        }
+                                    }
+
+                                    Text(
+                                        text = item.message,
+                                        fontFamily = CairoFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        color = DeepNavy.copy(alpha = 0.8f),
+                                        fontSize = 12.5.sp,
+                                        lineHeight = 18.5.sp
+                                    )
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Schedule,
+                                                contentDescription = null,
+                                                tint = Turquoise,
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                            Text(
+                                                text = item.timeAgo,
+                                                fontFamily = CairoFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                                color = DeepNavy.copy(alpha = 0.6f),
+                                                fontSize = 11.sp,
+                                                maxLines = 1,
+                                                softWrap = false
+                                            )
+                                        }
+
+                                        if (!item.isRead) {
+                                            Surface(
+                                                shape = CircleShape,
+                                                color = Turquoise,
+                                                modifier = Modifier.size(7.dp)
+                                            ) {}
+                                        }
                                     }
                                 }
                             }
                         }
+                    }
+                }
+
+                // =========================================================================
+                // 4. زر مسح كافة الإشعارات (Clear All Action)
+                // =========================================================================
+                if (notificationList.isNotEmpty()) {
+                    item {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedButton(
+                            onClick = { showClearConfirmDialog = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.6f)),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.White,
+                                contentColor = DeepNavy
+                            )
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DeleteOutline,
+                                    contentDescription = null,
+                                    tint = Color(0xFFC62828),
+                                    modifier = Modifier.size(17.dp)
+                                )
+                                Text(
+                                    text = "مسح جميع الإشعارات",
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = Color(0xFFC62828),
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
             }
 
-            // =========================================================================
-            // 4. زر تفريغ الإشعارات (Clear All Notifications Button)
-            // =========================================================================
-            if (notificationList.isNotEmpty()) {
-                item {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedButton(
-                        onClick = {
-                            notificationList.clear()
-                            scope.launch {
-                                snackbarHostState.showSnackbar("تم مسح قائمة الإشعارات بالكامل 🗑️")
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color(0xFFD32F2F)
-                        ),
-                        border = BorderStroke(1.dp, Color(0xFFE53935).copy(alpha = 0.4f))
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Cancel,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+            // نافذة تأكيد مسح الإشعارات
+            if (showClearConfirmDialog) {
+                AlertDialog(
+                    onDismissRequest = { showClearConfirmDialog = false },
+                    containerColor = Color.White,
+                    shape = RoundedCornerShape(20.dp),
+                    title = {
                         Text(
                             text = "مسح جميع الإشعارات",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFD32F2F),
-                                fontSize = 14.5.sp
-                            )
+                            fontFamily = CairoFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = DeepNavy,
+                            fontSize = 17.sp
                         )
+                    },
+                    text = {
+                        Text(
+                            text = "هل أنت متأكد من مسح قائمة التنبيهات بالكامل؟ لا يمكن استرجاعها بعد الحذف.",
+                            fontFamily = CairoFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            color = DeepNavy.copy(alpha = 0.75f),
+                            fontSize = 13.5.sp
+                        )
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showClearConfirmDialog = false
+                                notificationList.clear()
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("تم مسح قائمة الإشعارات بالكامل 🗑️")
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828)),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text(
+                                text = "مسح الكل",
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showClearConfirmDialog = false }) {
+                            Text(
+                                text = "إلغاء",
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                color = DeepNavy
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
+                )
             }
         }
     }
 }
 
-private data class NotificationIconStyle(
-    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+/**
+ * بنية بيانات لنمط كل نوع إشعار
+ */
+private data class NotificationVisual(
+    val icon: ImageVector,
     val iconBg: Color,
     val iconTint: Color,
-    val typeTag: String,
-    val tagBg: Color
+    val tagText: String,
+    val tagBg: Color,
+    val tagTextColor: Color
 )
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun NotificationsScreenPreview() {
+private fun NotificationsScreenEnhancedPreview() {
     TeamSeatTheme {
         NotificationsScreen()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun NotificationsScreenEmptyPreview() {
-    TeamSeatTheme {
-        NotificationsScreen(
-            notifications = emptyList()
-        )
     }
 }

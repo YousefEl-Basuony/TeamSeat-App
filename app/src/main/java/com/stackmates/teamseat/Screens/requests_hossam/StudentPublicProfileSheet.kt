@@ -2,17 +2,7 @@ package com.stackmates.teamseat.Screens.requests_hossam
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,48 +14,37 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.HourglassTop
-import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.VerifiedUser
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.User
-import com.stackmates.teamseat.core.theme.DeepNavy
-import com.stackmates.teamseat.core.theme.DeepTeal
-import com.stackmates.teamseat.core.theme.LeaderCrownGold
-import com.stackmates.teamseat.core.theme.LightAqua
-import com.stackmates.teamseat.core.theme.Peach
-import com.stackmates.teamseat.core.theme.SoftGray
-import com.stackmates.teamseat.core.theme.TeamSeatTheme
-import com.stackmates.teamseat.core.theme.Turquoise
-import com.stackmates.teamseat.core.theme.WarmCream
+import com.stackmates.teamseat.core.theme.*
 
 /**
  * ⚡ المسؤول عن المكون: حسام (Hossam) — [HOSSAM-2]
- * بطاقة معاينة بروفايل أي طالب آخر عند الضغط على اسمه (Student Public Profile BottomSheet)
- * تصميم منبثق مميز مليء بالأيقونات والتنسيقات المتناسقة مع هوية TeamSeat
+ * بطاقة معاينة بروفايل أي طالب منضم أو متقدم (Student Public Profile BottomSheet)
+ * تصميم عصري فاخر بهوية ألوان TeamSeat الرسمية (Color.kt) وخط Cairo
+ * يقدم نظرة شاملة على المهارات، والروابط، والرقم الجامعي، وحالة الفريق.
  */
 @Composable
 fun StudentPublicProfileSheet(
@@ -75,465 +54,442 @@ fun StudentPublicProfileSheet(
 ) {
     val isTeamMember = !student.currentTeamId.isNullOrEmpty()
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = WarmCream),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
-    ) {
-        Column(
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
         ) {
-            // =========================================================================
-            // 0. مقبض السحب العلوي (Sheet Drag Indicator) + زر الإغلاق
-            // =========================================================================
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(44.dp)
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(DeepTeal, Turquoise, LightAqua)
-                        )
-                    )
-            ) {
-                // مقبض السحب بالمنتصف
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .width(42.dp)
-                        .height(5.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.8f))
-                )
-
-                // زر الإغلاق
-                Surface(
-                    modifier = Modifier
-                        .padding(start = 10.dp)
-                        .size(32.dp)
-                        .align(Alignment.CenterStart),
-                    shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.9f)
-                ) {
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "إغلاق",
-                            tint = DeepNavy,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-
-                // شارة القائد إن وُجدت
-                if (student.isLeader) {
-                    Surface(
-                        modifier = Modifier
-                            .padding(end = 10.dp)
-                            .align(Alignment.CenterEnd),
-                        shape = RoundedCornerShape(14.dp),
-                        color = LeaderCrownGold,
-                        shadowElevation = 2.dp
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = null,
-                                tint = DeepNavy,
-                                modifier = Modifier.size(13.dp)
-                            )
-                            Spacer(modifier = Modifier.width(3.dp))
-                            Text(
-                                text = "قائد الفريق 👑",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 11.5.sp
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-
-            // =========================================================================
-            // 1. قسم الصورة الشخصية والاسم (Avatar & Header Profile)
-            // =========================================================================
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .verticalScroll(rememberScrollState())
             ) {
-                // صورة الـ Avatar مع إطار دائري أنيق
+                // =========================================================================
+                // 0. مقبض السحب العلوي (Sheet Handle) + زر الإغلاق
+                // =========================================================================
                 Box(
                     modifier = Modifier
-                        .size(88.dp)
-                        .clip(CircleShape)
-                        .background(Color.White)
-                        .border(
-                            width = 3.dp,
-                            brush = Brush.sweepGradient(listOf(Turquoise, DeepTeal, LightAqua, Turquoise)),
-                            shape = CircleShape
-                        )
-                        .padding(4.dp)
-                        .clip(CircleShape)
-                        .background(LightAqua.copy(alpha = 0.6f)),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    Text(
-                        text = student.avatarEmoji,
-                        fontSize = 42.sp
+                    // مقبض السحب في المنتصف
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .width(42.dp)
+                            .height(5.dp)
+                            .clip(CircleShape)
+                            .background(SoftGray.copy(alpha = 0.8f))
                     )
+
+                    // زر الإغلاق على اليمين (RTL Start)
+                    Surface(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .align(Alignment.CenterEnd),
+                        shape = CircleShape,
+                        color = SoftBeige.copy(alpha = 0.6f),
+                        border = BorderStroke(0.8.dp, SoftGray.copy(alpha = 0.6f))
+                    ) {
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.size(34.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "إغلاق",
+                                tint = DeepNavy,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+                    }
+
+                    // شارة قائد الفريق إذا كان الطالب قائداً
+                    if (student.isLeader) {
+                        Surface(
+                            modifier = Modifier.align(Alignment.CenterStart),
+                            shape = RoundedCornerShape(12.dp),
+                            color = Peach.copy(alpha = 0.6f),
+                            border = BorderStroke(1.dp, Peach)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Star,
+                                    contentDescription = null,
+                                    tint = DeepNavy,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Text(
+                                    text = "قائد الفريق 👑",
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DeepNavy,
+                                    fontSize = 11.5.sp,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // =========================================================================
+                // 1. قسم الصورة الشخصية والاسم والتخصص
+                // =========================================================================
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // صورة الـ Avatar مع إطار ناعم
+                    Surface(
+                        modifier = Modifier.size(84.dp),
+                        shape = CircleShape,
+                        color = WarmCream,
+                        border = BorderStroke(2.5.dp, Turquoise),
+                        shadowElevation = 2.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = student.avatarEmoji,
+                                fontSize = 40.sp
+                            )
+                        }
+                    }
+
+                    // اسم الطالب
+                    Text(
+                        text = student.name,
+                        fontFamily = CairoFontFamily,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 19.sp,
+                        color = DeepNavy,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+
+                    // شارة التخصص التقني
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = LightAqua.copy(alpha = 0.4f),
+                        border = BorderStroke(1.dp, Turquoise.copy(alpha = 0.6f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Code,
+                                contentDescription = null,
+                                tint = DeepTeal,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Text(
+                                text = student.roleTag,
+                                fontFamily = CairoFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = DeepTeal,
+                                fontSize = 12.5.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Text(
-                    text = student.name,
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 20.sp,
-                        color = DeepNavy
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // شارة التخصص المسمى بها
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = LightAqua.copy(alpha = 0.45f),
-                    border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.3f))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
+                    // =========================================================================
+                    // 2. كروت المعلومات الأكاديمية (الرقم الجامعي + التخصص)
+                    // =========================================================================
                     Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Code,
-                            contentDescription = null,
-                            tint = DeepTeal,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(5.dp))
-                        Text(
-                            text = student.roleTag,
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = DeepTeal,
-                                fontSize = 13.sp
-                            )
-                        )
+                        // كارت الرقم الجامعي
+                        Surface(
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(14.dp),
+                            color = WarmCream.copy(alpha = 0.6f),
+                            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Badge,
+                                    contentDescription = null,
+                                    tint = DeepTeal,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = "الرقم الجامعي",
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = DeepNavy.copy(alpha = 0.65f),
+                                    fontSize = 11.sp
+                                )
+                                Text(
+                                    text = student.studentId,
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DeepNavy,
+                                    fontSize = 13.5.sp,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        }
+
+                        // كارت التخصص الدراسي
+                        Surface(
+                            modifier = Modifier.weight(1.3f),
+                            shape = RoundedCornerShape(14.dp),
+                            color = WarmCream.copy(alpha = 0.6f),
+                            border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.School,
+                                    contentDescription = null,
+                                    tint = DeepTeal,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = "التخصص الدراسي",
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = DeepNavy.copy(alpha = 0.65f),
+                                    fontSize = 11.sp
+                                )
+                                Text(
+                                    text = student.major,
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DeepNavy,
+                                    fontSize = 12.5.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // =========================================================================
-                // 2. كروت المعلومات الأكاديمية (Academic Details Chips)
-                // =========================================================================
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // الرقم الجامعي
+                    // =========================================================================
+                    // 3. كارت حالة الانضمام للفريق
+                    // =========================================================================
                     Surface(
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(14.dp),
-                        color = Color.White,
-                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.4f))
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (isTeamMember) LightAqua.copy(alpha = 0.35f) else SoftBeige.copy(alpha = 0.45f),
+                        border = BorderStroke(
+                            1.dp,
+                            if (isTeamMember) Turquoise.copy(alpha = 0.7f) else Peach.copy(alpha = 0.8f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Surface(
+                                modifier = Modifier.size(38.dp),
+                                shape = CircleShape,
+                                color = if (isTeamMember) DeepTeal else Peach
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = if (isTeamMember) Icons.Outlined.VerifiedUser else Icons.Default.HourglassTop,
+                                        contentDescription = null,
+                                        tint = if (isTeamMember) Color.White else DeepNavy,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    text = if (isTeamMember) "عضو منضم رسمياً ✓" else "متاح ومتقدم للحجز ⏳",
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DeepNavy,
+                                    fontSize = 14.sp
+                                )
+                                Text(
+                                    text = if (isTeamMember) {
+                                        "تم اعتماد المقعد في تيم (${student.currentTeamId})"
+                                    } else {
+                                        "يبحث عن مقعد متاح في مشاريع التخرج"
+                                    },
+                                    fontFamily = CairoFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    color = DeepNavy.copy(alpha = 0.75f),
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+
+                    // =========================================================================
+                    // 4. معرض الأعمال والتواصل (GitHub & Email)
+                    // =========================================================================
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = WarmCream.copy(alpha = 0.35f)),
+                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
                     ) {
                         Column(
-                            modifier = Modifier.padding(10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Badge,
-                                contentDescription = null,
-                                tint = DeepTeal,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "الرقم الجامعي",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = DeepNavy.copy(alpha = 0.6f),
-                                    fontSize = 11.5.sp
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Link,
+                                    contentDescription = null,
+                                    tint = DeepTeal,
+                                    modifier = Modifier.size(17.dp)
                                 )
-                            )
-                            Text(
-                                text = student.studentId,
-                                style = MaterialTheme.typography.bodyMedium.copy(
+                                Text(
+                                    text = "روابط التواصل ومعرض الأعمال",
+                                    fontFamily = CairoFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     color = DeepNavy,
                                     fontSize = 13.5.sp
                                 )
-                            )
-                        }
-                    }
-
-                    // الكلية / التخصص
-                    Surface(
-                        modifier = Modifier.weight(1.4f),
-                        shape = RoundedCornerShape(14.dp),
-                        color = Color.White,
-                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.4f))
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.School,
-                                contentDescription = null,
-                                tint = DeepTeal,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "التخصص الدراسي",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = DeepNavy.copy(alpha = 0.6f),
-                                    fontSize = 11.5.sp
-                                )
-                            )
-                            Text(
-                                text = student.major,
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 13.sp
-                                ),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // =========================================================================
-                // 3. كارت حالة الانضمام (Team Status)
-                // =========================================================================
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    color = if (isTeamMember) LightAqua.copy(alpha = 0.35f) else Peach.copy(alpha = 0.3f),
-                    border = BorderStroke(
-                        1.dp,
-                        if (isTeamMember) DeepTeal.copy(alpha = 0.4f) else Peach
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(if (isTeamMember) DeepTeal else Peach),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = if (isTeamMember) Icons.Outlined.VerifiedUser else Icons.Default.HourglassTop,
-                                contentDescription = null,
-                                tint = if (isTeamMember) Color.White else DeepNavy,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        Column {
-                            Text(
-                                text = if (isTeamMember) "عضو منضم رسمياً" else "متاح ومتقدم للحجز",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 14.5.sp
-                                )
-                            )
-                            Text(
-                                text = if (isTeamMember) {
-                                    "تم اعتماد المقعد في تيم (#${student.currentTeamId})"
-                                } else {
-                                    "يبحث عن مقعد متاح في مشاريع التخرج"
-                                },
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = DeepNavy.copy(alpha = 0.75f),
-                                    fontSize = 12.sp
-                                )
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // =========================================================================
-                // 4. معرض الأعمال والتواصل (GitHub & Social Links)
-                // =========================================================================
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.4f))
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Link,
-                                contentDescription = null,
-                                tint = DeepTeal,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "روابط معرض الأعمال والتواصل",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 15.sp
-                                )
-                            )
-                        }
-
-                        // البريد الإلكتروني
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(10.dp),
-                            color = WarmCream.copy(alpha = 0.5f)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Email,
-                                    contentDescription = null,
-                                    tint = DeepTeal,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = student.email,
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = DeepNavy,
-                                        fontSize = 12.5.sp
-                                    )
-                                )
                             }
-                        }
 
-                        // رابط GitHub (زر تفاعلي)
-                        if (student.githubUrl.isNotEmpty()) {
-                            OutlinedButton(
-                                onClick = { onOpenGithubClick(student.githubUrl) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = DeepTeal),
-                                border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.5f))
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Code,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "تصفح حساب GitHub / Portfolio",
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp
-                                    )
-                                )
-                                Spacer(modifier = Modifier.weight(1f))
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.Launch,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                            }
-                        }
-
-                        // رابط LinkedIn (إن وُجد)
-                        if (student.linkedinUrl.isNotEmpty()) {
+                            // البريد الإلكتروني الجامعي
                             Surface(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(10.dp),
-                                color = WarmCream.copy(alpha = 0.5f)
+                                color = Color.White,
+                                border = BorderStroke(0.8.dp, SoftGray.copy(alpha = 0.5f))
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.Person,
+                                        imageVector = Icons.Default.Email,
                                         contentDescription = null,
                                         tint = DeepTeal,
                                         modifier = Modifier.size(16.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = student.linkedinUrl,
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            color = DeepNavy,
-                                            fontSize = 12.5.sp
-                                        ),
+                                        text = student.email,
+                                        fontFamily = CairoFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        color = DeepNavy,
+                                        fontSize = 12.sp,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
+
+                            // رابط GitHub التفاعلي
+                            if (student.githubUrl.isNotEmpty()) {
+                                OutlinedButton(
+                                    onClick = { onOpenGithubClick(student.githubUrl) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(44.dp),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        containerColor = Color.White,
+                                        contentColor = DeepNavy
+                                    ),
+                                    border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.6f))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Code,
+                                                contentDescription = null,
+                                                tint = DeepTeal,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Text(
+                                                text = "حساب GitHub / Portfolio",
+                                                fontFamily = CairoFontFamily,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 12.5.sp,
+                                                color = DeepNavy
+                                            )
+                                        }
+
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.Launch,
+                                            contentDescription = null,
+                                            tint = DeepTeal,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // =========================================================================
-                // 5. زر الإغلاق الرئيسي (Dismiss Button)
-                // =========================================================================
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = DeepTeal,
-                        contentColor = WarmCream
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
-                ) {
-                    Text(
-                        text = "إغلاق المعاينة",
-                        style = MaterialTheme.typography.titleMedium.copy(
+                    // =========================================================================
+                    // 5. زر الإغلاق النهائي (Dismiss Action)
+                    // =========================================================================
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = DeepNavy)
+                    ) {
+                        Text(
+                            text = "إغلاق المعاينة",
+                            fontFamily = CairoFontFamily,
                             fontWeight = FontWeight.Bold,
-                            color = WarmCream,
-                            fontSize = 15.sp
+                            color = Color.White,
+                            fontSize = 14.sp
                         )
-                    )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
@@ -542,7 +498,7 @@ fun StudentPublicProfileSheet(
 
 @Preview(showBackground = true)
 @Composable
-private fun StudentPublicProfileSheetPreview() {
+private fun StudentPublicProfileSheetEnhancedPreview() {
     TeamSeatTheme {
         StudentPublicProfileSheet(
             student = MockDataProvider.saraStudent
@@ -552,7 +508,7 @@ private fun StudentPublicProfileSheetPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun StudentPublicProfileSheetLeaderPreview() {
+private fun StudentPublicProfileSheetLeaderEnhancedPreview() {
     TeamSeatTheme {
         StudentPublicProfileSheet(
             student = MockDataProvider.ahmedLeader
