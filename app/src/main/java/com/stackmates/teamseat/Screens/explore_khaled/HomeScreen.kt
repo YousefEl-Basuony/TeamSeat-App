@@ -65,6 +65,19 @@ import com.stackmates.teamseat.core.model.Team
 import com.stackmates.teamseat.core.model.User
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
 
+private val HomePureWhite = Color(0xFFFFFFFF)
+private val HomeAquaSurface = Color(0xFFEDF7F7)
+private val HomeAquaBorder = Color(0xFF9AD2D4)
+private val HomeSearchBorder = Color(0xFFB8E0E1)
+private val HomeUrgentSurface = Color(0xFFFFF6ED)
+private val HomeUrgentBorder = Color(0xFFF2B885)
+private val HomeUrgentBadgeBg = Color(0xFFFDE68A)
+private val HomeUrgentBadgeText = Color(0xFFB45309)
+private val HomeLockedSurface = Color(0xFFF1F5F9)
+private val HomeLockedBorder = Color(0xFFCBD5E1)
+private val HomeCourseTagText = Color(0xFF0A344A)
+private val HomeNotifCoral = Color(0xFFE05A47)
+
 /**
  * 🔍 المسؤول عن الشاشة: خالد (Khaled) — [KHALED-4]
  * الشاشة الرئيسية واستكشاف التيمات ومقاعد المشاريع الجامعية (Home / Teams Feed Screen)
@@ -91,7 +104,7 @@ fun HomeScreen(
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = HomePureWhite,
         contentWindowInsets = WindowInsets.systemBars,
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -158,11 +171,8 @@ fun HomeScreen(
                             val isSelected = selectedQuickFilter == filter
                             Surface(
                                 shape = RoundedCornerShape(50),
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White,
-                                border = if (isSelected) null else BorderStroke(
-                                    1.dp,
-                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                ),
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else HomeAquaSurface,
+                                border = if (isSelected) null else BorderStroke(1.dp, HomeSearchBorder),
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(50))
                                     .clickable { selectedQuickFilter = filter }
@@ -319,8 +329,8 @@ private fun CalmHomeGreetingRow(
         ) {
             Surface(
                 shape = CircleShape,
-                color = Color.White,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                color = HomeAquaSurface,
+                border = BorderStroke(1.2.dp, HomeAquaBorder),
                 shadowElevation = 1.dp,
                 modifier = Modifier.size(44.dp)
             ) {
@@ -364,9 +374,9 @@ private fun CalmHomeGreetingRow(
         ) {
             Surface(
                 shape = RoundedCornerShape(50),
-                color = Color.White,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                shadowElevation = 0.dp,
+                color = HomeAquaSurface,
+                border = BorderStroke(1.dp, HomeSearchBorder),
+                shadowElevation = 1.dp,
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
                     .clickable { onMyApplicationsClick() }
@@ -397,9 +407,9 @@ private fun CalmHomeGreetingRow(
 
             Surface(
                 shape = CircleShape,
-                color = Color.White,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                shadowElevation = 0.dp,
+                color = HomeAquaSurface,
+                border = BorderStroke(1.dp, HomeSearchBorder),
+                shadowElevation = 1.dp,
                 modifier = Modifier.size(40.dp)
             ) {
                 IconButton(onClick = onNotificationsClick) {
@@ -407,8 +417,8 @@ private fun CalmHomeGreetingRow(
                         badge = {
                             if (unreadNotifCount > 0) {
                                 Badge(
-                                    containerColor = MaterialTheme.colorScheme.tertiary,
-                                    contentColor = MaterialTheme.colorScheme.onTertiary
+                                    containerColor = HomeNotifCoral,
+                                    contentColor = HomePureWhite
                                 ) {
                                     Text(
                                         text = "$unreadNotifCount",
@@ -446,9 +456,9 @@ private fun CalmSearchBarTrigger(
             .clip(RoundedCornerShape(16.dp))
             .clickable { onSearchClick() },
         shape = RoundedCornerShape(16.dp),
-        color = Color.White,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        shadowElevation = 0.dp
+        color = HomeAquaSurface,
+        border = BorderStroke(1.dp, HomeSearchBorder),
+        shadowElevation = 1.dp
     ) {
         Row(
             modifier = Modifier
@@ -509,9 +519,9 @@ private fun CalmUrgentTeamCard(
         onClick = onClick,
         modifier = Modifier.width(280.dp),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        colors = CardDefaults.cardColors(containerColor = HomeUrgentSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.2.dp, HomeUrgentBorder)
     ) {
         Column(
             modifier = Modifier
@@ -527,15 +537,16 @@ private fun CalmUrgentTeamCard(
             ) {
                 Surface(
                     shape = RoundedCornerShape(50),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                    color = HomePureWhite,
+                    border = BorderStroke(1.dp, HomeUrgentBorder.copy(alpha = 0.7f)),
                     modifier = Modifier.weight(1f, fill = false)
                 ) {
                     Text(
                         text = team.category.substringBefore(" ("),
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Medium,
+                            color = HomeCourseTagText,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 11.sp
                         ),
                         maxLines = 1,
@@ -547,13 +558,13 @@ private fun CalmUrgentTeamCard(
 
                 Surface(
                     shape = RoundedCornerShape(50),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    color = HomeUrgentBadgeBg
                 ) {
                     Text(
                         text = "متبقي $availableSeatsCount",
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.primary,
+                            color = HomeUrgentBadgeText,
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.sp
                         ),
@@ -686,9 +697,11 @@ private fun CalmProjectCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        colors = CardDefaults.cardColors(
+            containerColor = if (isLocked) HomeLockedSurface else HomeAquaSurface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isLocked) 0.dp else 2.dp),
+        border = BorderStroke(1.2.dp, if (isLocked) HomeLockedBorder else HomeAquaBorder)
     ) {
         Column(
             modifier = Modifier
@@ -702,27 +715,34 @@ private fun CalmProjectCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = HomePureWhite,
+                    border = BorderStroke(1.dp, if (isLocked) HomeLockedBorder else HomeSearchBorder),
+                    modifier = Modifier.weight(1f, fill = false)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.School,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(15.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = team.category,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 11.5.sp
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.School,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = team.category,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = HomeCourseTagText,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -730,9 +750,9 @@ private fun CalmProjectCard(
                 Surface(
                     shape = RoundedCornerShape(50),
                     color = if (isLocked) {
-                        MaterialTheme.colorScheme.secondaryContainer
+                        HomePureWhite
                     } else {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                        MaterialTheme.colorScheme.primary
                     }
                 ) {
                     Text(
@@ -742,7 +762,7 @@ private fun CalmProjectCard(
                             color = if (isLocked) {
                                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             } else {
-                                MaterialTheme.colorScheme.primary
+                                HomePureWhite
                             },
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.sp
@@ -851,8 +871,8 @@ private fun EmptyTeamsStateView() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        color = Color.White,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        color = HomeAquaSurface,
+        border = BorderStroke(1.dp, HomeAquaBorder),
         shadowElevation = 0.dp
     ) {
         Column(
