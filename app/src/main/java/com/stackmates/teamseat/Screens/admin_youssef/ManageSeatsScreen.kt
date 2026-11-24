@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -45,26 +44,26 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.stackmates.teamseat.core.theme.CairoFontFamily
-import com.stackmates.teamseat.core.theme.DeepNavy
-import com.stackmates.teamseat.core.theme.LightAqua
-import com.stackmates.teamseat.core.theme.Peach
-import com.stackmates.teamseat.core.theme.SoftBeige
-import com.stackmates.teamseat.core.theme.TeamSeatTheme
-import com.stackmates.teamseat.core.theme.Turquoise
+import com.stackmates.teamseat.core.theme.*
 import com.stackmates.teamseat.ui.components.StaggeredAnimatedItem
 import com.stackmates.teamseat.ui.components.bounceClick
 import com.stackmates.teamseat.ui.components.rememberAnimatedProgress
 
 // =============================================================================
-// 🎨 الألوان المحددة للشاشة (Warm Cream + Deep Teal + Warm Orange)
+// 🎨 باليت الألوان الرسمية للتطبيق (Color.kt)
 // =============================================================================
-private val ManageBgCream = Color(0xFFFBF7F2)
-private val ManageCardBorder = Color(0xFFE5E0D8)
-private val ManagePrimaryTeal = Color(0xFF136F78)
-private val ManageWarmOrange = Color(0xFFF97316)
-private val ManagePendingBg = Color(0xFFFFF7ED)
-private val ManageDangerRed = Color(0xFFC62828)
+private val OffWhiteBg = WarmCream
+private val PrimaryTeal = DeepTeal
+private val TitleDark = DeepNavy
+private val BodyMuted = DeepNavy.copy(alpha = 0.65f)
+
+private val TealCardFill = Color.White
+private val TealCardBorder = SoftGray.copy(alpha = 0.6f)
+
+private val WarmCardFill = SoftBeige.copy(alpha = 0.45f)
+private val WarmCardBorder = Peach
+private val WarmOrangeAccent = DeepNavy
+private val DangerRed = Color(0xFFC62828)
 
 private enum class ManageSeatState {
     APPROVED,
@@ -91,8 +90,6 @@ private enum class SeatFilterTab(val label: String) {
 /**
  * 💻 المسؤول عن الشاشة: يوسف (Youssef - Team Lead & Backend)
  * شاشة 1 من 4: إدارة وتظبيط مقاعد التيم (ManageSeatsScreen)
- * - تصميم مسطح بالكامل (Flat Hierarchy) بدون كروت متداخلة
- * - حركات تفاعلية ناعمة (bounceClick، Staggered Entrance، AnimatedContent، ModalBottomSheet)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -176,25 +173,25 @@ fun ManageSeatsScreen(
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Scaffold(
-            containerColor = ManageBgCream,
+            containerColor = OffWhiteBg,
             topBar = {
                 TopAppBar(
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = ManageBgCream),
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = OffWhiteBg),
                     navigationIcon = {
                         Box(
                             modifier = Modifier
                                 .padding(start = 12.dp)
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(Color.White)
-                                .border(1.dp, ManageCardBorder, CircleShape)
+                                .background(TealCardFill)
+                                .border(1.2.dp, TealCardBorder, CircleShape)
                                 .bounceClick(onClick = onBackClick),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "رجوع",
-                                tint = DeepNavy,
+                                tint = TitleDark,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -203,18 +200,18 @@ fun ManageSeatsScreen(
                         Column(modifier = Modifier.padding(start = 6.dp)) {
                             Text(
                                 text = "إدارة مقاعد التيم",
-                                fontFamily = CairoFontFamily,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = DeepNavy,
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = TitleDark,
                                 fontSize = 18.sp,
                                 maxLines = 1,
                                 softWrap = false
                             )
                             Text(
                                 text = "رتّب أدوار TeamSeat-App وتابع الأماكن الفاضية",
-                                fontFamily = CairoFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                color = ManagePrimaryTeal,
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                color = BodyMuted,
                                 fontSize = 12.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -228,8 +225,8 @@ fun ManageSeatsScreen(
                                     .padding(end = 12.dp)
                                     .height(36.dp)
                                     .clip(RoundedCornerShape(10.dp))
-                                    .background(LightAqua.copy(alpha = 0.45f))
-                                    .border(1.dp, ManagePrimaryTeal.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                                    .background(TealCardFill)
+                                    .border(1.2.dp, TealCardBorder, RoundedCornerShape(10.dp))
                                     .bounceClick {
                                         newRoleDraft = ""
                                         showAddSeatSheet = true
@@ -244,14 +241,14 @@ fun ManageSeatsScreen(
                                     Icon(
                                         imageVector = Icons.Default.Add,
                                         contentDescription = "مكان جديد",
-                                        tint = ManagePrimaryTeal,
+                                        tint = PrimaryTeal,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
                                         text = "مكان جديد",
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        color = ManagePrimaryTeal,
+                                        fontFamily = TajawalFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = PrimaryTeal,
                                         fontSize = 12.sp,
                                         maxLines = 1,
                                         softWrap = false
@@ -265,8 +262,8 @@ fun ManageSeatsScreen(
             bottomBar = {
                 Surface(
                     color = Color.White,
-                    shadowElevation = 8.dp,
-                    border = BorderStroke(1.dp, ManageCardBorder)
+                    shadowElevation = 6.dp,
+                    border = BorderStroke(1.dp, TealCardBorder.copy(alpha = 0.6f))
                 ) {
                     Box(
                         modifier = Modifier
@@ -279,7 +276,7 @@ fun ManageSeatsScreen(
                                 .fillMaxWidth()
                                 .height(50.dp)
                                 .clip(RoundedCornerShape(14.dp))
-                                .background(ManagePrimaryTeal)
+                                .background(PrimaryTeal)
                                 .bounceClick {
                                     Toast.makeText(
                                         context,
@@ -302,10 +299,10 @@ fun ManageSeatsScreen(
                                 )
                                 Text(
                                     text = "حفظ ومزامنة المقاعد",
-                                    fontFamily = CairoFontFamily,
-                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = Color.White,
-                                    fontSize = 15.sp,
+                                    fontSize = 14.sp,
                                     maxLines = 1,
                                     softWrap = false
                                 )
@@ -327,14 +324,14 @@ fun ManageSeatsScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 1. بطاقة ملخص اكتمال التيم (كارت مسطح بدون كروت داخلية)
+                // 1. بطاقة ملخص اكتمال التيم (Tinted Flat Card)
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        border = BorderStroke(1.dp, ManageCardBorder),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        colors = CardDefaults.cardColors(containerColor = TealCardFill),
+                        border = BorderStroke(1.2.dp, TealCardBorder),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Column(
                             modifier = Modifier
@@ -350,10 +347,10 @@ fun ManageSeatsScreen(
                                 Text(
                                     text = "TeamSeat-App",
                                     style = TextStyle(
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = DeepNavy,
-                                        fontSize = 16.sp,
+                                        fontFamily = TajawalFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TitleDark,
+                                        fontSize = 15.sp,
                                         textDirection = TextDirection.Ltr
                                     ),
                                     maxLines = 1,
@@ -363,14 +360,15 @@ fun ManageSeatsScreen(
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(LightAqua.copy(alpha = 0.45f))
+                                        .background(Color.White)
+                                        .border(1.dp, TealCardBorder, RoundedCornerShape(10.dp))
                                         .padding(horizontal = 10.dp, vertical = 4.dp)
                                 ) {
                                     Text(
                                         text = "$approvedCount من $totalCount معتمدين ($completionPercent%)",
-                                        fontFamily = CairoFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        color = ManagePrimaryTeal,
+                                        fontFamily = TajawalFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = PrimaryTeal,
                                         fontSize = 12.sp,
                                         maxLines = 1,
                                         softWrap = false
@@ -384,22 +382,22 @@ fun ManageSeatsScreen(
                                     .fillMaxWidth()
                                     .height(8.dp)
                                     .clip(RoundedCornerShape(4.dp)),
-                                color = ManagePrimaryTeal,
-                                trackColor = SoftBeige
+                                color = PrimaryTeal,
+                                trackColor = Color.White
                             )
 
                             Text(
                                 text = "دوس على أي مقعد عشان تعدّل دوره أو تأكد طلب الانضمام.",
-                                fontFamily = CairoFontFamily,
+                                fontFamily = TajawalFontFamily,
                                 fontWeight = FontWeight.Normal,
-                                color = DeepNavy.copy(alpha = 0.7f),
-                                fontSize = 12.sp
+                                color = BodyMuted,
+                                fontSize = 12.5.sp
                             )
                         }
                     }
                 }
 
-                // 2. شريط فلاتر الحالة (Single-line Filter Chips with bounceClick)
+                // 2. شريط فلاتر الحالة
                 item {
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -411,10 +409,10 @@ fun ManageSeatsScreen(
                                 modifier = Modifier
                                     .height(36.dp)
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(if (isSelected) ManagePrimaryTeal else Color.White)
+                                    .background(if (isSelected) PrimaryTeal else TealCardFill)
                                     .border(
-                                        width = 1.dp,
-                                        color = if (isSelected) ManagePrimaryTeal else ManageCardBorder,
+                                        width = 1.2.dp,
+                                        color = if (isSelected) PrimaryTeal else TealCardBorder,
                                         shape = RoundedCornerShape(12.dp)
                                     )
                                     .bounceClick { selectedFilter = tab }
@@ -423,10 +421,10 @@ fun ManageSeatsScreen(
                             ) {
                                 Text(
                                     text = tab.label,
-                                    fontFamily = CairoFontFamily,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) Color.White else DeepNavy,
-                                    fontSize = 12.5.sp,
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (isSelected) Color.White else TitleDark,
+                                    fontSize = 12.sp,
                                     maxLines = 1,
                                     softWrap = false
                                 )
@@ -435,7 +433,7 @@ fun ManageSeatsScreen(
                     }
                 }
 
-                // 3. تبديل محتوى المقاعد بانسيابية أفقية عند تغيير الفلتر
+                // 3. قائمة المقاعد بحركة انتقال ناعمة
                 item {
                     AnimatedContent(
                         targetState = selectedFilter,
@@ -449,9 +447,9 @@ fun ManageSeatsScreen(
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                border = BorderStroke(1.dp, ManageCardBorder),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                colors = CardDefaults.cardColors(containerColor = TealCardFill),
+                                border = BorderStroke(1.2.dp, TealCardBorder),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                             ) {
                                 Column(
                                     modifier = Modifier
@@ -462,17 +460,17 @@ fun ManageSeatsScreen(
                                 ) {
                                     Text(
                                         text = "مفيش مقاعد في الفلتر ده دلوقتي",
-                                        fontFamily = CairoFontFamily,
+                                        fontFamily = TajawalFontFamily,
                                         fontWeight = FontWeight.Bold,
-                                        color = DeepNavy,
-                                        fontSize = 14.5.sp,
+                                        color = TitleDark,
+                                        fontSize = 15.sp,
                                         textAlign = TextAlign.Center
                                     )
                                     Text(
                                         text = "جرّب تختار \"الكل\" عشان تشوف باقي مقاعد التيم.",
-                                        fontFamily = CairoFontFamily,
-                                        color = DeepNavy.copy(alpha = 0.65f),
-                                        fontSize = 12.sp,
+                                        fontFamily = TajawalFontFamily,
+                                        color = BodyMuted,
+                                        fontSize = 12.5.sp,
                                         textAlign = TextAlign.Center
                                     )
                                 }
@@ -520,14 +518,12 @@ fun ManageSeatsScreen(
             }
         }
 
-        // =========================================================================
-        // 🪄 ModalBottomSheet لإدارة إجراءات العضو وتعديل الدور
-        // =========================================================================
+        // ModalBottomSheet لإدارة العضو والدور
         if (activeSeatForSheet != null) {
             val targetSeat = activeSeatForSheet!!
             ModalBottomSheet(
                 onDismissRequest = { activeSeatForSheet = null },
-                containerColor = Color.White,
+                containerColor = OffWhiteBg,
                 shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             ) {
                 Column(
@@ -545,15 +541,15 @@ fun ManageSeatsScreen(
                         Column {
                             Text(
                                 text = "إدارة المقعد ${targetSeat.code}",
-                                fontFamily = CairoFontFamily,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = DeepNavy,
-                                fontSize = 17.sp
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = TitleDark,
+                                fontSize = 16.sp
                             )
                             Text(
                                 text = targetSeat.memberName ?: "مكان فاضي مستني عضو جديد",
-                                fontFamily = CairoFontFamily,
-                                color = ManagePrimaryTeal,
+                                fontFamily = TajawalFontFamily,
+                                color = BodyMuted,
                                 fontSize = 13.sp
                             )
                         }
@@ -561,14 +557,15 @@ fun ManageSeatsScreen(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(SoftBeige)
+                                .background(TealCardFill)
+                                .border(1.2.dp, TealCardBorder, RoundedCornerShape(10.dp))
                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                         ) {
                             Text(
                                 text = targetSeat.code,
-                                fontFamily = CairoFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                color = DeepNavy,
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                color = PrimaryTeal,
                                 fontSize = 12.sp,
                                 maxLines = 1,
                                 softWrap = false
@@ -583,12 +580,12 @@ fun ManageSeatsScreen(
                         label = {
                             Text(
                                 text = "المسمى الوظيفي المطلوب",
-                                fontFamily = CairoFontFamily,
+                                fontFamily = TajawalFontFamily,
                                 fontSize = 12.sp
                             )
                         },
                         textStyle = TextStyle(
-                            fontFamily = CairoFontFamily,
+                            fontFamily = TajawalFontFamily,
                             fontSize = 14.sp,
                             textDirection = TextDirection.Ltr
                         ),
@@ -601,7 +598,7 @@ fun ManageSeatsScreen(
                                 .fillMaxWidth()
                                 .height(46.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(ManageWarmOrange)
+                                .background(WarmOrangeAccent)
                                 .bounceClick {
                                     val idx = seatItems.indexOfFirst { it.id == targetSeat.id }
                                     if (idx != -1) {
@@ -621,8 +618,8 @@ fun ManageSeatsScreen(
                         ) {
                             Text(
                                 text = "تأكيد وقبول العضو في التيم",
-                                fontFamily = CairoFontFamily,
-                                fontWeight = FontWeight.Bold,
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.SemiBold,
                                 color = Color.White,
                                 fontSize = 14.sp,
                                 maxLines = 1,
@@ -640,7 +637,7 @@ fun ManageSeatsScreen(
                                 .weight(1f)
                                 .height(46.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(ManagePrimaryTeal)
+                                .background(PrimaryTeal)
                                 .bounceClick {
                                     val idx = seatItems.indexOfFirst { it.id == targetSeat.id }
                                     if (idx != -1 && roleDraft.isNotBlank()) {
@@ -657,10 +654,10 @@ fun ManageSeatsScreen(
                         ) {
                             Text(
                                 text = "حفظ التعديل",
-                                fontFamily = CairoFontFamily,
-                                fontWeight = FontWeight.Bold,
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.SemiBold,
                                 color = Color.White,
-                                fontSize = 14.sp,
+                                fontSize = 13.5.sp,
                                 maxLines = 1,
                                 softWrap = false
                             )
@@ -673,7 +670,7 @@ fun ManageSeatsScreen(
                                     .height(46.dp)
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(Color(0xFFFFF1F2))
-                                    .border(1.dp, ManageDangerRed.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                                    .border(1.2.dp, DangerRed.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
                                     .bounceClick {
                                         seatItems.removeAll { it.id == targetSeat.id }
                                         Toast.makeText(
@@ -687,10 +684,10 @@ fun ManageSeatsScreen(
                             ) {
                                 Text(
                                     text = "امسح المكان",
-                                    fontFamily = CairoFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    color = ManageDangerRed,
-                                    fontSize = 14.sp,
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = DangerRed,
+                                    fontSize = 13.5.sp,
                                     maxLines = 1,
                                     softWrap = false
                                 )
@@ -703,13 +700,11 @@ fun ManageSeatsScreen(
             }
         }
 
-        // =========================================================================
-        // ➕ ModalBottomSheet لإضافة مكان فاضي جديد
-        // =========================================================================
+        // ModalBottomSheet لإضافة مكان فاضي جديد
         if (showAddSeatSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showAddSeatSheet = false },
-                containerColor = Color.White,
+                containerColor = OffWhiteBg,
                 shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             ) {
                 Column(
@@ -721,10 +716,10 @@ fun ManageSeatsScreen(
                 ) {
                     Text(
                         text = "زود مكان فاضي جديد للتيم",
-                        fontFamily = CairoFontFamily,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = DeepNavy,
-                        fontSize = 17.sp
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = TitleDark,
+                        fontSize = 16.sp
                     )
 
                     OutlinedTextField(
@@ -734,12 +729,12 @@ fun ManageSeatsScreen(
                         placeholder = {
                             Text(
                                 text = "مثال: Backend Developer",
-                                fontFamily = CairoFontFamily,
+                                fontFamily = TajawalFontFamily,
                                 fontSize = 12.5.sp
                             )
                         },
                         textStyle = TextStyle(
-                            fontFamily = CairoFontFamily,
+                            fontFamily = TajawalFontFamily,
                             fontSize = 14.sp,
                             textDirection = TextDirection.Ltr
                         ),
@@ -751,7 +746,7 @@ fun ManageSeatsScreen(
                             .fillMaxWidth()
                             .height(48.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(ManagePrimaryTeal)
+                            .background(PrimaryTeal)
                             .bounceClick {
                                 if (newRoleDraft.isNotBlank()) {
                                     val nextNum = seatItems.size + 1
@@ -776,10 +771,10 @@ fun ManageSeatsScreen(
                     ) {
                         Text(
                             text = "إضافة المكان للتيم",
-                            fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.Bold,
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.SemiBold,
                             color = Color.White,
-                            fontSize = 14.5.sp,
+                            fontSize = 14.sp,
                             maxLines = 1,
                             softWrap = false
                         )
@@ -793,7 +788,7 @@ fun ManageSeatsScreen(
 }
 
 /**
- * صف المقعد الواحد (كارت مسطح بالكامل بدون أي Card/Surface متداخل وبضغطة bounceClick)
+ * صف المقعد الواحد (كارت ملون خفيف بحواف ملونة بدون كروت متداخلة)
  */
 @Composable
 private fun FlatSeatRowCard(
@@ -802,6 +797,10 @@ private fun FlatSeatRowCard(
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
+    val isHighlighted = seat.state == ManageSeatState.PENDING || seat.isLeader
+    val cardFill = if (isHighlighted) WarmCardFill else TealCardFill
+    val cardBorder = if (isHighlighted) WarmCardBorder else TealCardBorder
+
     val badgeLabel = when {
         seat.isLeader -> "قائد الفريق"
         seat.state == ManageSeatState.APPROVED -> "معتمد"
@@ -809,37 +808,31 @@ private fun FlatSeatRowCard(
         else -> "متاح"
     }
 
-    val badgeBg = when {
-        seat.isLeader -> Peach.copy(alpha = 0.55f)
-        seat.state == ManageSeatState.APPROVED -> LightAqua.copy(alpha = 0.5f)
-        seat.state == ManageSeatState.PENDING -> ManagePendingBg
-        else -> SoftBeige.copy(alpha = 0.7f)
-    }
-
+    val badgeBg = if (isHighlighted) Color.White else Color.White
+    val badgeBorder = if (isHighlighted) WarmCardBorder else TealCardBorder
     val badgeTextColor = when {
-        seat.isLeader -> DeepNavy
-        seat.state == ManageSeatState.APPROVED -> ManagePrimaryTeal
-        seat.state == ManageSeatState.PENDING -> ManageWarmOrange
-        else -> DeepNavy.copy(alpha = 0.8f)
+        seat.isLeader -> TitleDark
+        seat.state == ManageSeatState.APPROVED -> PrimaryTeal
+        seat.state == ManageSeatState.PENDING -> WarmOrangeAccent
+        else -> BodyMuted
     }
 
     val codeBg = when {
-        seat.isLeader -> DeepNavy
-        seat.state == ManageSeatState.APPROVED -> ManagePrimaryTeal
-        seat.state == ManageSeatState.PENDING -> ManageWarmOrange
-        else -> SoftBeige
+        seat.isLeader -> TitleDark
+        seat.state == ManageSeatState.APPROVED -> PrimaryTeal
+        seat.state == ManageSeatState.PENDING -> WarmOrangeAccent
+        else -> Color.White
     }
-
-    val codeTextColor = if (seat.state == ManageSeatState.AVAILABLE) DeepNavy else Color.White
+    val codeTextColor = if (seat.state == ManageSeatState.AVAILABLE) TitleDark else Color.White
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .bounceClick(onClick = onCardClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, ManageCardBorder),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = cardFill),
+        border = BorderStroke(1.2.dp, cardBorder),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -856,13 +849,18 @@ private fun FlatSeatRowCard(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(codeBg),
+                        .background(codeBg)
+                        .then(
+                            if (seat.state == ManageSeatState.AVAILABLE) {
+                                Modifier.border(1.dp, TealCardBorder, RoundedCornerShape(12.dp))
+                            } else Modifier
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = seat.code,
-                        fontFamily = CairoFontFamily,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.Bold,
                         color = codeTextColor,
                         fontSize = 14.sp,
                         maxLines = 1,
@@ -876,10 +874,10 @@ private fun FlatSeatRowCard(
                 ) {
                     Text(
                         text = seat.memberName ?: "مكان فاضي",
-                        fontFamily = CairoFontFamily,
+                        fontFamily = TajawalFontFamily,
                         fontWeight = FontWeight.Bold,
-                        color = if (seat.memberName != null) DeepNavy else DeepNavy.copy(alpha = 0.6f),
-                        fontSize = 14.5.sp,
+                        color = if (seat.memberName != null) TitleDark else BodyMuted,
+                        fontSize = 15.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -887,9 +885,9 @@ private fun FlatSeatRowCard(
                     Text(
                         text = seat.roleTitleEn,
                         style = TextStyle(
-                            fontFamily = CairoFontFamily,
+                            fontFamily = TajawalFontFamily,
                             fontWeight = FontWeight.Medium,
-                            color = ManagePrimaryTeal,
+                            color = BodyMuted,
                             fontSize = 12.5.sp,
                             textDirection = TextDirection.Ltr
                         ),
@@ -902,7 +900,8 @@ private fun FlatSeatRowCard(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
                         .background(badgeBg)
-                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                        .border(1.dp, badgeBorder, RoundedCornerShape(10.dp))
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(
@@ -922,10 +921,10 @@ private fun FlatSeatRowCard(
                         )
                         Text(
                             text = badgeLabel,
-                            fontFamily = CairoFontFamily,
-                            fontWeight = FontWeight.Bold,
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.SemiBold,
                             color = badgeTextColor,
-                            fontSize = 11.sp,
+                            fontSize = 12.sp,
                             maxLines = 1,
                             softWrap = false
                         )
@@ -942,8 +941,8 @@ private fun FlatSeatRowCard(
                     Row(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(ManageBgCream)
-                            .border(1.dp, ManageCardBorder, RoundedCornerShape(8.dp))
+                            .background(Color.White)
+                            .border(1.dp, TealCardBorder, RoundedCornerShape(8.dp))
                             .bounceClick(onClick = onEditClick)
                             .padding(horizontal = 10.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -952,15 +951,15 @@ private fun FlatSeatRowCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "تعديل الدور",
-                            tint = DeepNavy,
+                            tint = PrimaryTeal,
                             modifier = Modifier.size(13.dp)
                         )
                         Text(
                             text = "عدّل الدور",
-                            fontFamily = CairoFontFamily,
+                            fontFamily = TajawalFontFamily,
                             fontWeight = FontWeight.SemiBold,
-                            color = DeepNavy,
-                            fontSize = 11.5.sp,
+                            color = TitleDark,
+                            fontSize = 12.sp,
                             maxLines = 1,
                             softWrap = false
                         )
@@ -972,7 +971,7 @@ private fun FlatSeatRowCard(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(Color(0xFFFFF1F2))
-                                .border(1.dp, ManageDangerRed.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                                .border(1.dp, DangerRed.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
                                 .bounceClick(onClick = onDeleteClick)
                                 .padding(horizontal = 10.dp, vertical = 5.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -981,15 +980,15 @@ private fun FlatSeatRowCard(
                             Icon(
                                 imageVector = Icons.Default.DeleteOutline,
                                 contentDescription = "مسح المكان",
-                                tint = ManageDangerRed,
+                                tint = DangerRed,
                                 modifier = Modifier.size(13.dp)
                             )
                             Text(
                                 text = "امسح المكان",
-                                fontFamily = CairoFontFamily,
+                                fontFamily = TajawalFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                color = ManageDangerRed,
-                                fontSize = 11.5.sp,
+                                color = DangerRed,
+                                fontSize = 12.sp,
                                 maxLines = 1,
                                 softWrap = false
                             )

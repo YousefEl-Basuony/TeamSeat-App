@@ -1,49 +1,66 @@
 package com.stackmates.teamseat.Screens.admin_youssef
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Verified
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.VerifiedUser
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.stackmates.teamseat.core.theme.*
+import com.stackmates.teamseat.ui.components.StaggeredAnimatedItem
+import com.stackmates.teamseat.ui.components.bounceClick
+import com.stackmates.teamseat.ui.components.rememberAnimatedProgress
+
+// =============================================================================
+// 🎨 باليت الألوان الرسمية للتطبيق (Color.kt)
+// =============================================================================
+private val OffWhiteBg = WarmCream
+private val PrimaryTeal = DeepTeal
+private val TitleDark = DeepNavy
+private val BodyMuted = DeepNavy.copy(alpha = 0.65f)
+
+private val TealCardFill = Color.White
+private val TealCardBorder = SoftGray.copy(alpha = 0.6f)
+
+private val WarmCardFill = SoftBeige.copy(alpha = 0.45f)
+private val WarmCardBorder = Peach
+private val WarmOrangeAccent = DeepNavy
 
 /**
  * 💻 المسؤول عن الشاشة: يوسف (Youssef - Team Lead & Backend)
- * شاشة اعتماد وإغلاق الفريق نهائياً قبل تسليم الكشف الرسمي (Lock Team Screen)
- * مصممة بنفس الهوية البصرية الرسمية لشاشة إدارة المقاعد (EditTeamSeatsScreen):
- * خلفية WarmCream، كروت بيضاء فخمة، ألوان DeepNavy و DeepTeal، وخط Tajawal المريح.
+ * شاشة اعتماد وقفل التيم نهائياً (LockTeamScreen / LockTeamDialog)
+ * - خلفية Off-White (#F8FAFA) وكروت مسطحة ملونة بحواف 1.2.dp بدون كروت متداخلة
+ * - أسلوب مصري بسيط وواضح مع حركات bounceClick و rememberAnimatedProgress
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LockTeamDialog(
-    teamName: String = "StackMates (RoleSpot)",
+    teamName: String = "TeamSeat-App",
     totalSeats: Int = 6,
     bookedSeats: Int = 6,
     teachingAssistant: String = "م. شهد أحمد عبدالسلام",
@@ -51,509 +68,436 @@ fun LockTeamDialog(
     onConfirmLock: () -> Unit = {},
     onDismiss: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     var isConfirmedByLeader by remember { mutableStateOf(false) }
-    var isProcessing by remember { mutableStateOf(false) }
-    var showLockedSuccess by remember { mutableStateOf(false) }
+    var isLockedSuccess by remember { mutableStateOf(false) }
 
-    val membersList = listOf(
-        Triple("أحمد محمود", "قائد الفريق • Android Lead", true),
-        Triple("يوسف أحمد", "Backend Developer (Firebase/Spring)", false),
-        Triple("سارة علي", "UI/UX Designer (Figma Lead)", false),
-        Triple("عمر خالد", "Flutter Developer", false),
-        Triple("كريم صبحي", "AI / ML Engineer", false),
-        Triple("منى سعيد", "QA & Software Tester", false)
+    val targetProgress = if (totalSeats > 0) bookedSeats.toFloat() / totalSeats else 0f
+    val animatedProgress by rememberAnimatedProgress(
+        targetProgress = targetProgress,
+        durationMillis = 800
     )
+    val animatedPercent = (animatedProgress * 100).toInt()
 
-    Scaffold(
-        containerColor = WarmCream,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "اعتماد وإغلاق الفريق",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.ExtraBold,
-                                color = DeepNavy,
-                                fontSize = 21.sp
-                            )
-                        )
-                        Text(
-                            text = "تجميد المقاعد وتجهيز كشف التسليم الأكاديمي",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = DeepTeal,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp
-                            )
-                        )
-                    }
-                },
-                navigationIcon = {
-                    Surface(
-                        modifier = Modifier
-                            .padding(start = 12.dp, end = 8.dp)
-                            .size(44.dp),
-                        shape = CircleShape,
-                        color = Color.White,
-                        shadowElevation = 2.dp,
-                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.6f))
-                    ) {
-                        IconButton(onClick = onDismiss) {
+    val membersList = remember {
+        listOf(
+            Triple("يوسف محمد البسيوني", "Team Leader & Backend", true),
+            Triple("خالد محمد السعيد", "Android Developer", false),
+            Triple("حسام الجوهري", "Android UI & Navigation", false),
+            Triple("إسراء محمد أحمد", "UI/UX Designer", false),
+            Triple("نها أحمد محمد", "Frontend & State Management", false),
+            Triple("آلاء عصام حامد", "QA & Documentation", false)
+        )
+    }
+
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        Scaffold(
+            containerColor = OffWhiteBg,
+            topBar = {
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = OffWhiteBg),
+                    navigationIcon = {
+                        Box(
+                            modifier = Modifier
+                                .padding(start = 12.dp, end = 6.dp)
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(TealCardFill)
+                                .border(1.2.dp, TealCardBorder, CircleShape)
+                                .bounceClick(onClick = onDismiss),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "رجوع",
-                                tint = DeepNavy,
-                                modifier = Modifier.size(22.dp)
+                                tint = TitleDark,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = WarmCream
-                )
-            )
-        },
-        bottomBar = {
-            Surface(
-                color = Color.White,
-                shadowElevation = 16.dp,
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Button(
-                        onClick = {
-                            if (isConfirmedByLeader && !isProcessing) {
-                                isProcessing = true
-                                showLockedSuccess = true
-                                onConfirmLock()
-                            }
-                        },
-                        enabled = isConfirmedByLeader && !isProcessing,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = DeepTeal,
-                            disabledContainerColor = SoftGray.copy(alpha = 0.7f),
-                            contentColor = Color.White,
-                            disabledContentColor = DeepNavy.copy(alpha = 0.4f)
-                        ),
-                        shape = RoundedCornerShape(28.dp),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-                    ) {
-                        if (isProcessing) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = Color.White,
-                                strokeWidth = 2.5.dp
-                            )
-                        } else {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Lock,
-                                    contentDescription = null,
-                                    tint = if (isConfirmedByLeader) Color.White else DeepNavy.copy(alpha = 0.4f),
-                                    modifier = Modifier.size(22.dp)
-                                )
-                                Text(
-                                    text = if (showLockedSuccess) "تم اعتماد وقفل التيم رسمياً ✓" else "تأكيد إغلاق التيم واعتماد الكشف",
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
-                                )
-                            }
-                        }
-                    }
-
-                    // زر الإلغاء والعودة
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.35f)),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = DeepTeal
-                        )
-                    ) {
-                        Text(
-                            text = "العودة للمراجعة والتعديل",
-                            style = MaterialTheme.typography.bodyMedium.copy(
+                    },
+                    title = {
+                        Column {
+                            Text(
+                                text = "اقفل التيم وجهّز الكشف",
+                                fontFamily = TajawalFontFamily,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 14.5.sp,
-                                color = DeepTeal
+                                color = TitleDark,
+                                fontSize = 18.sp,
+                                maxLines = 1,
+                                softWrap = false
                             )
-                        )
+                            Text(
+                                text = "خطوة نهائية قبل التسليم الأكاديمي",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                color = BodyMuted,
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
-                }
-            }
-        }
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(top = 10.dp, bottom = 28.dp)
-        ) {
-
-            // =============================================================
-            // 1. كارت ملخص اكتمال الفريق (Hero Metric Dashboard)
-            // =============================================================
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
+                )
+            },
+            bottomBar = {
+                Surface(
+                    color = Color.White,
+                    shadowElevation = 6.dp,
+                    border = BorderStroke(1.dp, TealCardBorder.copy(alpha = 0.6f))
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp)
+                            .navigationBarsPadding()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // الصف العلوي مع مؤشر الاكتمال الدائري الكبير
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(
+                                    if (isConfirmedByLeader) PrimaryTeal else Color(0xFFD6E3E3)
+                                )
+                                .bounceClick(enabled = isConfirmedByLeader && !isLockedSuccess) {
+                                    isLockedSuccess = true
+                                    Toast.makeText(
+                                        context,
+                                        "تمام! التيم اتقفل وجاهز للتسليم",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    onConfirmLock()
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = SoftBeige,
-                                    modifier = Modifier.padding(bottom = 6.dp)
-                                ) {
-                                    Text(
-                                        text = "مشروع تخرج حاسبات 2026",
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                        style = MaterialTheme.typography.labelMedium.copy(
-                                            color = DeepTeal,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 12.5.sp
-                                        )
-                                    )
-                                }
-                                Text(
-                                    text = teamName,
-                                    style = MaterialTheme.typography.titleLarge.copy(
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = DeepNavy,
-                                        fontSize = 20.sp
-                                    )
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "اكتملت المقاعد رسمياً ($bookedSeats من أصل $totalSeats مقاعد)",
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        color = Color.Gray,
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 14.5.sp
-                                    )
-                                )
-                            }
-
-                            // حلقة التقدم الدائرية الكبيرة (100%)
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.size(64.dp)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                CircularProgressIndicator(
-                                    progress = { 1f },
-                                    modifier = Modifier.fillMaxSize(),
-                                    color = DeepTeal,
-                                    trackColor = SoftBeige,
-                                    strokeWidth = 6.dp
+                                Icon(
+                                    imageVector = if (isLockedSuccess) Icons.Default.Lock else Icons.Outlined.Lock,
+                                    contentDescription = null,
+                                    tint = if (isConfirmedByLeader) Color.White else BodyMuted,
+                                    modifier = Modifier.size(18.dp)
                                 )
                                 Text(
-                                    text = "100%",
-                                    style = MaterialTheme.typography.titleSmall.copy(
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = DeepNavy,
-                                        fontSize = 14.sp
-                                    )
+                                    text = if (isLockedSuccess) "تم قفل التيم بنجاح ✓" else "تأكيد قفل التيم",
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (isConfirmedByLeader) Color.White else BodyMuted,
+                                    fontSize = 14.sp,
+                                    maxLines = 1,
+                                    softWrap = false
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(18.dp))
-
-                        // شبكة إحصائيات الفريق 2x2
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(TealCardFill)
+                                .border(1.2.dp, TealCardBorder, RoundedCornerShape(12.dp))
+                                .bounceClick(onClick = onDismiss),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "ارجع راجع المقاعد الأول",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                color = PrimaryTeal,
+                                fontSize = 13.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
+                }
+            }
+        ) { paddingValues ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 12.dp,
+                    bottom = 16.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // 1. بطاقة ملخص جاهزية التيم
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = TealCardFill),
+                        border = BorderStroke(1.2.dp, TealCardBorder),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
                         Column(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                LockMetricCard(
-                                    modifier = Modifier.weight(1f),
-                                    title = "إجمالي المقاعد",
-                                    value = "$totalSeats مقاعد",
-                                    icon = Icons.Outlined.Groups,
-                                    iconTint = DeepNavy,
-                                    iconBg = SoftBeige
+                                Text(
+                                    text = teamName,
+                                    style = TextStyle(
+                                        fontFamily = TajawalFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TitleDark,
+                                        fontSize = 15.sp,
+                                        textDirection = TextDirection.Ltr
+                                    ),
+                                    maxLines = 1,
+                                    softWrap = false
                                 )
-                                LockMetricCard(
-                                    modifier = Modifier.weight(1f),
-                                    title = "الأعضاء المعتمدون",
-                                    value = "$bookedSeats طلاب",
-                                    icon = Icons.Outlined.VerifiedUser,
-                                    iconTint = DeepTeal,
-                                    iconBg = SeatBookedBg
-                                )
+
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color.White)
+                                        .border(1.dp, TealCardBorder, RoundedCornerShape(10.dp))
+                                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = "$bookedSeats من $totalSeats ($animatedPercent%)",
+                                        fontFamily = TajawalFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = PrimaryTeal,
+                                        fontSize = 12.sp,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
+                                }
                             }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                LockMetricCard(
-                                    modifier = Modifier.weight(1f),
-                                    title = "المعيدة المشرفة",
-                                    value = teachingAssistant,
-                                    icon = Icons.Outlined.Person,
-                                    iconTint = Turquoise,
-                                    iconBg = SeatAvailableBg
+
+                            LinearProgressIndicator(
+                                progress = { animatedProgress },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(8.dp)
+                                    .clip(RoundedCornerShape(4.dp)),
+                                color = PrimaryTeal,
+                                trackColor = Color.White
+                            )
+
+                            Text(
+                                text = "الإشراف: $supervisorDoctor • $teachingAssistant",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                color = BodyMuted,
+                                fontSize = 12.5.sp
+                            )
+                        }
+                    }
+                }
+
+                // 2. تنبيه القفل النهائي (Warm Highlight Card)
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = WarmCardFill),
+                        border = BorderStroke(1.2.dp, WarmCardBorder),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.WarningAmber,
+                                contentDescription = null,
+                                tint = WarmOrangeAccent,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                Text(
+                                    text = "خد بالك قبل ما تقفل",
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TitleDark,
+                                    fontSize = 15.sp
                                 )
-                                LockMetricCard(
-                                    modifier = Modifier.weight(1f),
-                                    title = "أستاذ المقرر",
-                                    value = supervisorDoctor,
-                                    icon = Icons.Outlined.School,
-                                    iconTint = DeepNavy,
-                                    iconBg = SoftBeige
+                                Text(
+                                    text = "بعد ما تقفل التيم، مفيش حد يقدر يبدّل مقعده أو يضيف عضو جديد إلا بعد مراجعة المعيدة.",
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    color = BodyMuted,
+                                    fontSize = 12.5.sp,
+                                    lineHeight = 19.sp
                                 )
                             }
                         }
                     }
                 }
-            }
 
-            // =============================================================
-            // 2. كشف تشكيل الفريق المعتمد (Team Roster Preview)
-            // =============================================================
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(18.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "تشكيل الفريق المعتمد في الكشف",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 16.sp
-                                )
-                            )
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = SeatAvailableBg
-                            ) {
-                                Text(
-                                    text = "جاهز للتسليم ✓",
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        color = DeepTeal,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp
-                                    )
-                                )
-                            }
-                        }
+                // 3. قائمة الأعضاء المعتمدين (ظهور متتابع بدون كروت متداخلة)
+                item {
+                    Text(
+                        text = "الأعضاء اللي هيتسجلوا في الكشف",
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = TitleDark,
+                        fontSize = 15.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
 
-                        HorizontalDivider(color = SoftGray.copy(alpha = 0.4f))
-
-                        membersList.forEachIndexed { index, member ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                membersList.forEachIndexed { index, (name, roleEn, isLeader) ->
+                    item(key = "lock_member_$index") {
+                        StaggeredAnimatedItem(index = index) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isLeader) WarmCardFill else TealCardFill
+                                ),
+                                border = BorderStroke(
+                                    1.2.dp,
+                                    if (isLeader) WarmCardBorder else TealCardBorder
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                             ) {
                                 Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(14.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    Surface(
-                                        modifier = Modifier.size(34.dp),
-                                        shape = CircleShape,
-                                        color = if (member.third) SoftBeige else SeatBookedBg
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(if (isLeader) WarmOrangeAccent else PrimaryTeal),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = "S${index + 1}",
+                                            fontFamily = TajawalFontFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White,
+                                            fontSize = 12.5.sp,
+                                            maxLines = 1,
+                                            softWrap = false
+                                        )
+                                    }
+
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+                                        Text(
+                                            text = name,
+                                            fontFamily = TajawalFontFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TitleDark,
+                                            fontSize = 15.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = roleEn,
+                                            style = TextStyle(
+                                                fontFamily = TajawalFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                                color = BodyMuted,
+                                                fontSize = 12.sp,
+                                                textDirection = TextDirection.Ltr
+                                            ),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Color.White)
+                                            .border(
+                                                1.dp,
+                                                if (isLeader) WarmCardBorder else TealCardBorder,
+                                                RoundedCornerShape(8.dp)
+                                            )
+                                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isLeader) Icons.Outlined.VerifiedUser else Icons.Default.CheckCircle,
+                                                contentDescription = null,
+                                                tint = if (isLeader) WarmOrangeAccent else PrimaryTeal,
+                                                modifier = Modifier.size(13.dp)
+                                            )
                                             Text(
-                                                text = "${index + 1}",
-                                                style = MaterialTheme.typography.labelLarge.copy(
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = if (member.third) DeepTeal else DeepNavy,
-                                                    fontSize = 13.sp
-                                                )
+                                                text = if (isLeader) "قائد الفريق" else "معتمد",
+                                                fontFamily = TajawalFontFamily,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = if (isLeader) WarmOrangeAccent else PrimaryTeal,
+                                                fontSize = 12.sp,
+                                                maxLines = 1,
+                                                softWrap = false
                                             )
                                         }
                                     }
-
-                                    Column {
-                                        Text(
-                                            text = member.first,
-                                            style = MaterialTheme.typography.bodyLarge.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                color = DeepNavy,
-                                                fontSize = 14.5.sp
-                                            )
-                                        )
-                                        Text(
-                                            text = member.second,
-                                            style = MaterialTheme.typography.bodySmall.copy(
-                                                color = Color.Gray,
-                                                fontSize = 12.5.sp
-                                            )
-                                        )
-                                    }
                                 }
-
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    tint = Turquoise,
-                                    modifier = Modifier.size(18.dp)
-                                )
                             }
                         }
                     }
                 }
-            }
 
-            // =============================================================
-            // 3. تنبيه الآثار الإدارية للاعتماد (Advisory Box)
-            // =============================================================
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = SoftBeige),
-                    border = BorderStroke(1.dp, Peach.copy(alpha = 0.6f))
-                ) {
-                    Column(
+                // 4. مربع تأكيد قائد الفريق
+                item {
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(18.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                            .bounceClick { isConfirmedByLeader = !isConfirmedByLeader },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isConfirmedByLeader) TealCardFill else WarmCardFill
+                        ),
+                        border = BorderStroke(
+                            1.2.dp,
+                            if (isConfirmedByLeader) TealCardBorder else WarmCardBorder
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = Peach
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Lock,
-                                    contentDescription = null,
-                                    tint = DeepNavy,
-                                    modifier = Modifier
-                                        .padding(6.dp)
-                                        .size(16.dp)
-                                )
-                            }
+                            Checkbox(
+                                checked = isConfirmedByLeader,
+                                onCheckedChange = { isConfirmedByLeader = it },
+                                colors = CheckboxDefaults.colors(checkedColor = PrimaryTeal)
+                            )
                             Text(
-                                text = "ماذا يحدث بعد اعتماد وقفل الفريق؟",
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 15.sp
-                                )
+                                text = "تمام، راجعت كل الأسماء ومتأكد إني عايز أقفل التيم.",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TitleDark,
+                                fontSize = 13.sp
                             )
                         }
-
-                        LockBulletPoint("تجميد المقاعد: لن يتمكن أي عضو من الانسحاب أو تبديل دوره بعد الاعتماد.")
-                        LockBulletPoint("تصدير الكشف: تفعيل تحميل كشف المعيدة الرسمي (A4 TA Sheet) المعتمد.")
-                        LockBulletPoint("إشعار الفريق: إرسال تأكيد فوري لجميع الأعضاء باعتماد التشكيل النهائي للمشروع.")
-                    }
-                }
-            }
-
-            // =============================================================
-            // 4. إقرار قائد الفريق التفاعلي (Leader Confirmation Card)
-            // =============================================================
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { isConfirmedByLeader = !isConfirmedByLeader },
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isConfirmedByLeader) SeatAvailableBg else Color.White
-                    ),
-                    border = BorderStroke(
-                        1.5.dp,
-                        if (isConfirmedByLeader) DeepTeal else SoftGray.copy(alpha = 0.7f)
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Surface(
-                            modifier = Modifier.size(26.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            color = if (isConfirmedByLeader) DeepTeal else SoftBeige,
-                            border = BorderStroke(
-                                1.5.dp,
-                                if (isConfirmedByLeader) DeepTeal else SoftGray
-                            )
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                if (isConfirmedByLeader) {
-                                    Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Text(
-                            text = "أقر بصفتي قائد الفريق بمراجعة بيانات المقاعد وأرقام جلوس جميع الأعضاء وجاهزية الكشف للتسليم الرسمي للجنة التقييم.",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = DeepNavy,
-                                fontSize = 13.5.sp,
-                                lineHeight = 21.sp
-                            )
-                        )
                     }
                 }
             }
@@ -561,96 +505,9 @@ fun LockTeamDialog(
     }
 }
 
-/**
- * 📊 كارت إحصائية متطابق مع بطاقات شاشة EditTeamSeatsScreen
- */
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
-private fun LockMetricCard(
-    modifier: Modifier = Modifier,
-    title: String,
-    value: String,
-    icon: ImageVector,
-    iconTint: Color,
-    iconBg: Color
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        color = iconBg,
-        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.4f))
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = Color.White.copy(alpha = 0.7f),
-                modifier = Modifier.size(28.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = iconTint,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = Color.Gray,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp
-                )
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = DeepNavy,
-                    fontSize = 13.5.sp
-                ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-/**
- * 🔹 نقطة إرشادية داخل صندوق التنبيه
- */
-@Composable
-private fun LockBulletPoint(text: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .padding(top = 8.dp)
-                .size(6.dp)
-                .clip(CircleShape)
-                .background(DeepTeal)
-        )
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontWeight = FontWeight.Medium,
-                color = DeepNavy,
-                fontSize = 13.5.sp,
-                lineHeight = 20.sp
-            )
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 390, heightDp = 844)
-@Composable
-private fun LockTeamDialogCleanOfficialPreview() {
+private fun LockTeamDialogPreview() {
     TeamSeatTheme {
         LockTeamDialog()
     }
