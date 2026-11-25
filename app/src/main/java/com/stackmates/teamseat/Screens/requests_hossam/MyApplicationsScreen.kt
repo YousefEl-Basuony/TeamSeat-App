@@ -1,92 +1,40 @@
 package com.stackmates.teamseat.Screens.requests_hossam
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.HourglassEmpty
-import androidx.compose.material.icons.filled.HourglassTop
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.DeleteOutline
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.Seat
 import com.stackmates.teamseat.core.model.SeatStatus
-import com.stackmates.teamseat.core.theme.DeepNavy
-import com.stackmates.teamseat.core.theme.DeepTeal
-import com.stackmates.teamseat.core.theme.LightAqua
-import com.stackmates.teamseat.core.theme.Peach
-import com.stackmates.teamseat.core.theme.SeatAvailableBg
-import com.stackmates.teamseat.core.theme.SoftBeige
-import com.stackmates.teamseat.core.theme.SoftGray
+import com.stackmates.teamseat.core.theme.TajawalFontFamily
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
-import com.stackmates.teamseat.core.theme.Turquoise
-import com.stackmates.teamseat.core.theme.WarmCream
-import kotlinx.coroutines.delay
+import com.stackmates.teamseat.ui.components.*
 import kotlinx.coroutines.launch
 
 /**
  * ⚡ المسؤول عن الشاشة: حسام (Hossam) — [HOSSAM-3]
- * شاشة متابعة طلباتي المعلقة (My Sent Applications - حد أقصى 3 طلبات)
- * تصميم أنيق ومتوافق تماماً مع الهوية البصرية الرسمية لتطبيق TeamSeat
+ * شاشة متابعة طلباتي المعلقة (MyApplicationsScreen)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,560 +43,317 @@ fun MyApplicationsScreen(
     onCancelApplicationClick: (seatId: String) -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
+    val appliedSeats = remember(myAppliedSeats) { mutableStateListOf(*myAppliedSeats.toTypedArray()) }
     var seatToCancel by remember { mutableStateOf<Seat?>(null) }
-    var showSuccessCancelBanner by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    Scaffold(
-        containerColor = WarmCream,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+    val maxRequests = 3
+    val currentCount = appliedSeats.size.coerceAtMost(maxRequests)
+    val targetProgress = currentCount.toFloat() / maxRequests
+    val animatedProgress by rememberAnimatedProgress(targetProgress = targetProgress, durationMillis = 800)
+
+    TeamSeatScreenContainer(
+        snackbarHostState = snackbarHostState,
         topBar = {
             TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                navigationIcon = {
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 12.dp, end = 6.dp)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.White)
+                            .border(1.dp, TeamSeatCardBorderTeal, CircleShape)
+                            .bounceClick(onClick = onBackClick),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = "رجوع",
+                            tint = TeamSeatTitleDark,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                },
                 title = {
                     Column {
                         Text(
-                            text = "طلباتي وحجوزاتي",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.ExtraBold,
-                                color = DeepNavy,
-                                fontSize = 21.sp
-                            )
+                            text = "طلباتي المعلقة",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = TeamSeatTitleDark,
+                            fontSize = 18.sp,
+                            maxLines = 1,
+                            softWrap = false
                         )
                         Text(
-                            text = "متابعة الطلبات المعلقة ومواعيد انتهائها",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = DeepTeal,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp
-                            )
+                            text = "تابع حالة طلباتك ومهلة الـ 48 ساعة",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            color = TeamSeatBodyMuted,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
-                },
-                navigationIcon = {
-                    Surface(
-                        modifier = Modifier
-                            .padding(start = 12.dp, end = 8.dp)
-                            .size(42.dp),
-                        shape = CircleShape,
-                        color = Color.White,
-                        shadowElevation = 2.dp,
-                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.5f))
-                    ) {
-                        IconButton(onClick = onBackClick) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "رجوع",
-                                tint = DeepNavy,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = WarmCream)
+                }
             )
         }
-    ) { innerPadding ->
+    ) { safePadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = safePadding.calculateTopPadding() + 8.dp,
+                bottom = safePadding.calculateBottomPadding()
+            ),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-
-            // =========================================================================
-            // 0. إشعار سحب الطلب (Cancel Success Banner)
-            // =========================================================================
+            // 1. بطاقة عداد الطلبات (حد أقصى 3)
             item {
-                AnimatedVisibility(
-                    visible = showSuccessCancelBanner,
-                    enter = slideInVertically() + fadeIn(),
-                    exit = slideOutVertically() + fadeOut()
-                ) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = SeatAvailableBg),
-                        shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.4f))
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(DeepTeal),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = "تم سحب وإلغاء طلبك بنجاح! 🔄",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-
-            // =========================================================================
-            // 1. كارت السعة والعداد (Active Applications Capacity Card)
-            // =========================================================================
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(22.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.4f))
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(18.dp)
-                    ) {
+                TeamSeatCard(contentPadding = 16.dp) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(38.dp)
-                                        .clip(CircleShape)
-                                        .background(LightAqua.copy(alpha = 0.5f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Schedule,
-                                        contentDescription = null,
-                                        tint = DeepTeal,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(
-                                        text = "الطلبات المعلقة النشطة",
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = DeepNavy,
-                                            fontSize = 17.sp
-                                        )
-                                    )
-                                    Text(
-                                        text = "حد أقصى 3 طلبات متزامنة لمنع العشوائية",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            color = DeepNavy.copy(alpha = 0.65f),
-                                            fontSize = 12.sp
-                                        )
-                                    )
-                                }
-                            }
+                            Text(
+                                text = "الحد المسموح للطلبات",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = TeamSeatTitleDark,
+                                fontSize = 15.sp
+                            )
 
-                            // شارة العداد
-                            Surface(
-                                shape = RoundedCornerShape(16.dp),
-                                color = if (myAppliedSeats.size >= 3) Peach else LightAqua,
-                                border = BorderStroke(
-                                    1.dp,
-                                    if (myAppliedSeats.size >= 3) DeepNavy.copy(alpha = 0.2f) else DeepTeal.copy(alpha = 0.3f)
-                                )
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(TeamSeatSoftTealPill)
+                                    .padding(horizontal = 10.dp, vertical = 4.dp)
                             ) {
                                 Text(
-                                    text = "${myAppliedSeats.size} / 3",
-                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = DeepNavy,
-                                        fontSize = 15.sp
-                                    )
+                                    text = "\u200E$currentCount / $maxRequests\u200E طلبات",
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TeamSeatPrimaryTeal,
+                                    fontSize = 12.sp,
+                                    maxLines = 1,
+                                    softWrap = false
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(14.dp))
+                        LinearProgressIndicator(
+                            progress = { animatedProgress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp)
+                                .clip(RoundedCornerShape(4.dp)),
+                            color = TeamSeatPrimaryTeal,
+                            trackColor = Color.White
+                        )
 
-                        // مؤشرات الدوائر الثلاثة للحالة
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            for (index in 1..3) {
-                                val isOccupied = index <= myAppliedSeats.size
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(8.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            if (isOccupied) DeepTeal else SoftGray.copy(alpha = 0.4f)
-                                        )
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Info,
-                                contentDescription = null,
-                                tint = Turquoise,
-                                modifier = Modifier.size(15.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = if (myAppliedSeats.size < 3) {
-                                    "يمكنك التقديم على ${3 - myAppliedSeats.size} مقعد إضافي في مشاريع التخرج"
-                                } else {
-                                    "وصلت للحد الأقصى، يلزم إلغاء طلب نشط للتقديم على مقعد جديد"
-                                },
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = DeepNavy.copy(alpha = 0.75f),
-                                    fontSize = 12.5.sp
-                                )
-                            )
-                        }
+                        Text(
+                            text = "تقدر تبعت لحد 3 طلبات في نفس الوقت، ولو قائد قبل طلبك الباقي بيتلغي تلقائي.",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            color = TeamSeatBodyMuted,
+                            fontSize = 12.sp,
+                            lineHeight = 18.sp
+                        )
                     }
                 }
             }
 
-            // =========================================================================
-            // 2. حالة عدم وجود طلبات (Empty State)
-            // =========================================================================
-            if (myAppliedSeats.isEmpty()) {
+            // 2. قائمة الطلبات أو رسالة فارغة
+            if (appliedSeats.isEmpty()) {
                 item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 24.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.4f))
-                    ) {
+                    TeamSeatCard(contentPadding = 28.dp) {
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(72.dp)
+                                    .size(56.dp)
                                     .clip(CircleShape)
-                                    .background(LightAqua.copy(alpha = 0.4f)),
+                                    .background(TeamSeatSoftTealPill),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.HourglassEmpty,
+                                    imageVector = Icons.Rounded.AssignmentTurnedIn,
                                     contentDescription = null,
-                                    tint = DeepTeal,
-                                    modifier = Modifier.size(38.dp)
+                                    tint = TeamSeatPrimaryTeal,
+                                    modifier = Modifier.size(28.dp)
                                 )
                             }
-
                             Text(
-                                text = "لا توجد طلبات معلقة حالياً",
-                                style = MaterialTheme.typography.headlineSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = DeepNavy,
-                                    fontSize = 20.sp
-                                ),
+                                text = "معندكش طلبات معلقة دلوقتي",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = TeamSeatTitleDark,
+                                fontSize = 15.sp,
                                 textAlign = TextAlign.Center
                             )
-
                             Text(
-                                text = "لم تقم بالتقديم على أي مقعد في مشاريع التخرج بعد. يمكنك استكشاف التيمات المتاحة والتقديم فوراً!",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = DeepNavy.copy(alpha = 0.7f),
-                                    lineHeight = 22.sp
-                                ),
+                                text = "لفّ على المشاريع المتاحة واحجز مكانك في التيم اللي يناسبك.",
+                                fontFamily = TajawalFontFamily,
+                                color = TeamSeatBodyMuted,
+                                fontSize = 12.5.sp,
                                 textAlign = TextAlign.Center
                             )
-
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            Button(
-                                onClick = onBackClick,
-                                shape = RoundedCornerShape(20.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = DeepTeal)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "استكشاف التيمات المتاحة",
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = WarmCream
-                                    )
-                                )
-                            }
                         }
                     }
                 }
             } else {
-                // =========================================================================
-                // 3. قائمة الطلبات المقدمة (Applied Seats Cards)
-                // =========================================================================
-                items(
-                    items = myAppliedSeats,
-                    key = { it.id }
-                ) { seat ->
-                    val teamInfo = remember(seat.teamId) {
-                        MockDataProvider.sampleTeamsList.find { it.teamId == seat.teamId } ?: MockDataProvider.sampleTeam
-                    }
+                itemsIndexed(appliedSeats, key = { _, seat -> seat.id }) { index, seat ->
+                    val isPending = seat.status == SeatStatus.PENDING
+                    val isBooked = seat.status == SeatStatus.BOOKED
+                    val accent = if (isPending) TeamSeatWarmOrange else TeamSeatPrimaryTeal
+                    val border = if (isPending) TeamSeatCardBorderWarm else TeamSeatCardBorderTeal
 
-                    val remainingHours = remember(seat.expiresAt) {
-                        if (seat.expiresAt != null) {
-                            val diffMs = seat.expiresAt - System.currentTimeMillis()
-                            val hours = (diffMs / (3600 * 1000L)).toInt()
-                            if (hours > 0) hours else 0
-                        } else 36
-                    }
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(22.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        border = BorderStroke(1.dp, SoftGray.copy(alpha = 0.4f))
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(18.dp),
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                    StaggeredAnimatedItem(index = index) {
+                        TeamSeatCard(
+                            isWarmHighlight = isPending,
+                            contentPadding = 14.dp
                         ) {
-                            // الترويسة العليا: اسم مشروع التيم + رقم المقعد
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = teamInfo.projectName,
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = DeepNavy,
-                                            fontSize = 18.sp
-                                        ),
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = "القائد: ${teamInfo.leaderName}",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            color = DeepNavy.copy(alpha = 0.65f),
-                                            fontSize = 12.5.sp
-                                        )
-                                    )
-                                }
-
-                                Surface(
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = LightAqua.copy(alpha = 0.5f),
-                                    border = BorderStroke(1.dp, DeepTeal.copy(alpha = 0.3f))
-                                ) {
-                                    Text(
-                                        text = "مقعد #${seat.seatNumber} (${seat.seatLabel})",
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = DeepTeal,
-                                            fontSize = 12.5.sp
-                                        )
-                                    )
-                                }
-                            }
-
-                            // المهارة / التخصص المطلوب
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(14.dp),
-                                color = SoftBeige.copy(alpha = 0.5f)
-                            ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Code,
-                                        contentDescription = null,
-                                        tint = DeepTeal,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "الدور المطلوب: ${seat.roleRequired}",
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = DeepNavy,
-                                            fontSize = 14.5.sp
-                                        )
-                                    )
-                                }
-                            }
-
-                            // حالة الطلب + مهلة الـ 48 ساعة
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                // شارة الحالة
-                                val statusBg = when (seat.status) {
-                                    SeatStatus.BOOKED -> LightAqua.copy(alpha = 0.6f)
-                                    SeatStatus.PENDING -> Peach.copy(alpha = 0.5f)
-                                    else -> LightAqua.copy(alpha = 0.3f)
-                                }
-                                val statusIcon = when (seat.status) {
-                                    SeatStatus.BOOKED -> Icons.Default.CheckCircle
-                                    else -> Icons.Default.HourglassTop
-                                }
-                                val statusText = when (seat.status) {
-                                    SeatStatus.BOOKED -> "مقبول ومعتمد رسمياً 🔵"
-                                    SeatStatus.PENDING -> "قيد المراجعة بانتظار القائد 🟡"
-                                    else -> "متاح 🟢"
-                                }
-
-                                Surface(
-                                    shape = RoundedCornerShape(16.dp),
-                                    color = statusBg
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        modifier = Modifier.weight(1f)
                                     ) {
-                                        Icon(
-                                            imageVector = statusIcon,
-                                            contentDescription = null,
-                                            tint = DeepNavy,
-                                            modifier = Modifier.size(15.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = statusText,
-                                            style = MaterialTheme.typography.labelMedium.copy(
+                                        Box(
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(accent),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = "S${seat.seatNumber}",
+                                                fontFamily = TajawalFontFamily,
                                                 fontWeight = FontWeight.Bold,
-                                                color = DeepNavy,
-                                                fontSize = 12.5.sp
+                                                color = Color.White,
+                                                fontSize = 13.sp,
+                                                maxLines = 1,
+                                                softWrap = false
                                             )
+                                        }
+
+                                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                            Text(
+                                                text = seat.roleRequired,
+                                                style = TextStyle(
+                                                    fontFamily = TajawalFontFamily,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = TeamSeatTitleDark,
+                                                    fontSize = 14.5.sp,
+                                                    textDirection = TextDirection.Ltr
+                                                ),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = "كود التيم: ${seat.teamId}",
+                                                fontFamily = TajawalFontFamily,
+                                                color = TeamSeatBodyMuted,
+                                                fontSize = 12.sp,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Color.White)
+                                            .border(1.dp, border, RoundedCornerShape(8.dp))
+                                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                                    ) {
+                                        Text(
+                                            text = when {
+                                                isBooked -> "مقبول ✓"
+                                                isPending -> "قيد المراجعة"
+                                                else -> "مفتوح"
+                                            },
+                                            fontFamily = TajawalFontFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = accent,
+                                            fontSize = 11.5.sp,
+                                            maxLines = 1,
+                                            softWrap = false
                                         )
                                     }
                                 }
 
-                                // مهلة الـ 48 ساعة
-                                if (seat.status == SeatStatus.PENDING) {
-                                    Surface(
-                                        shape = RoundedCornerShape(16.dp),
-                                        color = WarmCream,
-                                        border = BorderStroke(1.dp, Peach)
+                                if (!seat.applicantNote.isNullOrBlank()) {
+                                    Text(
+                                        text = "رسالتك: \"${seat.applicantNote}\"",
+                                        fontFamily = TajawalFontFamily,
+                                        color = TeamSeatBodyMuted,
+                                        fontSize = 12.5.sp,
+                                        lineHeight = 18.sp
+                                    )
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically
+                                        Icon(
+                                            imageVector = Icons.Rounded.Timer,
+                                            contentDescription = null,
+                                            tint = accent,
+                                            modifier = Modifier.size(15.dp)
+                                        )
+                                        Text(
+                                            text = if (isPending) "باقي 36 ساعة" else "تم الرد",
+                                            fontFamily = TajawalFontFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = accent,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+
+                                    if (!isBooked) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Color(0xFFFFF1F2))
+                                                .border(1.dp, TeamSeatDangerRed.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
+                                                .bounceClick { seatToCancel = seat }
+                                                .padding(horizontal = 10.dp, vertical = 5.dp)
                                         ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Schedule,
-                                                contentDescription = null,
-                                                tint = DeepNavy,
-                                                modifier = Modifier.size(14.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(4.dp))
                                             Text(
-                                                text = "متبقي: $remainingHours ساعة ⏳",
-                                                style = MaterialTheme.typography.labelSmall.copy(
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = DeepNavy,
-                                                    fontSize = 12.sp
-                                                )
+                                                text = "اسحب الطلب",
+                                                fontFamily = TajawalFontFamily,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = TeamSeatDangerRed,
+                                                fontSize = 12.sp,
+                                                maxLines = 1,
+                                                softWrap = false
                                             )
                                         }
                                     }
                                 }
-                            }
-
-                            // الرسالة / الملاحظة المقدمة (إذا وُجدت)
-                            if (!seat.applicantNote.isNullOrEmpty()) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(WarmCream.copy(alpha = 0.6f))
-                                        .padding(10.dp),
-                                    verticalAlignment = Alignment.Top
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Info,
-                                        contentDescription = null,
-                                        tint = Turquoise,
-                                        modifier = Modifier
-                                            .size(16.dp)
-                                            .padding(top = 2.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "ملاحظتك للقائد: \"${seat.applicantNote}\"",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            color = DeepNavy.copy(alpha = 0.8f),
-                                            fontSize = 12.5.sp,
-                                            lineHeight = 18.sp
-                                        )
-                                    )
-                                }
-                            }
-
-                            // زر سحب وإلغاء الطلب
-                            OutlinedButton(
-                                onClick = { seatToCancel = seat },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(46.dp),
-                                shape = RoundedCornerShape(23.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = Color(0xFFD32F2F)
-                                ),
-                                border = BorderStroke(1.dp, Color(0xFFE53935).copy(alpha = 0.5f))
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.DeleteOutline,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "إلغاء وسحب الطلب",
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFD32F2F),
-                                        fontSize = 14.5.sp
-                                    )
-                                )
                             }
                         }
                     }
@@ -657,82 +362,94 @@ fun MyApplicationsScreen(
         }
     }
 
-    // =========================================================================
-    // 4. نافذة تأكيد سحب الطلب (Cancel Confirmation Dialog)
-    // =========================================================================
     if (seatToCancel != null) {
-        val seat = seatToCancel!!
-        AlertDialog(
+        val target = seatToCancel!!
+        ModalBottomSheet(
             onDismissRequest = { seatToCancel = null },
-            title = {
+            containerColor = TeamSeatBgOffWhite,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
                 Text(
-                    text = "تأكيد سحب وإلغاء الطلب ⚠️",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = DeepNavy
-                    )
+                    text = "اسحب طلب الحجز؟",
+                    fontFamily = TajawalFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = TeamSeatTitleDark,
+                    fontSize = 16.sp
                 )
-            },
-            text = {
                 Text(
-                    text = "هل أنت متأكد من سحب طلبك لمقعد (${seat.roleRequired})؟ سيفقد المقعد أسبقيتك وسيصبح متاحاً للطلاب الآخرين.",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = DeepNavy.copy(alpha = 0.8f)
-                    )
+                    text = "متأكد إنك عايز تسحب طلبك على مقعد ${target.roleRequired}؟",
+                    fontFamily = TajawalFontFamily,
+                    color = TeamSeatBodyMuted,
+                    fontSize = 13.sp
                 )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val seatId = seat.id
-                        seatToCancel = null
-                        onCancelApplicationClick(seatId)
-                        showSuccessCancelBanner = true
-                        scope.launch {
-                            snackbarHostState.showSnackbar("تم سحب وإلغاء طلبك بنجاح! 🔄")
-                            delay(3000)
-                            showSuccessCancelBanner = false
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
-                    shape = RoundedCornerShape(12.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(
-                        text = "نعم، سحب الطلب",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(46.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(TeamSeatDangerRed)
+                            .bounceClick {
+                                appliedSeats.removeAll { it.id == target.id }
+                                onCancelApplicationClick(target.id)
+                                seatToCancel = null
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("تم سحب الطلب بنجاح")
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "اسحب الطلب",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(46.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White)
+                            .border(1.2.dp, TeamSeatCardBorderTeal, RoundedCornerShape(12.dp))
+                            .bounceClick { seatToCancel = null },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "إلغاء",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TeamSeatTitleDark,
+                            fontSize = 13.sp,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { seatToCancel = null }) {
-                    Text(
-                        text = "تراجع",
-                        color = DeepNavy,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            },
-            containerColor = WarmCream,
-            shape = RoundedCornerShape(20.dp)
-        )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun MyApplicationsScreenPreview() {
+private fun MyApplicationsScreenPreview() {
     TeamSeatTheme {
         MyApplicationsScreen()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MyApplicationsScreenEmptyPreview() {
-    TeamSeatTheme {
-        MyApplicationsScreen(
-            myAppliedSeats = emptyList()
-        )
     }
 }
