@@ -8,16 +8,15 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,38 +24,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.DemoPersona
 import com.stackmates.teamseat.core.model.User
-import com.stackmates.teamseat.core.theme.*
-import com.stackmates.teamseat.ui.components.bounceClick
-
-// =============================================================================
-// 🎨 باليت الألوان الرسمية للتطبيق (Color.kt)
-// =============================================================================
-private val OffWhiteBg = WarmCream
-private val PrimaryTeal = DeepTeal
-private val TitleDark = DeepNavy
-private val BodyMuted = DeepNavy.copy(alpha = 0.65f)
-
-private val TealCardFill = Color.White
-private val TealCardBorder = SoftGray.copy(alpha = 0.6f)
-
-private val WarmCardFill = SoftBeige.copy(alpha = 0.5f)
-private val WarmCardBorder = Peach
-private val WarmOrangeAccent = DeepTeal
+import com.stackmates.teamseat.core.theme.TajawalFontFamily
+import com.stackmates.teamseat.core.theme.TeamSeatTheme
+import com.stackmates.teamseat.ui.components.*
 
 /**
  * 💻 المسؤول عن الشاشة: يوسف (Youssef - Team Lead & Backend)
- * شاشة تبديل الحساب (DemoControlCenterScreen / DemoAccountSwitcherScreen)
- * - خلفية Off-White نقية (#F8FAFA) وكروت مسطحة ملونة بحواف 1.2.dp
- * - حركات AnimatedContent و bounceClick و ModalBottomSheet
+ * شاشة تبديل الحساب (DemoControlCenterScreen)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,241 +54,226 @@ fun DemoControlCenterScreen(
 
     val isLeaderActive = selectedPersona == DemoPersona.AHMED_LEADER
 
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        Scaffold(
-            containerColor = OffWhiteBg,
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "بدّل الحساب",
-                            fontFamily = TajawalFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            color = TitleDark,
-                            fontSize = 18.sp,
-                            maxLines = 1,
-                            softWrap = false
-                        )
-                    },
-                    navigationIcon = {
-                        Box(
-                            modifier = Modifier
-                                .padding(start = 12.dp, end = 6.dp)
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(TealCardFill)
-                                .border(1.2.dp, TealCardBorder, CircleShape)
-                                .bounceClick(onClick = onBackClick),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "رجوع",
-                                tint = TitleDark,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = OffWhiteBg)
-                )
-            }
-        ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    // شريط الحالة المتحرك عند التبديل بين أحمد وسارة
-                    AnimatedContent(
-                        targetState = isLeaderActive,
-                        transitionSpec = {
-                            (slideInHorizontally(tween(260)) { it / 5 } + fadeIn(tween(260)))
-                                .togetherWith(slideOutHorizontally(tween(200)) { -it / 5 } + fadeOut(tween(200)))
-                        },
-                        label = "activePersonaBannerTransition"
-                    ) { leaderActive ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(WarmCardFill)
-                                .border(1.2.dp, WarmCardBorder, RoundedCornerShape(16.dp))
-                                .padding(horizontal = 14.dp, vertical = 12.dp)
-                        ) {
-                            Text(
-                                text = if (leaderActive) {
-                                    "الحساب الشغال دلوقتي: أحمد محمود (قائد التيم)"
-                                } else {
-                                    "الحساب الشغال دلوقتي: سارة علي (عضو / متقدم)"
-                                },
-                                fontFamily = TajawalFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                color = TitleDark,
-                                fontSize = 13.sp,
-                                maxLines = 1,
-                                softWrap = false
-                            )
-                        }
-                    }
-
-                    // 1. كارت أحمد محمود (قائد الفريق)
-                    AccountSwitchCard(
-                        name = "أحمد محمود",
-                        role = "قائد الفريق",
-                        emoji = "👑",
-                        isActive = isLeaderActive,
-                        onClick = {
-                            if (!isLeaderActive) {
-                                selectedPersona = DemoPersona.AHMED_LEADER
-                                onTogglePersonaClick()
-                                Toast.makeText(context, "تم التبديل لحساب قائد التيم", Toast.LENGTH_SHORT).show()
-                            }
-                        }
+    TeamSeatScreenContainer(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "بدّل الحساب",
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = TeamSeatTitleDark,
+                        fontSize = 18.sp,
+                        maxLines = 1,
+                        softWrap = false
                     )
-
-                    // 2. كارت سارة علي (عضو / متقدم)
-                    AccountSwitchCard(
-                        name = "سارة علي",
-                        role = "عضو / متقدم",
-                        emoji = "🎓",
-                        isActive = !isLeaderActive,
-                        onClick = {
-                            if (isLeaderActive) {
-                                selectedPersona = DemoPersona.SARA_STUDENT
-                                onTogglePersonaClick()
-                                Toast.makeText(context, "تم التبديل لحساب سارة", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    )
-                }
-
-                // 3. الزر السفلي البسيط: إعادة ضبط التجربة
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(TealCardFill)
-                        .border(1.2.dp, TealCardBorder, RoundedCornerShape(14.dp))
-                        .bounceClick { showResetSheet = true },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                },
+                navigationIcon = {
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 12.dp, end = 6.dp)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.White)
+                            .border(1.dp, TeamSeatCardBorderTeal, CircleShape)
+                            .bounceClick(onClick = onBackClick),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.Refresh,
-                            contentDescription = null,
-                            tint = PrimaryTeal,
-                            modifier = Modifier.size(18.dp)
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = "رجوع",
+                            tint = TeamSeatTitleDark,
+                            modifier = Modifier.size(20.dp)
                         )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+            )
+        }
+    ) { safePadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(safePadding)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                AnimatedContent(
+                    targetState = isLeaderActive,
+                    transitionSpec = {
+                        (slideInHorizontally(tween(260)) { it / 5 } + fadeIn(tween(260)))
+                            .togetherWith(slideOutHorizontally(tween(200)) { -it / 5 } + fadeOut(tween(200)))
+                    },
+                    label = "activePersonaBannerTransition"
+                ) { leaderActive ->
+                    TeamSeatCard(
+                        isWarmHighlight = true,
+                        contentPadding = 14.dp
+                    ) {
                         Text(
-                            text = "رجّع التجربة من الأول",
+                            text = if (leaderActive) {
+                                "الحساب الشغال دلوقتي: أحمد محمود (قائد التيم)"
+                            } else {
+                                "الحساب الشغال دلوقتي: سارة علي (عضو / متقدم)"
+                            },
                             fontFamily = TajawalFontFamily,
                             fontWeight = FontWeight.SemiBold,
+                            color = TeamSeatTitleDark,
                             fontSize = 13.sp,
-                            color = PrimaryTeal,
                             maxLines = 1,
                             softWrap = false
                         )
                     }
+                }
+
+                AccountSwitchCard(
+                    name = "أحمد محمود",
+                    role = "قائد الفريق",
+                    emoji = "👑",
+                    isActive = isLeaderActive,
+                    onClick = {
+                        if (!isLeaderActive) {
+                            selectedPersona = DemoPersona.AHMED_LEADER
+                            onTogglePersonaClick()
+                            Toast.makeText(context, "تم التبديل لحساب قائد التيم", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+
+                AccountSwitchCard(
+                    name = "سارة علي",
+                    role = "عضو / متقدم",
+                    emoji = "🎓",
+                    isActive = !isLeaderActive,
+                    onClick = {
+                        if (isLeaderActive) {
+                            selectedPersona = DemoPersona.SARA_STUDENT
+                            onTogglePersonaClick()
+                            Toast.makeText(context, "تم التبديل لحساب سارة", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color.White)
+                    .border(1.2.dp, TeamSeatCardBorderTeal, RoundedCornerShape(14.dp))
+                    .bounceClick { showResetSheet = true },
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Refresh,
+                        contentDescription = null,
+                        tint = TeamSeatPrimaryTeal,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "رجّع التجربة من الأول",
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.5.sp,
+                        color = TeamSeatPrimaryTeal,
+                        maxLines = 1,
+                        softWrap = false
+                    )
                 }
             }
         }
+    }
 
-        // ModalBottomSheet لتأكيد إعادة ضبط التجربة
-        if (showResetSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showResetSheet = false },
-                containerColor = OffWhiteBg,
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    if (showResetSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showResetSheet = false },
+            containerColor = TeamSeatBgOffWhite,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                Text(
+                    text = "إعادة ضبط التجربة",
+                    fontFamily = TajawalFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = TeamSeatTitleDark,
+                    fontSize = 16.sp
+                )
+                Text(
+                    text = "عايز ترجّع المقاعد والطلبات لحالتها الأساسية من الأول؟",
+                    fontFamily = TajawalFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    color = TeamSeatBodyMuted,
+                    fontSize = 13.sp
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(
-                        text = "إعادة ضبط التجربة",
-                        fontFamily = TajawalFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        color = TitleDark,
-                        fontSize = 16.sp
-                    )
-                    Text(
-                        text = "عايز ترجّع المقاعد والطلبات لحالتها الأساسية من الأول؟",
-                        fontFamily = TajawalFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        color = BodyMuted,
-                        fontSize = 13.sp
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(46.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(TeamSeatPrimaryTeal)
+                            .bounceClick {
+                                showResetSheet = false
+                                onResetMockDataClick()
+                                Toast.makeText(context, "تمام! التجربة رجعت زي الأول", Toast.LENGTH_SHORT).show()
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(46.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(PrimaryTeal)
-                                .bounceClick {
-                                    showResetSheet = false
-                                    onResetMockDataClick()
-                                    Toast.makeText(context, "تمام! التجربة رجعت زي الأول", Toast.LENGTH_SHORT).show()
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "تأكيد الضبط",
-                                fontFamily = TajawalFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.White,
-                                fontSize = 13.sp,
-                                maxLines = 1,
-                                softWrap = false
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(46.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(TealCardFill)
-                                .border(1.2.dp, TealCardBorder, RoundedCornerShape(12.dp))
-                                .bounceClick { showResetSheet = false },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "إلغاء",
-                                fontFamily = TajawalFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                color = TitleDark,
-                                fontSize = 13.sp,
-                                maxLines = 1,
-                                softWrap = false
-                            )
-                        }
+                        Text(
+                            text = "تأكيد الضبط",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            maxLines = 1,
+                            softWrap = false
+                        )
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(46.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White)
+                            .border(1.2.dp, TeamSeatCardBorderTeal, RoundedCornerShape(12.dp))
+                            .bounceClick { showResetSheet = false },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "إلغاء",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TeamSeatTitleDark,
+                            fontSize = 13.sp,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
                 }
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
 }
 
-/**
- * كارت تبديل الحساب (كارت مسطح بدون كروت متداخلة وبخلفية وإطار ملونين)
- */
 @Composable
 private fun AccountSwitchCard(
     name: String,
@@ -316,23 +282,13 @@ private fun AccountSwitchCard(
     isActive: Boolean,
     onClick: () -> Unit
 ) {
-    val cardFill = if (isActive) WarmCardFill else TealCardFill
-    val cardBorder = if (isActive) WarmCardBorder else TealCardBorder
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(88.dp)
-            .bounceClick(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = cardFill),
-        border = BorderStroke(1.2.dp, cardBorder),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    TeamSeatCard(
+        isWarmHighlight = isActive,
+        contentPadding = 16.dp,
+        onClick = onClick
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -346,7 +302,11 @@ private fun AccountSwitchCard(
                         .size(48.dp)
                         .clip(CircleShape)
                         .background(Color.White)
-                        .border(1.2.dp, if (isActive) WarmCardBorder else TealCardBorder, CircleShape),
+                        .border(
+                            1.2.dp,
+                            if (isActive) TeamSeatCardBorderWarm else TeamSeatCardBorderTeal,
+                            CircleShape
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -360,7 +320,7 @@ private fun AccountSwitchCard(
                         text = name,
                         fontFamily = TajawalFontFamily,
                         fontWeight = FontWeight.Bold,
-                        color = TitleDark,
+                        color = TeamSeatTitleDark,
                         fontSize = 15.sp,
                         maxLines = 1,
                         softWrap = false
@@ -370,7 +330,7 @@ private fun AccountSwitchCard(
                         text = role,
                         fontFamily = TajawalFontFamily,
                         fontWeight = FontWeight.Medium,
-                        color = BodyMuted,
+                        color = TeamSeatBodyMuted,
                         fontSize = 12.5.sp,
                         maxLines = 1,
                         softWrap = false
@@ -390,7 +350,7 @@ private fun AccountSwitchCard(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
-                            .background(WarmOrangeAccent)
+                            .background(TeamSeatWarmOrange)
                             .padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
                         Row(
@@ -398,7 +358,7 @@ private fun AccountSwitchCard(
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Filled.Check,
+                                imageVector = Icons.Rounded.Check,
                                 contentDescription = null,
                                 tint = Color.White,
                                 modifier = Modifier.size(14.dp)
@@ -419,14 +379,14 @@ private fun AccountSwitchCard(
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
                             .background(Color.White)
-                            .border(1.dp, TealCardBorder, RoundedCornerShape(10.dp))
+                            .border(1.dp, TeamSeatCardBorderTeal, RoundedCornerShape(10.dp))
                             .padding(horizontal = 14.dp, vertical = 6.dp)
                     ) {
                         Text(
                             text = "بدّل",
                             fontFamily = TajawalFontFamily,
                             fontWeight = FontWeight.SemiBold,
-                            color = PrimaryTeal,
+                            color = TeamSeatPrimaryTeal,
                             fontSize = 12.sp,
                             maxLines = 1,
                             softWrap = false
