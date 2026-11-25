@@ -35,68 +35,68 @@ object MockDataProvider {
     // 2. تيم تجريبي أساسي
     val sampleTeam = Team(
         teamId = "team_alpha_2026",
-        projectName = "StackMates (RoleSpot)",
-        category = "مشروع تخرج حاسبات 2026",
+        projectName = "TeamSeat-App",
+        category = "مشروع مادة الأندرويد 2026",
         description = "تطبيق حجز مقاعد تيمات مشاريع التخرج بنظام السينما لمنع العشوائية وتسهيل التسليم للمعيدين.",
-        leaderId = ahmedLeader.uid,
-        leaderName = ahmedLeader.name,
+        leaderId = "user_youssef_101",
+        leaderName = "يوسف البسيوني",
         totalSeats = 6,
         isLocked = false,
         supervisorDoctor = "د. محمد كاظم",
         teachingAssistant = "م. شهد أحمد عبدالسلام"
     )
 
-    // 3. كراسي التيم التجريبي (بحالات مختلفة للمعاينة في Compose)
+    // 3. كراسي التيم التجريبي (4 محجوزة + 2 متاحة)
     val sampleSeats = listOf(
         Seat(
             id = "seat_1",
             teamId = sampleTeam.teamId,
             seatNumber = 1,
-            roleRequired = "Android Developer",
+            roleRequired = "Team Leader & Backend",
             status = SeatStatus.BOOKED,
-            applicantId = "user_omar",
-            applicantName = "عمر خالد"
+            applicantId = "user_youssef",
+            applicantName = "يوسف محمد البسيوني"
         ),
         Seat(
             id = "seat_2",
             teamId = sampleTeam.teamId,
             seatNumber = 2,
-            roleRequired = "Backend Developer (Spring/Firebase)",
+            roleRequired = "Android Developer",
             status = SeatStatus.BOOKED,
-            applicantId = "user_youssef",
-            applicantName = "يوسف أحمد"
+            applicantId = "user_khaled",
+            applicantName = "خالد محمد السعيد"
         ),
         Seat(
             id = "seat_3",
             teamId = sampleTeam.teamId,
             seatNumber = 3,
-            roleRequired = "UI/UX Designer",
-            status = SeatStatus.PENDING, // قيد المراجعة
-            applicantId = saraStudent.uid,
-            applicantName = saraStudent.name,
-            applicantNote = "عندي خبرة سابقة في Figma وصممت تطبيقين ونفسي أنضم لتيمكم!",
-            expiresAt = System.currentTimeMillis() + (36 * 3600 * 1000L) // باقي 36 ساعة
+            roleRequired = "Android UI & Navigation",
+            status = SeatStatus.BOOKED,
+            applicantId = "user_hossam",
+            applicantName = "حسام الجوهري"
         ),
         Seat(
             id = "seat_4",
             teamId = sampleTeam.teamId,
             seatNumber = 4,
-            roleRequired = "Flutter / Multiplatform",
-            status = SeatStatus.AVAILABLE // متاح للحجز 🟢
+            roleRequired = "UI/UX Designer",
+            status = SeatStatus.BOOKED,
+            applicantId = "user_esraa",
+            applicantName = "إسراء محمد أحمد"
         ),
         Seat(
             id = "seat_5",
             teamId = sampleTeam.teamId,
             seatNumber = 5,
-            roleRequired = "AI / ML Engineer",
-            status = SeatStatus.AVAILABLE // متاح للحجز 🟢
+            roleRequired = "Frontend Developer",
+            status = SeatStatus.AVAILABLE
         ),
         Seat(
             id = "seat_6",
             teamId = sampleTeam.teamId,
             seatNumber = 6,
-            roleRequired = "QA & Tester",
-            status = SeatStatus.AVAILABLE // متاح للحجز 🟢
+            roleRequired = "QA & Documentation",
+            status = SeatStatus.AVAILABLE
         )
     )
 
@@ -105,11 +105,11 @@ object MockDataProvider {
         sampleTeam,
         Team(
             teamId = "team_beta_2",
-            projectName = "Campus Navigation AR",
-            category = "هندسة برمجيات (سنة 3)",
-            description = "نظام ملاحة داخلي للمباني والسكاشن بالواقع المعزز.",
-            leaderId = "user_kareem",
-            leaderName = "كريم صبحي",
+            projectName = "صنايعي (Sanayee)",
+            category = "تطبيق خدمات وملاحة 2026",
+            description = "نظام ملاحة وتتبع لحظي لربط الفنيين والحرفيين بالعملاء داخل المدينة.",
+            leaderId = "user_khaled",
+            leaderName = "خالد السعيد",
             totalSeats = 5,
             isLocked = false
         ),
@@ -118,8 +118,8 @@ object MockDataProvider {
             projectName = "E-Clinic Health Vault",
             category = "مشروع تخرج",
             description = "ملف طبي إلكتروني للمرضى مع تحليلات ذكية للأشعة.",
-            leaderId = "user_mona",
-            leaderName = "منى سعيد",
+            leaderId = "user_alaa",
+            leaderName = "آلاء عبدالقادر",
             totalSeats = 4,
             isLocked = true // تيم مقفل
         )
