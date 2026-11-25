@@ -231,7 +231,7 @@ fun LoginScreen(
                             horizontalArrangement = Arrangement.End
                         ) {
                             Text(
-                                text = "Forgot Password?",
+                                text = "? Forgot Password",
                                 fontFamily = TajawalFontFamily,
                                 color = DeepTeal,
                                 fontSize = 13.5.sp,
