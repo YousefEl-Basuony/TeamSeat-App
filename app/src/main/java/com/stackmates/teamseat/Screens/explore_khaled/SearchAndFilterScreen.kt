@@ -70,6 +70,14 @@ import com.stackmates.teamseat.core.model.SeatStatus
 import com.stackmates.teamseat.core.model.Team
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
 
+private val SearchPureWhite = Color(0xFFFFFFFF)
+private val SearchAquaSurface = Color(0xFFEDF7F7)
+private val SearchAquaBorder = Color(0xFF9AD2D4)
+private val SearchInputBorder = Color(0xFFB8E0E1)
+private val SearchLockedSurface = Color(0xFFF1F5F9)
+private val SearchLockedBorder = Color(0xFFCBD5E1)
+private val SearchCourseTagText = Color(0xFF0A344A)
+
 /**
  * 🔍 المسؤول عن الشاشة: خالد (Khaled) — [KHALED-5]
  * شاشة البحث والفلترة المتقدمة لمشاريع وتيمات الجامعة (Search & Filter Screen)
@@ -107,7 +115,7 @@ fun SearchAndFilterScreen(
     val isFilterActive = searchQuery.isNotBlank() || (selectedRole != "الكل" && !selectedRole.equals("All", ignoreCase = true))
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = SearchPureWhite,
         contentWindowInsets = WindowInsets.systemBars,
         topBar = {
             SearchTopHeader(
@@ -169,9 +177,9 @@ fun SearchAndFilterScreen(
                         keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
+                            unfocusedBorderColor = SearchInputBorder,
+                            focusedContainerColor = SearchAquaSurface,
+                            unfocusedContainerColor = SearchAquaSurface,
                             cursorColor = MaterialTheme.colorScheme.primary
                         )
                     )
@@ -203,14 +211,14 @@ fun SearchAndFilterScreen(
                             shape = RoundedCornerShape(50),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                selectedLabelColor = Color.White,
-                                containerColor = Color.White,
+                                selectedLabelColor = SearchPureWhite,
+                                containerColor = SearchAquaSurface,
                                 labelColor = MaterialTheme.colorScheme.onSurface
                             ),
                             border = FilterChipDefaults.filterChipBorder(
                                 enabled = true,
                                 selected = isSelected,
-                                borderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                                borderColor = SearchInputBorder,
                                 selectedBorderColor = Color.Transparent
                             )
                         )
@@ -285,7 +293,7 @@ private fun SearchTopHeader(
     onResetFilters: () -> Unit
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.background,
+        color = SearchPureWhite,
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
@@ -303,9 +311,9 @@ private fun SearchTopHeader(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = Color.White,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                    shadowElevation = 0.dp,
+                    color = SearchAquaSurface,
+                    border = BorderStroke(1.dp, SearchInputBorder),
+                    shadowElevation = 1.dp,
                     modifier = Modifier.size(40.dp)
                 ) {
                     IconButton(onClick = onBackClick) {
@@ -392,9 +400,11 @@ private fun SearchTeamCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        colors = CardDefaults.cardColors(
+            containerColor = if (isLocked) SearchLockedSurface else SearchAquaSurface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isLocked) 0.dp else 2.dp),
+        border = BorderStroke(1.2.dp, if (isLocked) SearchLockedBorder else SearchAquaBorder)
     ) {
         Column(
             modifier = Modifier
@@ -407,38 +417,41 @@ private fun SearchTeamCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = SearchPureWhite,
+                    border = BorderStroke(1.dp, if (isLocked) SearchLockedBorder else SearchInputBorder),
+                    modifier = Modifier.weight(1f, fill = false)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.School,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(15.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = team.category,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 11.5.sp
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.School,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = team.category,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = SearchCourseTagText,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Surface(
                     shape = RoundedCornerShape(50),
-                    color = if (isLocked) {
-                        MaterialTheme.colorScheme.secondaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                    }
+                    color = if (isLocked) SearchPureWhite else MaterialTheme.colorScheme.primary
                 ) {
                     Text(
                         text = if (isLocked) "مكتمل" else "متاح $availableSeatsCount مقاعد",
@@ -447,7 +460,7 @@ private fun SearchTeamCard(
                             color = if (isLocked) {
                                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             } else {
-                                MaterialTheme.colorScheme.primary
+                                SearchPureWhite
                             },
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.sp
@@ -553,8 +566,8 @@ private fun EmptySearchResultsCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        color = Color.White,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        color = SearchAquaSurface,
+        border = BorderStroke(1.dp, SearchAquaBorder),
         shadowElevation = 0.dp
     ) {
         Column(

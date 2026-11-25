@@ -55,6 +55,15 @@ import com.stackmates.teamseat.core.model.SeatStatus
 import com.stackmates.teamseat.core.model.Team
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
 
+private val DetailPureWhite = Color(0xFFFFFFFF)
+private val DetailAquaSurface = Color(0xFFEDF7F7)
+private val DetailAquaBorder = Color(0xFF9AD2D4)
+private val DetailInputBorder = Color(0xFFB8E0E1)
+private val DetailUrgentBadgeBg = Color(0xFFFDE68A)
+private val DetailUrgentBadgeText = Color(0xFFB45309)
+private val DetailLockedSurface = Color(0xFFF1F5F9)
+private val DetailLockedBorder = Color(0xFFCBD5E1)
+
 /**
  * 🔍 المسؤول عن الشاشة: خالد (Khaled) — [KHALED-3]
  * شاشة تفاصيل المشروع الشاملة قبل فتح خريطة الكراسي (Team Details Overview Screen)
@@ -73,7 +82,7 @@ fun TeamDetailsOverviewScreen(
     val completionPercent = if (totalSeats > 0) ((bookedCount.toFloat() / totalSeats) * 100).toInt() else 0
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = DetailPureWhite,
         contentWindowInsets = WindowInsets.systemBars,
         topBar = {
             TeamOverviewTopBar(
@@ -142,7 +151,7 @@ private fun TeamOverviewTopBar(
     onBackClick: () -> Unit
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.background,
+        color = DetailPureWhite,
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
@@ -155,9 +164,9 @@ private fun TeamOverviewTopBar(
         ) {
             Surface(
                 shape = CircleShape,
-                color = Color.White,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                shadowElevation = 0.dp,
+                color = DetailAquaSurface,
+                border = BorderStroke(1.dp, DetailInputBorder),
+                shadowElevation = 1.dp,
                 modifier = Modifier.size(40.dp)
             ) {
                 IconButton(onClick = onBackClick) {
@@ -208,9 +217,9 @@ private fun ProjectHeroCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        color = Color.White,
-        shadowElevation = 1.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        color = if (team.isLocked) DetailLockedSurface else DetailAquaSurface,
+        shadowElevation = if (team.isLocked) 0.dp else 2.dp,
+        border = BorderStroke(1.2.dp, if (team.isLocked) DetailLockedBorder else DetailAquaBorder)
     ) {
         Column(
             modifier = Modifier
@@ -225,11 +234,7 @@ private fun ProjectHeroCard(
             ) {
                 Surface(
                     shape = RoundedCornerShape(50),
-                    color = if (team.isLocked) {
-                        MaterialTheme.colorScheme.secondaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                    }
+                    color = if (team.isLocked) DetailPureWhite else MaterialTheme.colorScheme.primary
                 ) {
                     Text(
                         text = if (team.isLocked) "فريق مقفل" else "متاح للحجز",
@@ -238,7 +243,7 @@ private fun ProjectHeroCard(
                             color = if (team.isLocked) {
                                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             } else {
-                                MaterialTheme.colorScheme.primary
+                                DetailPureWhite
                             },
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.5.sp
@@ -282,9 +287,9 @@ private fun TeamLeaderAndMentorsCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        color = Color.White,
-        shadowElevation = 1.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        color = DetailAquaSurface,
+        shadowElevation = 2.dp,
+        border = BorderStroke(1.2.dp, DetailAquaBorder)
     ) {
         Column(
             modifier = Modifier
@@ -298,7 +303,8 @@ private fun TeamLeaderAndMentorsCard(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    color = DetailPureWhite,
+                    border = BorderStroke(1.dp, DetailInputBorder),
                     modifier = Modifier.size(40.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -366,7 +372,8 @@ private fun MentorMiniCard(
     Surface(
         modifier = modifier.heightIn(min = 56.dp),
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+        color = DetailPureWhite,
+        border = BorderStroke(1.dp, DetailInputBorder)
     ) {
         Row(
             modifier = Modifier.padding(10.dp),
@@ -412,9 +419,9 @@ private fun ProjectDescriptionCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        color = Color.White,
-        shadowElevation = 1.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        color = DetailAquaSurface,
+        shadowElevation = 2.dp,
+        border = BorderStroke(1.2.dp, DetailAquaBorder)
     ) {
         Column(
             modifier = Modifier
@@ -458,9 +465,9 @@ private fun SeatAvailabilitySummaryCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        color = Color.White,
-        shadowElevation = 1.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        color = DetailAquaSurface,
+        shadowElevation = 2.dp,
+        border = BorderStroke(1.2.dp, DetailAquaBorder)
     ) {
         Column(
             modifier = Modifier
@@ -554,7 +561,8 @@ private fun SeatStatPill(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.06f)
+        color = DetailPureWhite,
+        border = BorderStroke(1.dp, DetailInputBorder)
     ) {
         Column(
             modifier = Modifier.padding(vertical = 10.dp),
@@ -593,13 +601,13 @@ private fun MiniSeatRow(
 
     val badgeBg = when (seat.status) {
         SeatStatus.AVAILABLE -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-        SeatStatus.PENDING -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.25f)
-        else -> MaterialTheme.colorScheme.secondaryContainer
+        SeatStatus.PENDING -> DetailUrgentBadgeBg
+        else -> DetailLockedSurface
     }
 
     val badgeText = when (seat.status) {
         SeatStatus.AVAILABLE -> MaterialTheme.colorScheme.primary
-        SeatStatus.PENDING -> MaterialTheme.colorScheme.onSurface
+        SeatStatus.PENDING -> DetailUrgentBadgeText
         else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
     }
 
@@ -608,7 +616,8 @@ private fun MiniSeatRow(
             .fillMaxWidth()
             .heightIn(min = 48.dp),
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.04f)
+        color = DetailPureWhite,
+        border = BorderStroke(1.dp, DetailInputBorder)
     ) {
         Row(
             modifier = Modifier
@@ -660,7 +669,7 @@ private fun TeamOverviewBottomCta(
     onOpenSeatMapClick: () -> Unit
 ) {
     Surface(
-        color = Color.White,
+        color = DetailPureWhite,
         shadowElevation = 2.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -671,7 +680,7 @@ private fun TeamOverviewBottomCta(
         ) {
             HorizontalDivider(
                 thickness = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                color = DetailInputBorder
             )
             Box(
                 modifier = Modifier

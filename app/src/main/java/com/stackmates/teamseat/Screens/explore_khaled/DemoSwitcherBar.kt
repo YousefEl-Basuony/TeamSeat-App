@@ -32,6 +32,10 @@ import com.stackmates.teamseat.core.model.DemoPersona
 import com.stackmates.teamseat.core.model.User
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
 
+private val SwitcherAquaSurface = Color(0xFFEDF7F7)
+private val SwitcherAquaBorder = Color(0xFFB8E0E1)
+private val SwitcherPureWhite = Color(0xFFFFFFFF)
+
 /**
  * 🔍 المسؤول عن المكون: خالد (Khaled) — [KHALED-1]
  * شريط التبديل اللحظي المصغر بين شخصية القائد والطالبة وقت المناقشة (Live Demo Switcher Chip)
@@ -52,9 +56,9 @@ fun DemoSwitcherBar(
             .clip(RoundedCornerShape(50))
             .clickable(role = Role.Button, onClick = onTogglePersona),
         shape = RoundedCornerShape(50),
-        color = Color.White,
-        shadowElevation = 0.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        color = SwitcherAquaSurface,
+        shadowElevation = 1.dp,
+        border = BorderStroke(1.dp, SwitcherAquaBorder)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
@@ -64,8 +68,8 @@ fun DemoSwitcherBar(
             Text(
                 text = activeRoleLabel,
                 style = MaterialTheme.typography.labelMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp
                 ),
                 maxLines = 1,
@@ -74,7 +78,8 @@ fun DemoSwitcherBar(
 
             Surface(
                 shape = RoundedCornerShape(50),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                color = SwitcherPureWhite,
+                border = BorderStroke(1.dp, SwitcherAquaBorder)
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),

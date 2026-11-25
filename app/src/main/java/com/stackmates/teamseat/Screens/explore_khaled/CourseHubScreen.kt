@@ -1,6 +1,7 @@
 package com.stackmates.teamseat.Screens.explore_khaled
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,13 +13,13 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,7 +32,6 @@ import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.SupervisorAccount
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -48,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,9 +60,17 @@ import com.stackmates.teamseat.core.model.SeatStatus
 import com.stackmates.teamseat.core.model.Team
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
 
+private val CoursePureWhite = Color(0xFFFFFFFF)
+private val CourseAquaSurface = Color(0xFFEDF7F7)
+private val CourseAquaBorder = Color(0xFF9AD2D4)
+private val CourseInputBorder = Color(0xFFB8E0E1)
+private val CourseLockedSurface = Color(0xFFF1F5F9)
+private val CourseLockedBorder = Color(0xFFCBD5E1)
+private val CourseTagText = Color(0xFF0A344A)
+
 /**
  * 🔍 المسؤول عن الشاشة: خالد (Khaled) — [KHALED-2]
- * شاشة استعراض تيمات مادة دراسية محددة (Course / Subject Hub Screen)
+ * شاشة مركز المادة الدراسية (Academic Course Hub Dashboard)
  */
 @Composable
 fun CourseHubScreen(
@@ -71,7 +80,8 @@ fun CourseHubScreen(
     onTeamClick: (teamId: String) -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
-    var selectedFilter by remember { mutableStateOf("الكل") }
+    var selectedTab by remember { mutableStateOf("الكل") }
+    val segmentTabs = listOf("الكل", "متاح للانضمام", "مكتمل")
 
     val totalTeams = teamsInCourse.size
     val totalAvailableSeats = teamsInCourse.filter { !it.isLocked }.sumOf { team ->
@@ -82,14 +92,20 @@ fun CourseHubScreen(
         }
     }
 
-    val filteredTeams = when (selectedFilter) {
-        "متاحة للتسجيل" -> teamsInCourse.filter { !it.isLocked }
-        "مكتملة ومعتمدة" -> teamsInCourse.filter { it.isLocked }
+    val averageCompletion = if (totalTeams > 0) {
+        teamsInCourse.sumOf { getTeamCompletionStats(it).third } / totalTeams
+    } else {
+        0
+    }
+
+    val filteredTeams = when (selectedTab) {
+        "متاح للانضمام" -> teamsInCourse.filter { !it.isLocked }
+        "مكتمل" -> teamsInCourse.filter { it.isLocked }
         else -> teamsInCourse
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = CoursePureWhite,
         contentWindowInsets = WindowInsets.systemBars,
         topBar = {
             CourseHubTopBar(onBackClick = onBackClick)
@@ -99,96 +115,52 @@ fun CourseHubScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(top = 6.dp, bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            contentPadding = PaddingValues(top = 8.dp, bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            // 1. بطاقة المادة الدراسية والمشرفين
+            // 1. بطاقة المادة الدراسية والهيئة التدريسية
             item {
                 Box(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    CourseHeroCard(
+                    CourseAcademicHeroCard(
                         courseName = courseName,
-                        supervisorName = supervisorName,
-                        totalTeams = totalTeams,
-                        availableSeats = totalAvailableSeats
+                        supervisorName = supervisorName
                     )
                 }
             }
 
-            // 2. تصفية فرق المادة
+            // 2. شريط ملخص إحصائيات المادة
             item {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "الفرق المسجلة",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = 17.sp
-                            )
-                        )
-                        Text(
-                            text = "${filteredTeams.size} فرق",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 12.5.sp
-                            )
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 20.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(listOf("الكل", "متاحة للتسجيل", "مكتملة ومعتمدة")) { tab ->
-                            val isSelected = selectedFilter == tab
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White,
-                                border = if (isSelected) null else BorderStroke(
-                                    1.dp,
-                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                ),
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(50))
-                                    .clickable { selectedFilter = tab }
-                            ) {
-                                Text(
-                                    text = tab,
-                                    modifier = Modifier.padding(horizontal = 15.dp, vertical = 8.dp),
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        fontSize = 13.sp
-                                    ),
-                                    maxLines = 1,
-                                    softWrap = false
-                                )
-                            }
-                        }
-                    }
+                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    CourseSummaryStrip(
+                        totalTeams = totalTeams,
+                        availableSeats = totalAvailableSeats,
+                        averageCompletion = averageCompletion
+                    )
                 }
             }
 
-            // 3. قائمة كروت الفرق
+            // 3. مبدّل التبويبات المقطع (Segmented View Switcher)
+            item {
+                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    CourseSegmentedSwitcher(
+                        tabs = segmentTabs,
+                        selectedTab = selectedTab,
+                        onTabSelected = { selectedTab = it }
+                    )
+                }
+            }
+
+            // 4. قائمة كروت الفرق المركّزة على نسبة الاكتمال
             if (filteredTeams.isEmpty()) {
                 item {
                     Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
-                        EmptyCourseTeamsView(selectedFilter = selectedFilter)
+                        EmptyCourseTeamsView(selectedFilter = selectedTab)
                     }
                 }
             } else {
                 items(filteredTeams, key = { it.teamId }) { team ->
                     Box(modifier = Modifier.padding(horizontal = 20.dp)) {
-                        CourseTeamCard(
+                        CourseCompletionTeamCard(
                             team = team,
                             onClick = { onTeamClick(team.teamId) }
                         )
@@ -200,14 +172,14 @@ fun CourseHubScreen(
 }
 
 // =============================================================================
-// مكون الهيدر العلوي المدمج (CourseHubTopBar)
+// 1. مكون الهيدر العلوي المدمج (CourseHubTopBar)
 // =============================================================================
 @Composable
 private fun CourseHubTopBar(
     onBackClick: () -> Unit
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.background,
+        color = CoursePureWhite,
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
@@ -220,16 +192,16 @@ private fun CourseHubTopBar(
         ) {
             Surface(
                 shape = CircleShape,
-                color = Color.White,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                shadowElevation = 0.dp,
+                color = CourseAquaSurface,
+                border = BorderStroke(1.dp, CourseInputBorder),
+                shadowElevation = 1.dp,
                 modifier = Modifier.size(40.dp)
             ) {
                 IconButton(onClick = onBackClick) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "رجوع",
-                        tint = MaterialTheme.colorScheme.onSurface,
+                        tint = CourseTagText,
                         modifier = Modifier.size(19.dp)
                     )
                 }
@@ -240,8 +212,8 @@ private fun CourseHubTopBar(
             Text(
                 text = "مركز المادة الدراسية",
                 style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = CourseTagText,
                     fontSize = 19.sp
                 ),
                 maxLines = 1,
@@ -252,21 +224,27 @@ private fun CourseHubTopBar(
 }
 
 // =============================================================================
-// كارت بطل المادة الهادئ (CourseHeroCard)
+// 2. بطاقة المادة الدراسية والهيئة التدريسية (CourseAcademicHeroCard)
 // =============================================================================
 @Composable
-private fun CourseHeroCard(
+private fun CourseAcademicHeroCard(
     courseName: String,
-    supervisorName: String,
-    totalTeams: Int,
-    availableSeats: Int
+    supervisorName: String
 ) {
+    val instructors = supervisorName
+        .split("&", "،", ",")
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+
+    val primaryInstructor = instructors.getOrNull(0) ?: supervisorName
+    val assistantInstructor = instructors.getOrNull(1)
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        color = Color.White,
-        shadowElevation = 1.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        color = CourseAquaSurface,
+        shadowElevation = 2.dp,
+        border = BorderStroke(1.2.dp, CourseAquaBorder)
     ) {
         Column(
             modifier = Modifier
@@ -281,7 +259,8 @@ private fun CourseHeroCard(
             ) {
                 Surface(
                     shape = RoundedCornerShape(50),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                    color = CoursePureWhite,
+                    border = BorderStroke(1.dp, CourseInputBorder)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
@@ -297,9 +276,9 @@ private fun CourseHeroCard(
                         Text(
                             text = "مقرر أكاديمي معتمد",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = CourseTagText,
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 11.5.sp
+                                fontSize = 11.sp
                             ),
                             maxLines = 1,
                             softWrap = false
@@ -309,13 +288,13 @@ private fun CourseHeroCard(
 
                 Surface(
                     shape = RoundedCornerShape(50),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    color = MaterialTheme.colorScheme.primary
                 ) {
                     Text(
-                        text = "$availableSeats مقاعد متاحة",
+                        text = "CS-401",
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.primary,
+                            color = CoursePureWhite,
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.sp
                         ),
@@ -328,57 +307,88 @@ private fun CourseHeroCard(
             Text(
                 text = courseName,
                 style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = CourseTagText,
                     fontSize = 20.sp,
                     lineHeight = 28.sp
                 )
             )
 
-            HorizontalDivider(
-                thickness = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-            )
-
+            // شريط الهيئة التدريسية (عمودان متجاوران)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.SupervisorAccount,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(17.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = supervisorName,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-                            fontSize = 13.5.sp
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                InstructorMiniCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Outlined.SupervisorAccount,
+                    role = "أستاذ المادة",
+                    name = primaryInstructor
+                )
+
+                if (assistantInstructor != null) {
+                    InstructorMiniCard(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Outlined.Person,
+                        role = "المعيدة",
+                        name = assistantInstructor
                     )
                 }
+            }
+        }
+    }
+}
 
-                Spacer(modifier = Modifier.width(8.dp))
-
+@Composable
+private fun InstructorMiniCard(
+    modifier: Modifier = Modifier,
+    icon: ImageVector,
+    role: String,
+    name: String
+) {
+    Surface(
+        modifier = modifier.heightIn(min = 54.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = CoursePureWhite,
+        border = BorderStroke(1.dp, CourseInputBorder)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = CourseAquaSurface,
+                modifier = Modifier.size(30.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
                 Text(
-                    text = "$totalTeams فرق",
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        fontWeight = FontWeight.SemiBold,
+                    text = role,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+                        fontSize = 10.5.sp
+                    ),
+                    maxLines = 1
+                )
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = CourseTagText,
+                        fontWeight = FontWeight.Bold,
                         fontSize = 12.sp
                     ),
                     maxLines = 1,
-                    softWrap = false
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -386,24 +396,170 @@ private fun CourseHeroCard(
 }
 
 // =============================================================================
-// كارت فريق المادة الهادئ (CourseTeamCard)
+// 3. شريط ملخص إحصائيات المادة (CourseSummaryStrip)
 // =============================================================================
 @Composable
-private fun CourseTeamCard(
+private fun CourseSummaryStrip(
+    totalTeams: Int,
+    availableSeats: Int,
+    averageCompletion: Int
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = CourseAquaSurface,
+        border = BorderStroke(1.dp, CourseInputBorder)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            SummaryMetricCell(
+                modifier = Modifier.weight(1f),
+                value = "$totalTeams فرق",
+                label = "إجمالي الفرق"
+            )
+
+            Box(
+                modifier = Modifier
+                    .height(26.dp)
+                    .width(1.dp)
+                    .background(CourseInputBorder)
+            )
+
+            SummaryMetricCell(
+                modifier = Modifier.weight(1f),
+                value = "$availableSeats مقاعد",
+                label = "مقاعد متاحة",
+                valueColor = MaterialTheme.colorScheme.primary
+            )
+
+            Box(
+                modifier = Modifier
+                    .height(26.dp)
+                    .width(1.dp)
+                    .background(CourseInputBorder)
+            )
+
+            SummaryMetricCell(
+                modifier = Modifier.weight(1f),
+                value = "$averageCompletion%",
+                label = "متوسط الاكتمال"
+            )
+        }
+    }
+}
+
+@Composable
+private fun SummaryMetricCell(
+    modifier: Modifier = Modifier,
+    value: String,
+    label: String,
+    valueColor: Color = CourseTagText
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleSmall.copy(
+                fontWeight = FontWeight.ExtraBold,
+                color = valueColor,
+                fontSize = 14.sp
+            ),
+            maxLines = 1
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                fontSize = 11.sp
+            ),
+            maxLines = 1
+        )
+    }
+}
+
+// =============================================================================
+// 4. مبدّل التبويبات المقطع (CourseSegmentedSwitcher)
+// =============================================================================
+@Composable
+private fun CourseSegmentedSwitcher(
+    tabs: List<String>,
+    selectedTab: String,
+    onTabSelected: (String) -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = CourseAquaSurface,
+        border = BorderStroke(1.dp, CourseInputBorder)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            tabs.forEach { tab ->
+                val isSelected = tab == selectedTab
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable { onTabSelected(tab) },
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+                ) {
+                    Box(
+                        modifier = Modifier.padding(vertical = 9.dp, horizontal = 6.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = tab,
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                color = if (isSelected) CoursePureWhite else CourseTagText,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                fontSize = 12.5.sp
+                            ),
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// =============================================================================
+// 5. كارت الفريق المركّز على نسبة الاكتمال (CourseCompletionTeamCard)
+// =============================================================================
+@Composable
+private fun CourseCompletionTeamCard(
     team: Team,
     onClick: () -> Unit
 ) {
     val isLocked = team.isLocked
     val (bookedSeats, totalSeats, completionPercent) = getTeamCompletionStats(team)
     val availableSeatsCount = if (isLocked) 0 else (totalSeats - bookedSeats).coerceAtLeast(0)
+    val openRolesSummary = getOpenRolesSummary(team)
 
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        colors = CardDefaults.cardColors(
+            containerColor = if (isLocked) CourseLockedSurface else CourseAquaSurface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isLocked) 0.dp else 2.dp),
+        border = BorderStroke(1.2.dp, if (isLocked) CourseLockedBorder else CourseAquaBorder)
     ) {
         Column(
             modifier = Modifier
@@ -411,27 +567,38 @@ private fun CourseTeamCard(
                 .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // الهيدر: اسم المشروع + شارة الحالة
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                Text(
+                    text = team.projectName,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = CourseTagText,
+                        fontSize = 16.5.sp
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Surface(
                     shape = RoundedCornerShape(50),
-                    color = if (isLocked) {
-                        MaterialTheme.colorScheme.secondaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                    }
+                    color = if (isLocked) CoursePureWhite else MaterialTheme.colorScheme.primary
                 ) {
                     Text(
-                        text = if (isLocked) "مكتمل ومعتمد" else "متاح $availableSeatsCount مقاعد",
+                        text = if (isLocked) "مكتمل" else "متبقي $availableSeatsCount مقاعد",
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = if (isLocked) {
                                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             } else {
-                                MaterialTheme.colorScheme.primary
+                                CoursePureWhite
                             },
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.sp
@@ -440,83 +607,103 @@ private fun CourseTeamCard(
                         softWrap = false
                     )
                 }
-
-                Text(
-                    text = "$completionPercent%",
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.sp
-                    ),
-                    maxLines = 1,
-                    softWrap = false
-                )
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = team.projectName,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 16.5.sp
-                    )
+            // السطر الفرعي: قائد الفريق
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Outlined.Person,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(15.dp)
                 )
+                Spacer(modifier = Modifier.width(5.dp))
                 Text(
-                    text = team.description,
+                    text = "قائد الفريق: ${team.leaderName.substringBefore(" (")}",
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
-                        fontSize = 13.sp,
-                        lineHeight = 19.sp
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.5.sp
                     ),
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
 
-            LinearProgressIndicator(
-                progress = { completionPercent / 100f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp)),
-                color = if (isLocked) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-            )
+            // قسم نسبة اكتمال الفريق البارز
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = CoursePureWhite,
+                border = BorderStroke(1.dp, if (isLocked) CourseLockedBorder else CourseInputBorder)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "نسبة اكتمال الفريق",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.sp
+                            )
+                        )
+                        Text(
+                            text = "$completionPercent% • $bookedSeats/$totalSeats أعضاء",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                color = if (isLocked) CourseTagText else MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 12.5.sp
+                            ),
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
 
+                    LinearProgressIndicator(
+                        progress = { completionPercent / 100f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = if (isLocked) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    )
+                }
+            }
+
+            // الفوتر: ملخص الأدوار المطلوبة + رابط عرض التفاصيل
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                Text(
+                    text = if (isLocked) "الفريق مكتمل الأعضاء" else "الأدوار: $openRolesSummary",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                        fontSize = 12.sp
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Person,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Text(
-                        text = "${team.leaderName.substringBefore(" (")} • $bookedSeats/$totalSeats أعضاء",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = if (isLocked) "التفاصيل" else "حجز مقعد",
+                        text = "عرض التفاصيل",
                         style = MaterialTheme.typography.labelMedium.copy(
-                            color = MaterialTheme.colorScheme.primary,
+                            color = if (isLocked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.5.sp
                         ),
@@ -527,7 +714,7 @@ private fun CourseTeamCard(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = if (isLocked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(14.dp)
                     )
                 }
@@ -546,8 +733,8 @@ private fun EmptyCourseTeamsView(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        color = Color.White,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        color = CourseAquaSurface,
+        border = BorderStroke(1.dp, CourseAquaBorder),
         shadowElevation = 0.dp
     ) {
         Column(
@@ -557,7 +744,8 @@ private fun EmptyCourseTeamsView(
         ) {
             Surface(
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                color = CoursePureWhite,
+                border = BorderStroke(1.dp, CourseInputBorder),
                 modifier = Modifier.size(52.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -574,7 +762,7 @@ private fun EmptyCourseTeamsView(
                 text = "لا توجد فرق مطابقة حالياً",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = CourseTagText,
                     fontSize = 16.sp
                 )
             )
@@ -597,7 +785,7 @@ private fun EmptyCourseTeamsView(
 }
 
 // =============================================================================
-// دوال مساعدة لحساب نسبة الاكتمال
+// دوال مساعدة لحساب نسبة الاكتمال والأدوار
 // =============================================================================
 private fun getTeamCompletionStats(team: Team): Triple<Int, Int, Int> {
     val totalSeats = team.totalSeats
@@ -616,6 +804,22 @@ private fun getTeamCompletionStats(team: Team): Triple<Int, Int, Int> {
     }
 
     return Triple(bookedSeats, totalSeats, percentage)
+}
+
+private fun getOpenRolesSummary(team: Team): String {
+    val roles = if (team.teamId == MockDataProvider.sampleTeam.teamId) {
+        MockDataProvider.sampleSeats
+            .filter { it.status == SeatStatus.AVAILABLE }
+            .map { it.roleRequired.substringBefore(" (") }
+            .distinct()
+    } else {
+        when (team.teamId) {
+            "team_beta_2" -> listOf("Flutter", "UI/UX", "Backend")
+            "team_gamma_3" -> listOf("Android", "Backend", "AI")
+            else -> listOf("Android", "Backend", "UI/UX")
+        }
+    }
+    return roles.joinToString("، ").ifEmpty { "متنوعة" }
 }
 
 // =============================================================================
