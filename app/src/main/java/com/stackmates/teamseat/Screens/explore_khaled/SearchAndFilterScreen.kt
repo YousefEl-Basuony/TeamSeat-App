@@ -1,66 +1,37 @@
 package com.stackmates.teamseat.Screens.explore_khaled
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.RestartAlt
-import androidx.compose.material.icons.outlined.School
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.SearchOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.ChevronLeft
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Groups
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.RestartAlt
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.SearchOff
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -68,20 +39,16 @@ import androidx.compose.ui.unit.sp
 import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.SeatStatus
 import com.stackmates.teamseat.core.model.Team
+import com.stackmates.teamseat.core.theme.TajawalFontFamily
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
-
-private val SearchPureWhite = Color(0xFFFFFFFF)
-private val SearchAquaSurface = Color(0xFFEDF7F7)
-private val SearchAquaBorder = Color(0xFF9AD2D4)
-private val SearchInputBorder = Color(0xFFB8E0E1)
-private val SearchLockedSurface = Color(0xFFF1F5F9)
-private val SearchLockedBorder = Color(0xFFCBD5E1)
-private val SearchCourseTagText = Color(0xFF0A344A)
+import com.stackmates.teamseat.ui.components.*
 
 /**
- * 🔍 المسؤول عن الشاشة: خالد (Khaled) — [KHALED-5]
- * شاشة البحث والفلترة المتقدمة لمشاريع وتيمات الجامعة (Search & Filter Screen)
+ * 🔍 المسؤول عن الشاشة: خالد (Khaled) — [KHALED-2]
+ * شاشة البحث والفلترة المتقدمة لمشاريع وتيمات الجامعة (SearchAndFilterScreen)
+ * تستخدم TeamSeatScreenContainer (بالموجتين العضويتين) و TeamSeatCard.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchAndFilterScreen(
     teams: List<Team> = MockDataProvider.sampleTeamsList,
@@ -93,186 +60,296 @@ fun SearchAndFilterScreen(
     var selectedRole by remember { mutableStateOf(roleFilters.firstOrNull() ?: "الكل") }
     val focusManager = LocalFocusManager.current
 
-    val filteredTeams = teams.filter { team ->
+    val filteredTeams = remember(teams, searchQuery, selectedRole) {
         val queryTrimmed = searchQuery.trim()
-
-        val matchesQuery = queryTrimmed.isEmpty() ||
+        teams.filter { team ->
+            val matchesQuery = queryTrimmed.isEmpty() ||
                 team.projectName.contains(queryTrimmed, ignoreCase = true) ||
                 team.category.contains(queryTrimmed, ignoreCase = true) ||
                 team.description.contains(queryTrimmed, ignoreCase = true) ||
-                team.leaderName.contains(queryTrimmed, ignoreCase = true) ||
-                team.supervisorDoctor.contains(queryTrimmed, ignoreCase = true)
+                team.leaderName.contains(queryTrimmed, ignoreCase = true)
 
-        val teamRoles = getRolesForTeam(team)
-        val isAllRole = selectedRole == "الكل" || selectedRole.equals("All", ignoreCase = true)
-        val matchesRole = isAllRole || teamRoles.any { role ->
-            role.contains(selectedRole, ignoreCase = true)
-        } || team.description.contains(selectedRole, ignoreCase = true)
+            val matchesRole = if (selectedRole == "الكل") {
+                true
+            } else {
+                team.projectName.contains(selectedRole, ignoreCase = true) ||
+                    team.description.contains(selectedRole, ignoreCase = true) ||
+                    team.category.contains(selectedRole, ignoreCase = true) ||
+                    (team.teamId == MockDataProvider.sampleTeam.teamId &&
+                        MockDataProvider.sampleSeats.any {
+                            it.roleRequired.contains(selectedRole, ignoreCase = true)
+                        })
+            }
 
-        matchesQuery && matchesRole
+            matchesQuery && matchesRole
+        }
     }
 
-    val isFilterActive = searchQuery.isNotBlank() || (selectedRole != "الكل" && !selectedRole.equals("All", ignoreCase = true))
-
-    Scaffold(
-        containerColor = SearchPureWhite,
-        contentWindowInsets = WindowInsets.systemBars,
+    TeamSeatScreenContainer(
         topBar = {
-            SearchTopHeader(
-                onBackClick = onBackClick,
-                isFilterActive = isFilterActive,
-                onResetFilters = {
-                    searchQuery = ""
-                    selectedRole = roleFilters.firstOrNull() ?: "الكل"
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                navigationIcon = {
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 12.dp, end = 6.dp)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.White)
+                            .border(1.dp, TeamSeatCardBorderTeal, CircleShape)
+                            .bounceClick(onClick = onBackClick),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = "رجوع",
+                            tint = TeamSeatTitleDark,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                },
+                title = {
+                    Column {
+                        Text(
+                            text = "دوّر على تيمك",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = TeamSeatTitleDark,
+                            fontSize = 18.sp,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                        Text(
+                            text = "ابحث بالمشروع أو المادة أو التخصص اللي بتحبه",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            color = TeamSeatBodyMuted,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             )
         }
-    ) { innerPadding ->
+    ) { safePadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(top = 4.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = safePadding.calculateTopPadding() + 8.dp,
+                bottom = safePadding.calculateBottomPadding()
+            ),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 1. شريط البحث الأنيق
+            // 1. حقل البحث
             item {
-                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = {
-                            Text(
-                                text = "ابحث باسم المشروع، المادة، أو القائد...",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                    fontSize = 13.5.sp
-                                )
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Search,
-                                contentDescription = "بحث",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        },
-                        trailingIcon = {
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = "مسح البحث",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
-                        },
-                        singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = SearchInputBorder,
-                            focusedContainerColor = SearchAquaSurface,
-                            unfocusedContainerColor = SearchAquaSurface,
-                            cursorColor = MaterialTheme.colorScheme.primary
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    placeholder = {
+                        Text(
+                            text = "اكتب اسم مشروع، مادة، أو تخصص...",
+                            fontFamily = TajawalFontFamily,
+                            color = TeamSeatBodyMuted.copy(alpha = 0.8f),
+                            fontSize = 13.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
-                    )
-                }
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Rounded.Search,
+                            contentDescription = "بحث",
+                            tint = TeamSeatPrimaryTeal,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Close,
+                                    contentDescription = "مسح البحث",
+                                    tint = TeamSeatBodyMuted,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    },
+                    textStyle = TextStyle(
+                        fontFamily = TajawalFontFamily,
+                        fontSize = 14.sp,
+                        color = TeamSeatTitleDark
+                    ),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedBorderColor = TeamSeatPrimaryTeal,
+                        unfocusedBorderColor = Color(0xFFD9E6E6)
+                    ),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+                )
             }
 
-            // 2. شرائح الفلترة الأفقية حسب التخصص
+            // 2. شرائح فلاتر التخصصات
             item {
                 LazyRow(
-                    contentPadding = PaddingValues(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(vertical = 2.dp)
                 ) {
                     items(roleFilters) { role ->
                         val isSelected = selectedRole == role
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = { selectedRole = role },
-                            label = {
-                                Text(
-                                    text = role,
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        fontSize = 13.sp
-                                    ),
-                                    maxLines = 1,
-                                    softWrap = false
+                        Box(
+                            modifier = Modifier
+                                .height(36.dp)
+                                .wrapContentWidth()
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(if (isSelected) TeamSeatPrimaryTeal else Color.White)
+                                .border(
+                                    width = 1.dp,
+                                    color = if (isSelected) TeamSeatPrimaryTeal else Color(0xFFD9E6E6),
+                                    shape = RoundedCornerShape(18.dp)
                                 )
-                            },
-                            shape = RoundedCornerShape(50),
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                selectedLabelColor = SearchPureWhite,
-                                containerColor = SearchAquaSurface,
-                                labelColor = MaterialTheme.colorScheme.onSurface
-                            ),
-                            border = FilterChipDefaults.filterChipBorder(
-                                enabled = true,
-                                selected = isSelected,
-                                borderColor = SearchInputBorder,
-                                selectedBorderColor = Color.Transparent
+                                .bounceClick { selectedRole = role }
+                                .padding(horizontal = 14.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = role,
+                                style = TextStyle(
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (isSelected) Color.White else TeamSeatTitleDark,
+                                    fontSize = 12.sp,
+                                    textDirection = if (role == "الكل") TextDirection.Rtl else TextDirection.Ltr
+                                ),
+                                maxLines = 1,
+                                softWrap = false
                             )
-                        )
+                        }
                     }
                 }
             }
 
-            // 3. عنوان وعداد النتائج
+            // 3. شريط عدد النتائج
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .padding(vertical = 2.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (isFilterActive) "نتائج البحث" else "جميع المشاريع",
-                        style = MaterialTheme.typography.titleMedium.copy(
+                        text = "النتائج المطابقة",
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = TeamSeatTitleDark,
+                        fontSize = 15.sp
+                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(TeamSeatSoftTealPill)
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "${filteredTeams.size} تيمات",
+                            fontFamily = TajawalFontFamily,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = 17.sp
+                            color = TeamSeatPrimaryTeal,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            softWrap = false
                         )
-                    )
-
-                    Text(
-                        text = "${filteredTeams.size} فرق",
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.5.sp
-                        )
-                    )
+                    }
                 }
             }
 
             // 4. قائمة النتائج أو حالة عدم وجود نتائج
             if (filteredTeams.isEmpty()) {
                 item {
-                    Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
-                        EmptySearchResultsCard(
-                            searchQuery = searchQuery,
-                            selectedRole = selectedRole,
-                            onResetClick = {
-                                searchQuery = ""
-                                selectedRole = roleFilters.firstOrNull() ?: "الكل"
+                    TeamSeatCard(contentPadding = 28.dp) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(CircleShape)
+                                    .background(TeamSeatSoftTealPill),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.SearchOff,
+                                    contentDescription = null,
+                                    tint = TeamSeatPrimaryTeal,
+                                    modifier = Modifier.size(28.dp)
+                                )
                             }
-                        )
+                            Text(
+                                text = "ملقيناش تيم بالمواصفات دي",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = TeamSeatTitleDark,
+                                fontSize = 15.sp,
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                text = "جرّب تغيّر كلمة البحث أو اختار \"الكل\" عشان تشوف باقي الفرق.",
+                                fontFamily = TajawalFontFamily,
+                                color = TeamSeatBodyMuted,
+                                fontSize = 12.5.sp,
+                                textAlign = TextAlign.Center
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .height(40.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(TeamSeatPrimaryTeal)
+                                    .bounceClick {
+                                        searchQuery = ""
+                                        selectedRole = "الكل"
+                                    }
+                                    .padding(horizontal = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.RestartAlt,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = "رجّع كل التيمات",
+                                        fontFamily = TajawalFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color.White,
+                                        fontSize = 12.5.sp,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             } else {
-                items(filteredTeams, key = { it.teamId }) { team ->
-                    Box(modifier = Modifier.padding(horizontal = 20.dp)) {
-                        SearchTeamCard(
+                itemsIndexed(filteredTeams, key = { _, item -> item.teamId }) { index, team ->
+                    StaggeredAnimatedItem(index = index) {
+                        SearchTeamResultCard(
                             team = team,
                             onClick = { onTeamClick(team.teamId) }
                         )
@@ -283,383 +360,212 @@ fun SearchAndFilterScreen(
     }
 }
 
-// =============================================================================
-// مكون الهيدر العلوي المدمج (SearchTopHeader)
-// =============================================================================
 @Composable
-private fun SearchTopHeader(
-    onBackClick: () -> Unit,
-    isFilterActive: Boolean,
-    onResetFilters: () -> Unit
+private fun SearchTeamResultCard(
+    team: Team,
+    onClick: () -> Unit
 ) {
-    Surface(
-        color = SearchPureWhite,
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
+    val availableSeats = if (team.isLocked) {
+        0
+    } else if (team.teamId == MockDataProvider.sampleTeam.teamId) {
+        MockDataProvider.sampleSeats.count { it.status == SeatStatus.AVAILABLE }
+    } else {
+        (team.totalSeats - 2).coerceAtLeast(1)
+    }
+    val bookedSeats = (team.totalSeats - availableSeats).coerceAtLeast(1)
+    val progress = if (team.totalSeats > 0) bookedSeats.toFloat() / team.totalSeats else 0.5f
+
+    val isArabicFirst = team.projectName.firstOrNull()?.let {
+        Character.getDirectionality(it) == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC ||
+            Character.getDirectionality(it) == Character.DIRECTIONALITY_RIGHT_TO_LEFT
+    } == true
+
+    TeamSeatCard(
+        isWarmHighlight = team.isLocked,
+        contentPadding = 14.dp,
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .height(IntrinsicSize.Min),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Surface(
-                    shape = CircleShape,
-                    color = SearchAquaSurface,
-                    border = BorderStroke(1.dp, SearchInputBorder),
-                    shadowElevation = 1.dp,
-                    modifier = Modifier.size(40.dp)
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White)
+                        .border(1.dp, TeamSeatCardBorderTeal.copy(alpha = 0.7f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "رجوع",
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(19.dp)
-                        )
-                    }
+                    Text(
+                        text = team.category.substringBefore(" ("),
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TeamSeatPrimaryTeal,
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        softWrap = false
+                    )
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = team.projectName,
+                        style = TextStyle(
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = TeamSeatTitleDark,
+                            fontSize = 15.5.sp,
+                            textDirection = if (isArabicFirst) TextDirection.Rtl else TextDirection.Ltr
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    Icon(
+                        imageVector = Icons.Rounded.ChevronLeft,
+                        contentDescription = null,
+                        tint = TeamSeatTitleDark,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
 
                 Text(
-                    text = "البحث عن الفرق",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 19.sp
-                    ),
-                    maxLines = 1,
+                    text = team.description,
+                    fontFamily = TajawalFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    color = TeamSeatBodyMuted,
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-            }
 
-            if (isFilterActive) {
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .clickable { onResetFilters() }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.weight(1f, fill = false)
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.RestartAlt,
-                            contentDescription = "إعادة ضبط",
-                            tint = MaterialTheme.colorScheme.primary,
+                            imageVector = Icons.Rounded.Person,
+                            contentDescription = null,
+                            tint = TeamSeatPrimaryTeal,
                             modifier = Modifier.size(14.dp)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "إعادة ضبط",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.5.sp
-                            ),
+                            text = team.leaderName.substringBefore(" ("),
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TeamSeatTitleDark,
+                            fontSize = 11.5.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier
+                            .width(42.dp)
+                            .height(5.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = TeamSeatPrimaryTeal,
+                        trackColor = Color.White
+                    )
+
+                    Text(
+                        text = "\u200E$bookedSeats / ${team.totalSeats}\u200E أعضاء",
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = TeamSeatPrimaryTeal,
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(
+                modifier = Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.End
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(TeamSeatSoftTealPill)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Groups,
+                            contentDescription = null,
+                            tint = TeamSeatPrimaryTeal,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Text(
+                            text = if (team.isLocked) "مكتمل" else "متاح $availableSeats مقاعد",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = TeamSeatPrimaryTeal,
+                            fontSize = 11.sp,
                             maxLines = 1,
                             softWrap = false
                         )
                     }
                 }
-            }
-        }
-    }
-}
 
-// =============================================================================
-// كارت نتائج البحث الهادئ (SearchTeamCard)
-// =============================================================================
-@Composable
-private fun SearchTeamCard(
-    team: Team,
-    onClick: () -> Unit
-) {
-    val isLocked = team.isLocked
-    val availableSeatsCount = if (team.teamId == MockDataProvider.sampleTeam.teamId) {
-        MockDataProvider.sampleSeats.count { it.status == SeatStatus.AVAILABLE }
-    } else if (isLocked) {
-        0
-    } else {
-        (team.totalSeats - 2).coerceAtLeast(1)
-    }
+                Spacer(modifier = Modifier.height(8.dp))
 
-    val bookedSeatsCount = team.totalSeats - availableSeatsCount
-    val capacityFraction = if (team.totalSeats > 0) (bookedSeatsCount.toFloat() / team.totalSeats) else 0.5f
+                ProjectCategoryIllustration(
+                    category = "${team.projectName} ${team.category}",
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
 
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isLocked) SearchLockedSurface else SearchAquaSurface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isLocked) 0.dp else 2.dp),
-        border = BorderStroke(1.2.dp, if (isLocked) SearchLockedBorder else SearchAquaBorder)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = SearchPureWhite,
-                    border = BorderStroke(1.dp, if (isLocked) SearchLockedBorder else SearchInputBorder),
-                    modifier = Modifier.weight(1f, fill = false)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.School,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(5.dp))
-                        Text(
-                            text = team.category,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = SearchCourseTagText,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 11.sp
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
+                Spacer(modifier = Modifier.height(8.dp))
 
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = if (isLocked) SearchPureWhite else MaterialTheme.colorScheme.primary
+                Box(
+                    modifier = Modifier
+                        .height(34.dp)
+                        .clip(RoundedCornerShape(17.dp))
+                        .background(TeamSeatPrimaryTeal)
+                        .padding(horizontal = 12.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (isLocked) "مكتمل" else "متاح $availableSeatsCount مقاعد",
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = if (isLocked) {
-                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                            } else {
-                                SearchPureWhite
-                            },
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp
-                        ),
-                        maxLines = 1,
-                        softWrap = false
-                    )
-                }
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = team.projectName,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 16.5.sp
-                    )
-                )
-                Text(
-                    text = team.description,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
-                        fontSize = 13.sp,
-                        lineHeight = 19.sp
-                    ),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            LinearProgressIndicator(
-                progress = { capacityFraction },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp)),
-                color = if (isLocked) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Person,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Text(
-                        text = "${team.leaderName.substringBefore(" (")} • $bookedSeatsCount/${team.totalSeats} أعضاء",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "التفاصيل",
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.5.sp
-                        ),
-                        maxLines = 1,
-                        softWrap = false
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(14.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-// =============================================================================
-// حالة عدم وجود نتائج للبحث (EmptySearchResultsCard)
-// =============================================================================
-@Composable
-private fun EmptySearchResultsCard(
-    searchQuery: String,
-    selectedRole: String,
-    onResetClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        color = SearchAquaSurface,
-        border = BorderStroke(1.dp, SearchAquaBorder),
-        shadowElevation = 0.dp
-    ) {
-        Column(
-            modifier = Modifier.padding(28.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                modifier = Modifier.size(54.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Outlined.SearchOff,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(26.dp)
-                    )
-                }
-            }
-
-            Text(
-                text = "لا توجد فرق مطابقة للبحث",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 16.5.sp
-                )
-            )
-
-            Text(
-                text = if (searchQuery.isNotBlank() && selectedRole != "الكل") {
-                    "لم نجد أي مشروع يطابق \"$searchQuery\" مع التخصص المحدد ($selectedRole)."
-                } else if (searchQuery.isNotBlank()) {
-                    "لم يتم العثور على أي مشروع يتضمن \"$searchQuery\"."
-                } else {
-                    "لا توجد فرق تطلب تخصص ($selectedRole) حالياً."
-                },
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    fontSize = 13.sp,
-                    lineHeight = 19.sp
-                ),
-                textAlign = TextAlign.Center
-            )
-
-            Button(
-                onClick = onResetClick,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.RestartAlt,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "مسح معايير البحث",
-                    style = MaterialTheme.typography.labelMedium.copy(
+                        text = "عرض التفاصيل ←",
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        softWrap = false
                     )
-                )
+                }
             }
         }
     }
 }
 
-// =============================================================================
-// دوال مساعدة لربط الأدوار والتخصصات بالفرق
-// =============================================================================
-private fun getRolesForTeam(team: Team): List<String> {
-    return if (team.teamId == MockDataProvider.sampleTeam.teamId) {
-        MockDataProvider.sampleSeats.map { it.roleRequired.substringBefore(" (") }.distinct()
-    } else {
-        when (team.teamId) {
-            "team_beta_2" -> listOf("Flutter", "UI/UX", "Backend", "AI")
-            "team_gamma_3" -> listOf("Android", "Backend", "AI")
-            else -> listOf("Android", "Backend", "UI/UX", "Flutter")
-        }
-    }
-}
-
-// =============================================================================
-// Preview
-// =============================================================================
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun SearchAndFilterScreenPreview() {
     TeamSeatTheme {
