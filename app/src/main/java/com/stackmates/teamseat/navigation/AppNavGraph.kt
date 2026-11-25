@@ -44,7 +44,7 @@ fun AppNavGraph(
     NavHost(
         navController = navController,
         startDestination = startDestination
-        \
+        
     ) {
         // شاشة لوحة التطوير المركزية
         composable(ScreenRoutes.DEV_HUB) {
