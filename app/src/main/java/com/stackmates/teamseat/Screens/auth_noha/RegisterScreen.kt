@@ -35,11 +35,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.stackmates.teamseat.core.theme.*
@@ -66,21 +68,24 @@ fun RegisterScreen(
     // التخصص / الدور التقني في الفريق (Designer, Developer, Frontend, QA)
     var selectedRole by remember { mutableStateOf("Developer") }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(WarmCream)
-    ) {
-        // خلفية التموجات الانسيابية المتطابقة مع شاشة تسجيل الدخول
-        RegisterFluidBackground()
-
-        Column(
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 22.dp, vertical = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(WarmCream)
         ) {
+            // خلفية التموجات الانسيابية المتطابقة مع شاشة تسجيل الدخول
+            RegisterFluidBackground()
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 22.dp, vertical = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             Spacer(modifier = Modifier.height(8.dp))
 
             // شعار الكرسي الأيقوني لـ TeamSeat
@@ -151,6 +156,10 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = fullName,
                         onValueChange = { fullName = it },
+                        textStyle = LocalTextStyle.current.copy(
+                            fontFamily = TajawalFontFamily,
+                            fontSize = 14.sp
+                        ),
                         placeholder = {
                             Text(
                                 text = "Full Name",
@@ -169,8 +178,8 @@ fun RegisterScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(16.dp),
+                            .height(54.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = SoftBeige.copy(alpha = 0.35f),
                             unfocusedContainerColor = SoftBeige.copy(alpha = 0.2f),
@@ -186,6 +195,10 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = studentId,
                         onValueChange = { studentId = it },
+                        textStyle = LocalTextStyle.current.copy(
+                            fontFamily = TajawalFontFamily,
+                            fontSize = 14.sp
+                        ),
                         placeholder = {
                             Text(
                                 text = "Student ID",
@@ -204,8 +217,8 @@ fun RegisterScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(16.dp),
+                            .height(54.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = SoftBeige.copy(alpha = 0.35f),
                             unfocusedContainerColor = SoftBeige.copy(alpha = 0.2f),
@@ -222,6 +235,10 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
+                        textStyle = LocalTextStyle.current.copy(
+                            fontFamily = TajawalFontFamily,
+                            fontSize = 14.sp
+                        ),
                         placeholder = {
                             Text(
                                 text = "Academic Email",
@@ -240,8 +257,8 @@ fun RegisterScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(16.dp),
+                            .height(54.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = SoftBeige.copy(alpha = 0.35f),
                             unfocusedContainerColor = SoftBeige.copy(alpha = 0.2f),
@@ -258,6 +275,10 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
+                        textStyle = LocalTextStyle.current.copy(
+                            fontFamily = TajawalFontFamily,
+                            fontSize = 14.sp
+                        ),
                         placeholder = {
                             Text(
                                 text = "Password",
@@ -287,8 +308,8 @@ fun RegisterScreen(
                         visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(16.dp),
+                            .height(54.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = SoftBeige.copy(alpha = 0.35f),
                             unfocusedContainerColor = SoftBeige.copy(alpha = 0.2f),
@@ -420,14 +441,14 @@ fun RegisterScreen(
                     text = "Already have an account? ",
                     fontFamily = TajawalFontFamily,
                     color = DeepNavy.copy(alpha = 0.7f),
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Medium
                 )
                 Text(
                     text = "Sign In",
                     fontFamily = TajawalFontFamily,
                     color = DeepTeal,
-                    fontSize = 14.5.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier.clickable {
                         onNavigateToLogin()
@@ -435,6 +456,7 @@ fun RegisterScreen(
                     }
                 )
             }
+        }
         }
     }
 }

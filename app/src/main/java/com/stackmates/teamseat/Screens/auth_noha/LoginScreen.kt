@@ -30,15 +30,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.stackmates.teamseat.core.theme.*
+import com.stackmates.teamseat.ui.components.StaggeredAnimatedItem
+import com.stackmates.teamseat.ui.components.bounceClick
 
 /**
  * 🌸 شاشة تسجيل الدخول (Login Screen)
@@ -56,23 +60,26 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(WarmCream)
-    ) {
-        // 1. خلفية التموجات الانسيابية الهادئة في الزوايا لمنع الفراغ
-        LoginFluidBackground()
-
-        // 2. المحتوى الرئيسي المتناسق مع الشاشة
-        Column(
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .background(WarmCream)
         ) {
+            // 1. خلفية التموجات الانسيابية الهادئة في الزوايا لمنع الفراغ
+            LoginFluidBackground()
+
+            // 2. المحتوى الرئيسي المتناسق مع الشاشة
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
             Spacer(modifier = Modifier.height(12.dp))
 
             // شعار الكرسي الأيقوني لـ TeamSeat مع الحلقة التركوازية
@@ -143,12 +150,16 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = emailOrId,
                         onValueChange = { emailOrId = it },
+                        textStyle = LocalTextStyle.current.copy(
+                            fontFamily = TajawalFontFamily,
+                            fontSize = 14.sp
+                        ),
                         placeholder = {
                             Text(
                                 text = "Email or Student ID",
                                 fontFamily = TajawalFontFamily,
                                 color = DeepNavy.copy(alpha = 0.45f),
-                                fontSize = 14.5.sp
+                                fontSize = 14.sp
                             )
                         },
                         leadingIcon = {
@@ -162,7 +173,7 @@ fun LoginScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(54.dp),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = SoftBeige.copy(alpha = 0.4f),
                             unfocusedContainerColor = SoftBeige.copy(alpha = 0.25f),
@@ -180,12 +191,16 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = password,
                             onValueChange = { password = it },
+                            textStyle = LocalTextStyle.current.copy(
+                                fontFamily = TajawalFontFamily,
+                                fontSize = 14.sp
+                            ),
                             placeholder = {
                                 Text(
                                     text = "Password",
                                     fontFamily = TajawalFontFamily,
                                     color = DeepNavy.copy(alpha = 0.45f),
-                                    fontSize = 14.5.sp
+                                    fontSize = 14.sp
                                 )
                             },
                             leadingIcon = {
@@ -210,7 +225,7 @@ fun LoginScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(54.dp),
-                            shape = RoundedCornerShape(16.dp),
+                            shape = RoundedCornerShape(14.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedContainerColor = SoftBeige.copy(alpha = 0.4f),
                                 unfocusedContainerColor = SoftBeige.copy(alpha = 0.25f),
@@ -231,10 +246,10 @@ fun LoginScreen(
                             horizontalArrangement = Arrangement.End
                         ) {
                             Text(
-                                text = "? Forgot Password",
+                                text = "Forgot Password?",
                                 fontFamily = TajawalFontFamily,
                                 color = DeepTeal,
-                                fontSize = 13.5.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.clickable { onForgotPassword() }
                             )
@@ -332,18 +347,19 @@ fun LoginScreen(
                     text = "Don't have an account? ",
                     fontFamily = TajawalFontFamily,
                     color = DeepNavy.copy(alpha = 0.7f),
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Medium
                 )
                 Text(
                     text = "Sign Up",
                     fontFamily = TajawalFontFamily,
                     color = DeepTeal,
-                    fontSize = 14.5.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier.clickable { onNavigateToRegister() }
                 )
             }
+        }
         }
     }
 }

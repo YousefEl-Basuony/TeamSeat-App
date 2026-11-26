@@ -1,0 +1,309 @@
+package com.stackmates.teamseat.navigation
+
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.Diversity2
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.SpaceDashboard
+import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.Diversity2
+import androidx.compose.material.icons.rounded.Explore
+import androidx.compose.material.icons.rounded.SpaceDashboard
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.stackmates.teamseat.Screens.explore_khaled.HomeScreen
+import com.stackmates.teamseat.Screens.explore_khaled.SearchAndFilterScreen
+import com.stackmates.teamseat.Screens.requests_hossam.MyProfileScreen
+import com.stackmates.teamseat.Screens.workspace_alaa.TeamWorkspaceScreen
+import com.stackmates.teamseat.core.data.MockDataProvider
+import com.stackmates.teamseat.core.model.Seat
+import com.stackmates.teamseat.core.model.Team
+import com.stackmates.teamseat.core.model.User
+import com.stackmates.teamseat.core.theme.TajawalFontFamily
+import com.stackmates.teamseat.core.theme.TeamSeatTheme
+import com.stackmates.teamseat.ui.components.TeamSeatBgOffWhite
+import com.stackmates.teamseat.ui.components.TeamSeatWarmOrange
+import com.stackmates.teamseat.ui.components.bounceClick
+
+private val NavBarBorderColor = Color(0xFFE2ECEC)
+private val NavActivePillBg = Color(0xFFFFF3E6)
+private val NavInactiveSlate = Color(0xFF64748B)
+
+private data class MainNavTab(
+    val label: String,
+    val activeIcon: ImageVector,
+    val inactiveIcon: ImageVector
+)
+
+private val MainNavTabs = listOf(
+    MainNavTab("الرئيسية", Icons.Rounded.SpaceDashboard, Icons.Outlined.SpaceDashboard),
+    MainNavTab("استكشاف", Icons.Rounded.Explore, Icons.Outlined.Explore),
+    MainNavTab("فريقي", Icons.Rounded.Diversity2, Icons.Outlined.Diversity2),
+    MainNavTab("حسابي", Icons.Rounded.AccountCircle, Icons.Outlined.AccountCircle)
+)
+
+@Composable
+fun MainAppShell(
+    currentUser: User,
+    teams: List<Team>,
+    seats: List<Seat>,
+    onTeamClick: (String) -> Unit,
+    onCreateTeamClick: () -> Unit,
+    onNotificationsClick: () -> Unit,
+    onMyApplicationsClick: () -> Unit,
+    onSwitchPersona: () -> Unit,
+    onOpenCalendarClick: () -> Unit,
+    onOpenTASheetClick: () -> Unit,
+    onLogoutClick: () -> Unit
+) {
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        Scaffold(
+            containerColor = TeamSeatBgOffWhite,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            bottomBar = {
+                TeamSeatFloatingNavBar(
+                    selectedIndex = selectedTab,
+                    onSelect = { selectedTab = it }
+                )
+            }
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = innerPadding.calculateBottomPadding())
+            ) {
+                AnimatedContent(
+                    targetState = selectedTab,
+                    transitionSpec = {
+                        val direction = if (targetState > initialState) 1 else -1
+                        (fadeIn(tween(220)) + slideInHorizontally(tween(260)) { it / 16 * direction })
+                            .togetherWith(
+                                fadeOut(tween(160)) + slideOutHorizontally(tween(200)) { -it / 16 * direction }
+                            )
+                    },
+                    label = "mainTabTransition"
+                ) { tabIndex ->
+                    when (tabIndex) {
+                        0 -> HomeScreen(
+                            currentUser = currentUser,
+                            teams = teams,
+                            onTeamClick = onTeamClick,
+                            onCreateTeamClick = onCreateTeamClick,
+                            onSearchClick = { selectedTab = 1 },
+                            onNotificationsClick = onNotificationsClick,
+                            onMyApplicationsClick = onMyApplicationsClick,
+                            onSwitchPersona = onSwitchPersona,
+                            onExploreClick = { selectedTab = 1 },
+                            onMyTeamClick = { selectedTab = 2 },
+                            onProfileClick = { selectedTab = 3 },
+                            showBottomBar = false
+                        )
+
+                        1 -> SearchAndFilterScreen(
+                            teams = teams,
+                            onTeamClick = { onTeamClick(it) },
+                            onBackClick = { selectedTab = 0 }
+                        )
+
+                        2 -> TeamWorkspaceScreen(
+                            team = teams.firstOrNull() ?: MockDataProvider.sampleTeam,
+                            seats = seats,
+                            onOpenCalendarClick = onOpenCalendarClick,
+                            onOpenTASheetClick = onOpenTASheetClick,
+                            onBackClick = { selectedTab = 0 }
+                        )
+
+                        else -> MyProfileScreen(
+                            user = currentUser,
+                            onLogoutClick = onLogoutClick,
+                            onBackClick = { selectedTab = 0 }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TeamSeatFloatingNavBar(
+    selectedIndex: Int,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val dockShape = RoundedCornerShape(28.dp)
+    val pillShape = RoundedCornerShape(20.dp)
+    val animatedIndex by animateFloatAsState(
+        targetValue = selectedIndex.toFloat(),
+        animationSpec = spring(
+            dampingRatio = 0.78f,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "slidingPillIndex"
+    )
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+    ) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(58.dp)
+                .shadow(
+                    elevation = 6.dp,
+                    shape = dockShape,
+                    ambientColor = Color(0xFF0A344A).copy(alpha = 0.12f),
+                    spotColor = Color(0xFF0A344A).copy(alpha = 0.12f)
+                )
+                .clip(dockShape)
+                .background(Color.White)
+                .border(1.dp, NavBarBorderColor, dockShape)
+                .padding(horizontal = 6.dp, vertical = 6.dp)
+        ) {
+            val tabWidth = maxWidth / MainNavTabs.size
+
+            // الكبسولة البرتقالية المنزلقة خلف التبويب النشط
+            Box(
+                modifier = Modifier
+                    .offset(x = tabWidth * animatedIndex)
+                    .width(tabWidth)
+                    .fillMaxHeight()
+                    .clip(pillShape)
+                    .background(NavActivePillBg)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                MainNavTabs.forEachIndexed { index, tab ->
+                    val isSelected = selectedIndex == index
+                    val iconScale by animateFloatAsState(
+                        targetValue = if (isSelected) 1.12f else 1.0f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMediumLow
+                        ),
+                        label = "navIconPop$index"
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(pillShape)
+                            .bounceClick { onSelect(index) },
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (isSelected) tab.activeIcon else tab.inactiveIcon,
+                            contentDescription = tab.label,
+                            tint = if (isSelected) TeamSeatWarmOrange else NavInactiveSlate,
+                            modifier = Modifier
+                                .size(22.dp)
+                                .graphicsLayer {
+                                    scaleX = iconScale
+                                    scaleY = iconScale
+                                }
+                        )
+                        AnimatedVisibility(
+                            visible = isSelected,
+                            enter = expandHorizontally(
+                                animationSpec = spring(
+                                    dampingRatio = 0.78f,
+                                    stiffness = Spring.StiffnessMediumLow
+                                )
+                            ) + fadeIn(tween(180)),
+                            exit = shrinkHorizontally(tween(140)) + fadeOut(tween(100))
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(
+                                    text = tab.label,
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp,
+                                    color = TeamSeatWarmOrange,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TeamSeatFloatingNavBarPreview() {
+    TeamSeatTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(TeamSeatBgOffWhite)
+                .padding(vertical = 16.dp)
+        ) {
+            TeamSeatFloatingNavBar(selectedIndex = 0, onSelect = {})
+        }
+    }
+}

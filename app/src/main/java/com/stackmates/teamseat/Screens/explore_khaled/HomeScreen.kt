@@ -94,7 +94,8 @@ fun HomeScreen(
     onSwitchPersona: () -> Unit = {},
     onExploreClick: () -> Unit = onSearchClick,
     onMyTeamClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {}
+    onProfileClick: () -> Unit = {},
+    showBottomBar: Boolean = true
 ) {
     var selectedFilter by remember { mutableStateOf("الكل") }
     var selectedNavIndex by remember { mutableIntStateOf(0) }
@@ -187,17 +188,19 @@ fun HomeScreen(
         },
         floatingActionButtonPosition = FabPosition.Center,
         bottomBar = {
-            HomeBottomNavigationBar(
-                selectedIndex = selectedNavIndex,
-                onSelect = { index ->
-                    selectedNavIndex = index
-                    when (index) {
-                        1 -> onExploreClick()
-                        2 -> onMyTeamClick()
-                        3 -> onProfileClick()
+            if (showBottomBar) {
+                HomeBottomNavigationBar(
+                    selectedIndex = selectedNavIndex,
+                    onSelect = { index ->
+                        selectedNavIndex = index
+                        when (index) {
+                            1 -> onExploreClick()
+                            2 -> onMyTeamClick()
+                            3 -> onProfileClick()
+                        }
                     }
-                }
-            )
+                )
+            }
         }
     ) { innerPadding ->
         LazyColumn(

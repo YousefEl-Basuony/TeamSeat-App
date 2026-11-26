@@ -1,5 +1,14 @@
 package com.stackmates.teamseat.Screens.auth_noha
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,10 +18,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,16 +36,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.stackmates.teamseat.core.theme.TajawalFontFamily
+import com.stackmates.teamseat.core.theme.TeamSeatTheme
+import com.stackmates.teamseat.ui.components.bounceClick
 import kotlinx.coroutines.launch
+import kotlin.math.absoluteValue
 
 // درجات الألوان الرسمية لتطبيق TeamSeat
 private val DeepNavy   = Color(0xFF0A344A) // العناوين الداكنة
-private val DeepTeal   = Color(0xFF1B6F7D) // الأزرار وعناصر التركيز
+private val DeepTeal   = Color(0xFF136F78) // الأزرار وعناصر التركيز
 private val Turquoise  = Color(0xFF469D9F) // التركواز للأيقونات واللمسات
 private val LightAqua  = Color(0xFFA9D5D4) // خلفيات الآورا والبادج
 private val WarmCream  = Color(0xFFFAF5EE) // الخلفية الكريمية الدافئة للشاشة
@@ -225,6 +243,16 @@ fun TeamSeatChairLogo(modifier: Modifier = Modifier) {
 // رسمة الشريحة 1: Build Your Dream Team
 @Composable
 fun DreamTeamIllustration(modifier: Modifier = Modifier) {
+    val infiniteTransition = rememberInfiniteTransition(label = "dreamTeamFloat")
+    val floatY by infiniteTransition.animateFloat(
+        initialValue = -6f,
+        targetValue = 6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "floatY"
+    )
     Box(
         modifier = modifier
             .size(220.dp)
@@ -240,7 +268,9 @@ fun DreamTeamIllustration(modifier: Modifier = Modifier) {
                 shape = CircleShape,
                 color = Color.White,
                 shadowElevation = 8.dp,
-                modifier = Modifier.size(90.dp)
+                modifier = Modifier
+                    .size(90.dp)
+                    .graphicsLayer { translationY = floatY.dp.toPx() }
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
@@ -253,6 +283,7 @@ fun DreamTeamIllustration(modifier: Modifier = Modifier) {
             }
             Spacer(modifier = Modifier.height(12.dp))
             Row(
+                modifier = Modifier.graphicsLayer { translationY = (-floatY * 0.65f).dp.toPx() },
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -463,20 +494,24 @@ fun OnboardingScreen(
     val pagerState = rememberPagerState(pageCount = { items.size })
     val coroutineScope = rememberCoroutineScope()
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // خلفية التموجات والنقاط
-        OnboardingFluidBackground()
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        ProvideTextStyle(LocalTextStyle.current.copy(fontFamily = TajawalFontFamily)) {
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // خلفية التموجات والنقاط
+                OnboardingFluidBackground()
 
-        // المحتوى الرئيسي
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
+                // المحتوى الرئيسي
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .navigationBarsPadding()
+                        .padding(top = 16.dp, bottom = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
             // الهيدر العلوي: لوجو TeamSeat في المنتصف و زر Skip على اليمين
             Box(
                 modifier = Modifier
@@ -542,10 +577,28 @@ fun OnboardingScreen(
                     .weight(1f)
             ) { pageIndex ->
                 val item = items[pageIndex]
+                val pageOffset = ((pagerState.currentPage - pageIndex) +
+                    pagerState.currentPageOffsetFraction).absoluteValue.coerceIn(0f, 1f)
+                val infiniteFloat = rememberInfiniteTransition(label = "slideFloat$pageIndex")
+                val slideFloatY by infiniteFloat.animateFloat(
+                    initialValue = -6f,
+                    targetValue = 6f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(durationMillis = 2200, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "slideFloatY$pageIndex"
+                )
 
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .graphicsLayer {
+                            val scale = 1f - 0.08f * pageOffset
+                            scaleX = scale
+                            scaleY = scale
+                            alpha = 1f - 0.35f * pageOffset
+                        }
                         .padding(horizontal = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
@@ -554,7 +607,12 @@ fun OnboardingScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(230.dp),
+                            .height(230.dp)
+                            .graphicsLayer {
+                                if (pageIndex > 0) {
+                                    translationY = slideFloatY.dp.toPx()
+                                }
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         item.illustration()
@@ -654,10 +712,18 @@ fun OnboardingScreen(
                 ) {
                     repeat(items.size) { index ->
                         val isSelected = pagerState.currentPage == index
+                        val dotWidth by animateDpAsState(
+                            targetValue = if (isSelected) 24.dp else 8.dp,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessMediumLow
+                            ),
+                            label = "dotWidth$index"
+                        )
                         Box(
                             modifier = Modifier
                                 .height(8.dp)
-                                .width(if (isSelected) 26.dp else 8.dp)
+                                .width(dotWidth)
                                 .clip(CircleShape)
                                 .background(if (isSelected) DeepTeal else SoftGray)
                         )
@@ -678,6 +744,15 @@ fun OnboardingScreen(
                     modifier = Modifier
                         .fillMaxWidth(0.85f)
                         .height(54.dp)
+                        .bounceClick {
+                            if (pagerState.currentPage < items.size - 1) {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                                }
+                            } else {
+                                onFinishOnboarding()
+                            }
+                        }
                         .shadow(6.dp, RoundedCornerShape(27.dp), spotColor = DeepTeal.copy(alpha = 0.35f)),
                     shape = RoundedCornerShape(27.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = DeepTeal)
@@ -693,7 +768,7 @@ fun OnboardingScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                             contentDescription = null,
                             tint = WarmCream,
                             modifier = Modifier.size(20.dp)
@@ -702,11 +777,15 @@ fun OnboardingScreen(
                 }
             }
         }
+            }
+        }
     }
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun OnboardingScreenPreview() {
-    OnboardingScreen()
+    TeamSeatTheme {
+        OnboardingScreen()
+    }
 }

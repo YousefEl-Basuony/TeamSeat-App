@@ -139,65 +139,7 @@ fun MyProfileScreen(
                 }
             )
         },
-        bottomBar = {
-            Surface(
-                color = Color.White,
-                shadowElevation = 0.dp,
-                border = BorderStroke(1.dp, TeamSeatDividerColor)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .shadow(
-                                elevation = 8.dp,
-                                shape = RoundedCornerShape(14.dp),
-                                ambientColor = TeamSeatPrimaryTeal,
-                                spotColor = TeamSeatPrimaryTeal
-                            )
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(TeamSeatPrimaryTeal)
-                            .bounceClick {
-                                onSaveChangesClick(selectedRole, githubUrl)
-                                showSavedBanner = true
-                                scope.launch {
-                                    snackbarHostState.showSnackbar("تمام! حفظنا تعديلات حسابك")
-                                    delay(2500)
-                                    showSavedBanner = false
-                                }
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Save,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(19.dp)
-                            )
-                            Text(
-                                text = "احفظ التعديلات",
-                                fontFamily = TajawalFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                fontSize = 14.5.sp,
-                                maxLines = 1,
-                                softWrap = false
-                            )
-                        }
-                    }
-                }
-            }
-        }
+        bottomBar = {}
     ) { safePadding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -205,7 +147,7 @@ fun MyProfileScreen(
                 start = 16.dp,
                 end = 16.dp,
                 top = safePadding.calculateTopPadding() + 8.dp,
-                bottom = safePadding.calculateBottomPadding()
+                bottom = 24.dp
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -486,6 +428,54 @@ fun MyProfileScreen(
                             ),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp)
+                        .height(50.dp)
+                        .shadow(
+                            elevation = 8.dp,
+                            shape = RoundedCornerShape(14.dp),
+                            ambientColor = TeamSeatPrimaryTeal,
+                            spotColor = TeamSeatPrimaryTeal
+                        )
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(TeamSeatPrimaryTeal)
+                        .bounceClick {
+                            onSaveChangesClick(selectedRole, githubUrl)
+                            showSavedBanner = true
+                            scope.launch {
+                                snackbarHostState.showSnackbar("تمام! حفظنا تعديلات حسابك")
+                                delay(2500)
+                                showSavedBanner = false
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Save,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(19.dp)
+                        )
+                        Text(
+                            text = "احفظ التعديلات",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            fontSize = 14.5.sp,
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
                 }

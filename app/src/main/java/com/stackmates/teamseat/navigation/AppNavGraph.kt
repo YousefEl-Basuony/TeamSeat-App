@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppNavGraph(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = ScreenRoutes.DEV_HUB
+    startDestination: String = ScreenRoutes.SPLASH
 ) {
     val authRepository = remember { FakeAuthRepository() }
     val teamRepository = remember { FakeTeamSeatRepository() }
@@ -98,13 +98,21 @@ fun AppNavGraph(
         // =====================================================================
         composable(ScreenRoutes.SPLASH) {
             SplashScreen(
-                onSplashFinished = { navController.navigate(ScreenRoutes.ONBOARDING) }
+                onSplashFinished = {
+                    navController.navigate(ScreenRoutes.ONBOARDING) {
+                        popUpTo(ScreenRoutes.SPLASH) { inclusive = true }
+                    }
+                }
             )
         }
 
         composable(ScreenRoutes.ONBOARDING) {
             OnboardingScreen(
-                onFinishOnboarding = { navController.navigate(ScreenRoutes.LOGIN) }
+                onFinishOnboarding = {
+                    navController.navigate(ScreenRoutes.LOGIN) {
+                        popUpTo(ScreenRoutes.ONBOARDING) { inclusive = true }
+                    }
+                }
             )
         }
 
@@ -113,7 +121,9 @@ fun AppNavGraph(
                 onLoginClick = { email, password ->
                     scope.launch {
                         authRepository.login(email, password)
-                        navController.navigate(ScreenRoutes.HOME)
+                        navController.navigate(ScreenRoutes.HOME) {
+                            popUpTo(ScreenRoutes.LOGIN) { inclusive = true }
+                        }
                     }
                 },
                 onNavigateToRegister = { navController.navigate(ScreenRoutes.REGISTER) }
@@ -125,7 +135,9 @@ fun AppNavGraph(
                 onRegisterClick = { name, studentId, email, password ->
                     scope.launch {
                         authRepository.register(name, studentId, email, password)
-                        navController.navigate(ScreenRoutes.HOME)
+                        navController.navigate(ScreenRoutes.HOME) {
+                            popUpTo(ScreenRoutes.LOGIN) { inclusive = true }
+                        }
                     }
                 },
                 onBackToLogin = { navController.popBackStack() }
@@ -136,15 +148,22 @@ fun AppNavGraph(
         // 🔍 3. شاشات خالد (Explore, Search, Course Hub & Team Overview)
         // =====================================================================
         composable(ScreenRoutes.HOME) {
-            HomeScreen(
+            MainAppShell(
                 currentUser = currentUser ?: MockDataProvider.saraStudent,
                 teams = teams,
+                seats = seats,
                 onTeamClick = { navController.navigate(ScreenRoutes.TEAM_DETAILS_OVERVIEW) },
                 onCreateTeamClick = { navController.navigate(ScreenRoutes.CREATE_TEAM_INFO) },
-                onSearchClick = { navController.navigate(ScreenRoutes.SEARCH) },
                 onNotificationsClick = { navController.navigate(ScreenRoutes.NOTIFICATIONS) },
                 onMyApplicationsClick = { navController.navigate(ScreenRoutes.MY_APPLICATIONS) },
-                onSwitchPersona = { authRepository.switchDemoPersona() }
+                onSwitchPersona = { authRepository.switchDemoPersona() },
+                onOpenCalendarClick = { navController.navigate(ScreenRoutes.TEAM_CALENDAR) },
+                onOpenTASheetClick = { navController.navigate(ScreenRoutes.TA_SHEET_PREVIEW) },
+                onLogoutClick = {
+                    navController.navigate(ScreenRoutes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
 
@@ -179,7 +198,11 @@ fun AppNavGraph(
         composable(ScreenRoutes.MY_PROFILE) {
             MyProfileScreen(
                 user = currentUser ?: MockDataProvider.saraStudent,
-                onLogoutClick = { navController.navigate(ScreenRoutes.LOGIN) },
+                onLogoutClick = {
+                    navController.navigate(ScreenRoutes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -233,7 +256,11 @@ fun AppNavGraph(
 
         composable(ScreenRoutes.CREATE_TEAM_SEATS) {
             CreateTeamSeatsScreen(
-                onPublishTeamClick = { navController.navigate(ScreenRoutes.SEAT_MAP) },
+                onPublishTeamClick = {
+                    navController.navigate(ScreenRoutes.SEAT_MAP) {
+                        popUpTo(ScreenRoutes.HOME)
+                    }
+                },
                 onBackClick = { navController.popBackStack() }
             )
         }
