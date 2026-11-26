@@ -24,6 +24,11 @@ fun DevHubScreen(
             "مركز تحكم المناقشة (Live Demo Center)" to ScreenRoutes.DEMO_CONTROL_CENTER,
             "تعديل مقاعد التيم (Edit Seats)" to ScreenRoutes.EDIT_TEAM_SEATS
         ),
+
+
+
+
+        
         "🌸 2. شاشات نُهى (Auth & Onboarding)" to listOf(
             "Splash Screen" to ScreenRoutes.SPLASH,
             "Onboarding Screen (السلايدر)" to ScreenRoutes.ONBOARDING,
