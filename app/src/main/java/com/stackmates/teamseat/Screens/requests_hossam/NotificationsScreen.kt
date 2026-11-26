@@ -40,7 +40,6 @@ import kotlinx.coroutines.launch
 /**
  * ⚡ المسؤول عن الشاشة: حسام (Hossam) — [HOSSAM-4]
  * شاشة مركز الإشعارات الفورية (NotificationsScreen)
- * تستخدم TeamSeatScreenContainer و TeamSeatCard الموحدين.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

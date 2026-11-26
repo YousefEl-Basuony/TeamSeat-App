@@ -1,9 +1,18 @@
 package com.stackmates.teamseat.Screens.admin_youssef
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,9 +41,6 @@ import androidx.compose.material.icons.outlined.HourglassTop
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material.icons.outlined.WorkspacePremium
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -65,7 +71,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -86,8 +91,6 @@ import com.stackmates.teamseat.core.theme.SeatPendingBg
 import com.stackmates.teamseat.core.theme.SoftBeige
 import com.stackmates.teamseat.core.theme.SoftGray
 import com.stackmates.teamseat.core.theme.TajawalFontFamily
-import com.stackmates.teamseat.core.theme.SoftBeige
-import com.stackmates.teamseat.core.theme.SoftGray
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
 import com.stackmates.teamseat.core.theme.Turquoise
 import com.stackmates.teamseat.core.theme.WarmCream
@@ -107,10 +110,7 @@ fun EditTeamSeatsScreen(
     val editableSeats = remember { mutableStateListOf(*seats.toTypedArray()) }
     var showSavedMessage by remember { mutableStateOf(false) }
     var selectedFilter by remember { mutableStateOf("الكل") }
-
-
-
-     val totalCount = editableSeats.size
+    val totalCount = editableSeats.size
     val bookedCount = editableSeats.count { it.status == SeatStatus.BOOKED }
     val availableCount = editableSeats.count { it.status == SeatStatus.AVAILABLE }
     val pendingCount = editableSeats.count { it.status == SeatStatus.PENDING }
@@ -133,7 +133,6 @@ fun EditTeamSeatsScreen(
         "QA & Testing",
         "DevOps Engineer"
     )
-    var showSavedToast by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = WarmCream,
@@ -182,24 +181,6 @@ fun EditTeamSeatsScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = WarmCream
                 )
-                    Text(
-                        text = "إدارة وتعديل مقاعد التيم",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = DeepNavy
-                        )
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "الرجوع",
-                            tint = DeepNavy
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = WarmCream)
             )
         },
         bottomBar = {
@@ -212,13 +193,6 @@ fun EditTeamSeatsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp, vertical = 16.dp)
-                color = SoftBeige,
-                shadowElevation = 8.dp
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
                 ) {
                     Button(
                         onClick = {
@@ -246,24 +220,6 @@ fun EditTeamSeatsScreen(
                                 color = Color.White,
                                 fontSize = 17.sp
                             )
-                            showSavedToast = true
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = DeepTeal),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Save,
-                            contentDescription = null,
-                            tint = Color.White
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (showSavedToast) "تم حفظ التعديلات بنجاح! ✓" else "حفظ تعديلات المقاعد 💾",
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                            color = Color.White
                         )
                     }
                 }
@@ -506,91 +462,6 @@ fun EditTeamSeatsScreen(
                             val index = editableSeats.indexOfFirst { it.id == seat.id }
                             if (index != -1) {
                                 editableSeats[index] = seat.copy(roleRequired = newRole)
-                .padding(horizontal = 16.dp)
-        ) {
-
-            // كارت إحصائيات المقاعد
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                colors = CardDefaults.cardColors(containerColor = SoftBeige),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceAround,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "${editableSeats.size}",
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = DeepNavy)
-                        )
-                        Text(
-                            text = "إجمالي المقاعد",
-                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .width(1.dp)
-                            .height(30.dp)
-                            .background(SoftGray)
-                    )
-
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "${editableSeats.count { it.status == SeatStatus.BOOKED }}",
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = DeepTeal)
-                        )
-                        Text(
-                            text = "محجوزة",
-                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .width(1.dp)
-                            .height(30.dp)
-                            .background(SoftGray)
-                    )
-
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "${editableSeats.count { it.status == SeatStatus.AVAILABLE }}",
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = Turquoise)
-                        )
-                        Text(
-                            text = "شاغرة (متاحة)",
-                            style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
-                        )
-                    }
-                }
-            }
-
-            Text(
-                text = "قائمة مقاعد المشروع (يمكنك تعديل المسمى أو حذف المقعد الشاغر)",
-                style = MaterialTheme.typography.labelMedium.copy(color = Color.Gray),
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            // قائمة المقاعد
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                items(editableSeats, key = { it.id }) { seat ->
-                    SeatItemRow(
-                        seat = seat,
-                        onRoleChange = { newRole ->
-                            val index = editableSeats.indexOfFirst { it.id == seat.id }
-                            if (index != -1) {
-                                editableSeats[index] = seat.copy(roleTag = newRole)
                             }
                         },
                         onDeleteClick = {
@@ -670,14 +541,6 @@ fun EditTeamSeatsScreen(
 private fun TicketSeatCard(
     seat: Seat,
     rolePresets: List<String>,
-            }
-        }
-    }
-}
-
-@Composable
-private fun SeatItemRow(
-    seat: Seat,
     onRoleChange: (String) -> Unit,
     onDeleteClick: () -> Unit
 ) {

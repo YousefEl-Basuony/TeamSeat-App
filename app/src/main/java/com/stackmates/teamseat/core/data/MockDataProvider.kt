@@ -125,26 +125,26 @@ object MockDataProvider {
         )
     )
 
-    // 5. إشعارات تجريبية (لشاشات خالد)
+    // 5. إشعارات تجريبية (لشاشات حسام)
     val sampleNotifications = listOf(
         NotificationItem(
             id = "notif_1",
-            title = "تم قبول حجزك رسمياً! 🎉",
-            message = "وافق أحمد محمود على طلب انضمامك لمقعد Android Developer في تيم StackMates.",
+            title = "تم قبول حجزك رسمياً",
+            message = "وافق يوسف محمد البسيوني على طلب انضمامك لمقعد Android Developer في تيم TeamSeat-App.",
             timeAgo = "منذ 10 دقائق",
             type = NotificationType.ACCEPTED
         ),
         NotificationItem(
             id = "notif_2",
-            title = "طلب حجز جديد معلق ⏳",
-            message = "قدمت سارة علي على حجز مقعد UI/UX في تيمك. تنتهي الصلاحية خلال 36 ساعة.",
+            title = "طلب حجز جديد معلق",
+            message = "قدمت إسراء محمد على حجز مقعد UI/UX Designer في تيمك. تنتهي الصلاحية خلال 36 ساعة.",
             timeAgo = "منذ ساعة",
             type = NotificationType.NEW_REQUEST
         ),
         NotificationItem(
             id = "notif_3",
-            title = "تنبيه اعتماد التيم 🔒",
-            message = "قام قائد التيم بإغلاق المقاعد نهائياً وتصدير كشف المعيدة م. شهد أحمد.",
+            title = "تنبيه اعتماد التيم",
+            message = "قام قائد التيم بإغلاق المقاعد نهائياً وتصدير كشف المعيدة م. شهد أحمد عبدالسلام.",
             timeAgo = "أمس",
             type = NotificationType.TEAM_LOCKED
         )
