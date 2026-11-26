@@ -1,8 +1,7 @@
-package com.example.myapplication
+package com.stackmates.teamseat.Screens.seatmap_esraa
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import com.stackmates.teamseat.core.theme.TajawalFontFamily
+import com.stackmates.teamseat.core.theme.TeamSeatTheme
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -38,9 +37,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -73,30 +74,14 @@ import kotlin.math.roundToInt
 
 // ───── ألوان TeamSeat ─────
 private val Navy = Color(0xFF0A344A)
-private val Teal = Color(0xFF1B6F7D)
+private val Teal = Color(0xFF136F78)
 private val Turquoise = Color(0xFF469D9F)
 private val Aqua = Color(0xFFA9D5D4)
-private val Cream = Color(0xFFFCF2EA)
+private val Cream = Color(0xFFF8FAFA)
 private val Mist = Color(0xFFE6F2F0)
 
 private val HeaderBrush = Brush.linearGradient(listOf(Navy, Teal))
 private val ButtonBrush = Brush.horizontalGradient(listOf(Teal, Turquoise))
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            MaterialTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = Cream
-                ) {
-                    CreateTeamInfoScreen()
-                }
-            }
-        }
-    }
-}
 
 @Composable
 private fun ChairIcon(
@@ -352,6 +337,17 @@ private fun StepIndicator(
 
 @Composable
 fun CreateTeamInfoScreen(
+    onNextStepClick: (String, String, String, Int) -> Unit,
+    onBackClick: () -> Unit
+) {
+    CreateTeamInfoScreen(
+        onBack = onBackClick,
+        onNext = onNextStepClick
+    )
+}
+
+@Composable
+fun CreateTeamInfoScreen(
     onBack: () -> Unit = {},
     onNext: (name: String, course: String, description: String, seatCount: Int) -> Unit = { _, _, _, _ -> }
 ) {
@@ -362,11 +358,12 @@ fun CreateTeamInfoScreen(
     val count = seatCount.roundToInt()
     val valid = name.isNotBlank() && course.isNotBlank()
 
-    Scaffold(
-        modifier = Modifier.screenBackground(),
-        containerColor = Color.Transparent,
-        topBar = { TopBar("Create Team", "Step 1 of 2 · Info", onBack) }
-    ) { padding ->
+    ProvideTextStyle(LocalTextStyle.current.copy(fontFamily = TajawalFontFamily)) {
+        Scaffold(
+            modifier = Modifier.screenBackground(),
+            containerColor = Color.Transparent,
+            topBar = { TopBar("Create Team", "Step 1 of 2 · Info", onBack) }
+        ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -380,6 +377,7 @@ fun CreateTeamInfoScreen(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text("Project Name") },
+                textStyle = LocalTextStyle.current.copy(fontFamily = TajawalFontFamily),
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -391,6 +389,7 @@ fun CreateTeamInfoScreen(
                 value = course,
                 onValueChange = { course = it },
                 label = { Text("Course") },
+                textStyle = LocalTextStyle.current.copy(fontFamily = TajawalFontFamily),
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -402,6 +401,7 @@ fun CreateTeamInfoScreen(
                 value = desc,
                 onValueChange = { desc = it },
                 label = { Text("Description / Goal") },
+                textStyle = LocalTextStyle.current.copy(fontFamily = TajawalFontFamily),
                 minLines = 4,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -487,6 +487,7 @@ fun CreateTeamInfoScreen(
                 onClick = { onNext(name, course, desc, count) }
             )
         }
+        }
     }
 }
 
@@ -525,7 +526,7 @@ private fun SeatPreviewRow(count: Int) {
 @Preview(showBackground = true, showSystemUi = true, name = "3 - Create Team Info")
 @Composable
 fun CreateTeamInfoScreenPreview() {
-    MaterialTheme {
+    TeamSeatTheme {
         CreateTeamInfoScreen()
     }
 }

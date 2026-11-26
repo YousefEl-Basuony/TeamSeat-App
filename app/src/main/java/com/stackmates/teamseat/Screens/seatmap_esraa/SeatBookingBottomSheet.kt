@@ -1,8 +1,7 @@
-package com.example.myapplication
+package com.stackmates.teamseat.Screens.seatmap_esraa
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import com.stackmates.teamseat.core.theme.TajawalFontFamily
+import com.stackmates.teamseat.core.theme.TeamSeatTheme
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -29,10 +28,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -65,10 +66,10 @@ import kotlinx.coroutines.launch
 
 // ───── ألوان TeamSeat ─────
 private val Navy = Color(0xFF0A344A)
-private val Teal = Color(0xFF1B6F7D)
+private val Teal = Color(0xFF136F78)
 private val Turquoise = Color(0xFF469D9F)
 private val Aqua = Color(0xFFA9D5D4)
-private val Cream = Color(0xFFFCF2EA)
+private val Cream = Color(0xFFF8FAFA)
 
 private val HeaderBrush = Brush.linearGradient(listOf(Navy, Teal))
 private val ButtonBrush = Brush.horizontalGradient(listOf(Teal, Turquoise))
@@ -77,28 +78,6 @@ private enum class BookingPhase {
     Form,
     Loading,
     Success
-}
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            MaterialTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = Cream
-                ) {
-                    SeatBookingSheetContent(
-                        seatId = "A2",
-                        role = "UI/UX Designer",
-                        teamName = "Alpha Team",
-                        onCancel = {},
-                        onConfirm = {}
-                    )
-                }
-            }
-        }
-    }
 }
 
 @Composable
@@ -237,6 +216,20 @@ private fun fieldColors() = OutlinedTextFieldDefaults.colors(
     disabledContainerColor = Color.White.copy(alpha = 0.6f)
 )
 
+@Composable
+fun SeatBookingBottomSheetContent(
+    onConfirmBookingClick: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    SeatBookingBottomSheet(
+        seatId = "S4",
+        role = "Android Developer",
+        teamName = "TeamSeat-App",
+        onDismiss = onDismiss,
+        onConfirm = onConfirmBookingClick
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SeatBookingBottomSheet(
@@ -294,6 +287,7 @@ fun SeatBookingSheetContent(
         }
     }
 
+    ProvideTextStyle(LocalTextStyle.current.copy(fontFamily = TajawalFontFamily)) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -353,6 +347,7 @@ fun SeatBookingSheetContent(
                         value = note,
                         onValueChange = { note = it },
                         modifier = Modifier.fillMaxWidth(),
+                        textStyle = LocalTextStyle.current.copy(fontFamily = TajawalFontFamily),
                         minLines = 3,
                         enabled = phase == BookingPhase.Form,
                         label = { Text("Quick message to the leader") },
@@ -377,6 +372,7 @@ fun SeatBookingSheetContent(
                 }
             }
         }
+    }
     }
 }
 
@@ -440,7 +436,7 @@ private fun SuccessPanel(seatId: String, role: String) {
 @Preview(showBackground = true, showSystemUi = true, name = "2 - Booking Sheet")
 @Composable
 fun SeatBookingSheetPreview() {
-    MaterialTheme {
+    TeamSeatTheme {
         Box(
             modifier = Modifier
                 .fillMaxSize()
