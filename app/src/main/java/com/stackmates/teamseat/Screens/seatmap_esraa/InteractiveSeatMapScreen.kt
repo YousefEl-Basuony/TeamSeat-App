@@ -1,8 +1,10 @@
-package com.example.myapplication
+package com.stackmates.teamseat.Screens.seatmap_esraa
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import com.stackmates.teamseat.core.model.Seat
+import com.stackmates.teamseat.core.model.SeatStatus
+import com.stackmates.teamseat.core.model.Team
+import com.stackmates.teamseat.core.theme.TajawalFontFamily
+import com.stackmates.teamseat.core.theme.TeamSeatTheme
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -45,7 +47,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -97,9 +101,9 @@ data class SeatMapSeat(
 
 // ───── ألوان TeamSeat ─────
 private val Navy = Color(0xFF0A344A)
-private val Teal = Color(0xFF1B6F7D)
+private val Teal = Color(0xFF136F78)
 private val Aqua = Color(0xFFA9D5D4)
-private val Cream = Color(0xFFFCF2EA)
+private val Cream = Color(0xFFF8FAFA)
 private val Mist = Color(0xFFE6F2F0)
 private val Gold = Color(0xFFF2B84B)
 
@@ -113,22 +117,6 @@ private val DemoSeats = listOf(
     SeatMapSeat("C1", "Android Developer", SeatMapStatus.BOOKED, "Esraa A."),
     SeatMapSeat("C2", "QA Engineer", SeatMapStatus.LOCKED)
 )
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            MaterialTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = Cream
-                ) {
-                    InteractiveSeatMapScreen()
-                }
-            }
-        }
-    }
-}
 
 private fun SeatMapStatus.base(): Color = when (this) {
     SeatMapStatus.AVAILABLE -> Aqua
@@ -296,6 +284,38 @@ private fun Modifier.screenBackground(): Modifier =
 
 @Composable
 fun InteractiveSeatMapScreen(
+    team: Team,
+    seats: List<Seat>,
+    isCurrentUserLeader: Boolean,
+    onSeatClick: (String) -> Unit,
+    onOpenWorkspaceClick: () -> Unit,
+    onReviewRequestsClick: () -> Unit,
+    onBackClick: () -> Unit
+) {
+    val mappedSeats = seats.map { seat ->
+        SeatMapSeat(
+            id = seat.seatLabel,
+            role = seat.roleRequired,
+            status = when (seat.status) {
+                SeatStatus.AVAILABLE -> SeatMapStatus.AVAILABLE
+                SeatStatus.PENDING -> SeatMapStatus.PENDING
+                SeatStatus.BOOKED -> SeatMapStatus.BOOKED
+                SeatStatus.LOCKED -> SeatMapStatus.LOCKED
+            },
+            holder = seat.applicantName
+        )
+    }
+    InteractiveSeatMapScreen(
+        teamName = team.projectName,
+        leaderName = team.leaderName,
+        seats = mappedSeats,
+        onBack = onBackClick,
+        onAvailableSeatClick = { mapped -> onSeatClick(mapped.id) }
+    )
+}
+
+@Composable
+fun InteractiveSeatMapScreen(
     teamName: String = "Alpha Team",
     leaderName: String = "Esraa A.",
     seats: List<SeatMapSeat> = DemoSeats,
@@ -307,6 +327,7 @@ fun InteractiveSeatMapScreen(
     val scope = rememberCoroutineScope()
     val filled = seats.count { it.status == SeatMapStatus.BOOKED }
 
+    ProvideTextStyle(LocalTextStyle.current.copy(fontFamily = TajawalFontFamily)) {
     Scaffold(
         modifier = Modifier.screenBackground(),
         containerColor = Color.Transparent,
@@ -377,6 +398,7 @@ fun InteractiveSeatMapScreen(
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
+        }
         }
     }
 }
@@ -656,7 +678,7 @@ private fun SeatCard(
 @Preview(showBackground = true, showSystemUi = true, name = "1 - Seat Map")
 @Composable
 fun InteractiveSeatMapScreenPreview() {
-    MaterialTheme {
+    TeamSeatTheme {
         InteractiveSeatMapScreen()
     }
 }

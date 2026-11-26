@@ -1,8 +1,7 @@
-package com.example.myapplication
+package com.stackmates.teamseat.Screens.seatmap_esraa
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import com.stackmates.teamseat.core.theme.TajawalFontFamily
+import com.stackmates.teamseat.core.theme.TeamSeatTheme
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -43,7 +42,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -73,10 +74,10 @@ import kotlinx.coroutines.delay
 
 // ───── ألوان TeamSeat ─────
 private val Navy = Color(0xFF0A344A)
-private val Teal = Color(0xFF1B6F7D)
+private val Teal = Color(0xFF136F78)
 private val Turquoise = Color(0xFF469D9F)
 private val Aqua = Color(0xFFA9D5D4)
-private val Cream = Color(0xFFFCF2EA)
+private val Cream = Color(0xFFF8FAFA)
 private val Mist = Color(0xFFE6F2F0)
 
 private val HeaderBrush = Brush.linearGradient(listOf(Navy, Teal))
@@ -90,22 +91,6 @@ private val SeatRoles = listOf(
     "Android Developer",
     "QA Engineer"
 )
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            MaterialTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = Cream
-                ) {
-                    CreateTeamSeatsScreen(seatCount = 6)
-                }
-            }
-        }
-    }
-}
 
 @Composable
 private fun ChairIcon(
@@ -349,6 +334,18 @@ private fun StepIndicator(
 
 @Composable
 fun CreateTeamSeatsScreen(
+    onPublishTeamClick: () -> Unit,
+    onBackClick: () -> Unit
+) {
+    CreateTeamSeatsScreen(
+        seatCount = 6,
+        onBack = onBackClick,
+        onPublish = { onPublishTeamClick() }
+    )
+}
+
+@Composable
+fun CreateTeamSeatsScreen(
     seatCount: Int = 6,
     onBack: () -> Unit = {},
     onPublish: (List<String>) -> Unit = {}
@@ -368,6 +365,7 @@ fun CreateTeamSeatsScreen(
         }
     }
 
+    ProvideTextStyle(LocalTextStyle.current.copy(fontFamily = TajawalFontFamily)) {
     Scaffold(
         modifier = Modifier.screenBackground(),
         containerColor = Color.Transparent,
@@ -415,6 +413,7 @@ fun CreateTeamSeatsScreen(
                 }
             }
         }
+    }
     }
 }
 
@@ -509,7 +508,7 @@ private fun SeatRoleRow(
 @Preview(showBackground = true, showSystemUi = true, name = "4 - Create Team Seats")
 @Composable
 fun CreateTeamSeatsScreenPreview() {
-    MaterialTheme {
+    TeamSeatTheme {
         CreateTeamSeatsScreen(seatCount = 6)
     }
 }
