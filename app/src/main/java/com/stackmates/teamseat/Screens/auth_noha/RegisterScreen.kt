@@ -57,7 +57,9 @@ fun RegisterScreen(
     onRegisterWithRoleClick: (name: String, studentId: String, email: String, pass: String, role: String) -> Unit = { _, _, _, _, _ -> },
     onRegisterSuccess: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {},
-    onBackToLogin: () -> Unit = onNavigateToLogin
+    onBackToLogin: () -> Unit = onNavigateToLogin,
+    errorMessage: String? = null,
+    isLoading: Boolean = false
 ) {
     var fullName by remember { mutableStateOf("") }
     var studentId by remember { mutableStateOf("") }
@@ -400,13 +402,32 @@ fun RegisterScreen(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
+                    if (!errorMessage.isNullOrBlank()) {
+                        Surface(
+                            color = Color(0xFFFDECEC),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = errorMessage,
+                                fontFamily = TajawalFontFamily,
+                                color = Color(0xFFC62828),
+                                fontSize = 12.5.sp,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                            )
+                        }
+                    }
+
                     // زرار إنشاء الحساب: -> Register
                     Button(
                         onClick = {
-                            onRegisterClick(fullName, studentId, email, password)
-                            onRegisterWithRoleClick(fullName, studentId, email, password, selectedRole)
-                            onRegisterSuccess()
+                            if (!isLoading) {
+                                onRegisterClick(fullName, studentId, email, password)
+                                onRegisterWithRoleClick(fullName, studentId, email, password, selectedRole)
+                                onRegisterSuccess()
+                            }
                         },
+                        enabled = !isLoading,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp)
@@ -418,13 +439,21 @@ fun RegisterScreen(
                         shape = RoundedCornerShape(26.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = DeepNavy)
                     ) {
-                        Text(
-                            text = "Register",
-                            fontFamily = TajawalFontFamily,
-                            color = Color.White,
-                            fontSize = 16.5.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        } else {
+                            Text(
+                                text = "Register",
+                                fontFamily = TajawalFontFamily,
+                                color = Color.White,
+                                fontSize = 16.5.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }

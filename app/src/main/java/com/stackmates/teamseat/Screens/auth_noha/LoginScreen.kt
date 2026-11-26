@@ -54,7 +54,9 @@ fun LoginScreen(
     onLoginClick: (email: String, pass: String) -> Unit = { _, _ -> },
     onLoginSuccess: () -> Unit = {},
     onNavigateToRegister: () -> Unit = {},
-    onForgotPassword: () -> Unit = {}
+    onForgotPassword: () -> Unit = {},
+    errorMessage: String? = null,
+    isLoading: Boolean = false
 ) {
     var emailOrId by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -256,12 +258,31 @@ fun LoginScreen(
                         }
                     }
 
+                    if (!errorMessage.isNullOrBlank()) {
+                        Surface(
+                            color = Color(0xFFFDECEC),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = errorMessage,
+                                fontFamily = TajawalFontFamily,
+                                color = Color(0xFFC62828),
+                                fontSize = 12.5.sp,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                            )
+                        }
+                    }
+
                     // زر تسجيل الدخول الرئيسي
                     Button(
                         onClick = {
-                            onLoginClick(emailOrId, password)
-                            onLoginSuccess()
+                            if (!isLoading) {
+                                onLoginClick(emailOrId, password)
+                                onLoginSuccess()
+                            }
                         },
+                        enabled = !isLoading,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp)
@@ -273,13 +294,21 @@ fun LoginScreen(
                         shape = RoundedCornerShape(26.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = DeepNavy)
                     ) {
-                        Text(
-                            text = "Log In",
-                            fontFamily = TajawalFontFamily,
-                            color = Color.White,
-                            fontSize = 16.5.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        } else {
+                            Text(
+                                text = "Log In",
+                                fontFamily = TajawalFontFamily,
+                                color = Color.White,
+                                fontSize = 16.5.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
 
                     // خط OR الفاصل

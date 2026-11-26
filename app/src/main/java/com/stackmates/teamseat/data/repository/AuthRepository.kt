@@ -17,6 +17,7 @@ interface AuthRepository {
 
     suspend fun login(emailOrId: String, password: String): Result<User>
     suspend fun register(name: String, studentId: String, email: String, password: String): Result<User>
+    fun logout()
     fun switchDemoPersona()
 }
 
@@ -50,6 +51,10 @@ class FakeAuthRepository : AuthRepository {
         )
         _currentUser.value = newUser
         return Result.success(newUser)
+    }
+
+    override fun logout() {
+        _currentUser.value = null
     }
 
     override fun switchDemoPersona() {

@@ -3,8 +3,10 @@ package com.stackmates.teamseat.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -12,8 +14,10 @@ import androidx.navigation.compose.rememberNavController
 import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.SeatStatus
 import com.stackmates.teamseat.core.utils.PdfExporter
-import com.stackmates.teamseat.data.repository.FakeAuthRepository
-import com.stackmates.teamseat.data.repository.FakeTeamSeatRepository
+import com.stackmates.teamseat.data.repository.AuthRepository
+import com.stackmates.teamseat.data.repository.FirebaseAuthRepository
+import com.stackmates.teamseat.data.repository.FirebaseTeamSeatRepository
+import com.stackmates.teamseat.data.repository.TeamSeatRepository
 import com.stackmates.teamseat.Screens.admin_youssef.*
 import com.stackmates.teamseat.Screens.auth_noha.*
 import com.stackmates.teamseat.Screens.explore_khaled.*
@@ -31,8 +35,8 @@ fun AppNavGraph(
     navController: NavHostController = rememberNavController(),
     startDestination: String = ScreenRoutes.SPLASH
 ) {
-    val authRepository = remember { FakeAuthRepository() }
-    val teamRepository = remember { FakeTeamSeatRepository() }
+    val authRepository: AuthRepository = remember { FirebaseAuthRepository() }
+    val teamRepository: TeamSeatRepository = remember { FirebaseTeamSeatRepository() }
     val scope = rememberCoroutineScope()
 
     val currentUser by authRepository.currentUser.collectAsState()
@@ -117,30 +121,54 @@ fun AppNavGraph(
         }
 
         composable(ScreenRoutes.LOGIN) {
+            var authError by remember { mutableStateOf<String?>(null) }
+            var isLoading by remember { mutableStateOf(false) }
             LoginScreen(
                 onLoginClick = { email, password ->
                     scope.launch {
-                        authRepository.login(email, password)
-                        navController.navigate(ScreenRoutes.HOME) {
-                            popUpTo(ScreenRoutes.LOGIN) { inclusive = true }
+                        isLoading = true
+                        authError = null
+                        val result = authRepository.login(email, password)
+                        isLoading = false
+                        if (result.isSuccess) {
+                            navController.navigate(ScreenRoutes.HOME) {
+                                popUpTo(ScreenRoutes.LOGIN) { inclusive = true }
+                            }
+                        } else {
+                            authError = result.exceptionOrNull()?.localizedMessage
+                                ?: "فشل تسجيل الدخول، تأكد من البيانات"
                         }
                     }
                 },
-                onNavigateToRegister = { navController.navigate(ScreenRoutes.REGISTER) }
+                onNavigateToRegister = { navController.navigate(ScreenRoutes.REGISTER) },
+                errorMessage = authError,
+                isLoading = isLoading
             )
         }
 
         composable(ScreenRoutes.REGISTER) {
+            var authError by remember { mutableStateOf<String?>(null) }
+            var isLoading by remember { mutableStateOf(false) }
             RegisterScreen(
                 onRegisterClick = { name, studentId, email, password ->
                     scope.launch {
-                        authRepository.register(name, studentId, email, password)
-                        navController.navigate(ScreenRoutes.HOME) {
-                            popUpTo(ScreenRoutes.LOGIN) { inclusive = true }
+                        isLoading = true
+                        authError = null
+                        val result = authRepository.register(name, studentId, email, password)
+                        isLoading = false
+                        if (result.isSuccess) {
+                            navController.navigate(ScreenRoutes.HOME) {
+                                popUpTo(ScreenRoutes.LOGIN) { inclusive = true }
+                            }
+                        } else {
+                            authError = result.exceptionOrNull()?.localizedMessage
+                                ?: "تعذر إنشاء الحساب، حاول مرة أخرى"
                         }
                     }
                 },
-                onBackToLogin = { navController.popBackStack() }
+                onBackToLogin = { navController.popBackStack() },
+                errorMessage = authError,
+                isLoading = isLoading
             )
         }
 
@@ -160,6 +188,7 @@ fun AppNavGraph(
                 onOpenCalendarClick = { navController.navigate(ScreenRoutes.TEAM_CALENDAR) },
                 onOpenTASheetClick = { navController.navigate(ScreenRoutes.TA_SHEET_PREVIEW) },
                 onLogoutClick = {
+                    authRepository.logout()
                     navController.navigate(ScreenRoutes.LOGIN) {
                         popUpTo(0) { inclusive = true }
                     }
@@ -199,6 +228,7 @@ fun AppNavGraph(
             MyProfileScreen(
                 user = currentUser ?: MockDataProvider.saraStudent,
                 onLogoutClick = {
+                    authRepository.logout()
                     navController.navigate(ScreenRoutes.LOGIN) {
                         popUpTo(0) { inclusive = true }
                     }

@@ -2,8 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    // فك الكومنت عند ربط Firebase وإضافة google-services.json:
-    // id("com.google.gms.google-services")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -65,11 +64,12 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.6.0")
 
     // =========================================================================
-    // Firebase Dependencies (للباك إند - فك الكومنت عند وضع google-services.json)
+    // Firebase Dependencies
     // =========================================================================
-    // implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
-    // implementation("com.google.firebase:firebase-auth-ktx")
-    // implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
 
     debugImplementation(libs.androidx.ui.tooling)
 }

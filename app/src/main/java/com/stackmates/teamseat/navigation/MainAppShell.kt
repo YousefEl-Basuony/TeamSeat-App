@@ -2,9 +2,8 @@ package com.stackmates.teamseat.navigation
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
@@ -14,10 +13,10 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -32,16 +31,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountCircle
-import androidx.compose.material.icons.outlined.Diversity2
 import androidx.compose.material.icons.outlined.Explore
-import androidx.compose.material.icons.outlined.SpaceDashboard
-import androidx.compose.material.icons.rounded.AccountCircle
-import androidx.compose.material.icons.rounded.Diversity2
+import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.rounded.Explore
-import androidx.compose.material.icons.rounded.SpaceDashboard
+import androidx.compose.material.icons.rounded.Groups
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -52,7 +53,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -73,11 +73,11 @@ import com.stackmates.teamseat.core.model.User
 import com.stackmates.teamseat.core.theme.TajawalFontFamily
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
 import com.stackmates.teamseat.ui.components.TeamSeatBgOffWhite
-import com.stackmates.teamseat.ui.components.TeamSeatWarmOrange
+import com.stackmates.teamseat.ui.components.TeamSeatPrimaryTeal
 import com.stackmates.teamseat.ui.components.bounceClick
 
-private val NavBarBorderColor = Color(0xFFE2ECEC)
-private val NavActivePillBg = Color(0xFFFFF3E6)
+private val NavBarTopDivider = Color(0xFFE0ECEB)
+private val NavActiveMintPill = Color(0xFFE2F1F0)
 private val NavInactiveSlate = Color(0xFF64748B)
 
 private data class MainNavTab(
@@ -87,10 +87,10 @@ private data class MainNavTab(
 )
 
 private val MainNavTabs = listOf(
-    MainNavTab("الرئيسية", Icons.Rounded.SpaceDashboard, Icons.Outlined.SpaceDashboard),
+    MainNavTab("الرئيسية", Icons.Rounded.Home, Icons.Outlined.Home),
     MainNavTab("استكشاف", Icons.Rounded.Explore, Icons.Outlined.Explore),
-    MainNavTab("فريقي", Icons.Rounded.Diversity2, Icons.Outlined.Diversity2),
-    MainNavTab("حسابي", Icons.Rounded.AccountCircle, Icons.Outlined.AccountCircle)
+    MainNavTab("فريقي", Icons.Rounded.Groups, Icons.Outlined.Groups),
+    MainNavTab("حسابي", Icons.Rounded.Person, Icons.Outlined.Person)
 )
 
 @Composable
@@ -114,7 +114,7 @@ fun MainAppShell(
             containerColor = TeamSeatBgOffWhite,
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
-                TeamSeatFloatingNavBar(
+                TeamSeatDockedNavBar(
                     selectedIndex = selectedTab,
                     onSelect = { selectedTab = it }
                 )
@@ -129,9 +129,11 @@ fun MainAppShell(
                     targetState = selectedTab,
                     transitionSpec = {
                         val direction = if (targetState > initialState) 1 else -1
-                        (fadeIn(tween(220)) + slideInHorizontally(tween(260)) { it / 16 * direction })
+                        (fadeIn(tween(220, easing = FastOutSlowInEasing)) +
+                            slideInHorizontally(tween(220, easing = FastOutSlowInEasing)) { it / 16 * direction })
                             .togetherWith(
-                                fadeOut(tween(160)) + slideOutHorizontally(tween(200)) { -it / 16 * direction }
+                                fadeOut(tween(180, easing = FastOutSlowInEasing)) +
+                                    slideOutHorizontally(tween(200, easing = FastOutSlowInEasing)) { -it / 16 * direction }
                             )
                     },
                     label = "mainTabTransition"
@@ -179,111 +181,98 @@ fun MainAppShell(
 }
 
 @Composable
-fun TeamSeatFloatingNavBar(
+fun TeamSeatDockedNavBar(
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val dockShape = RoundedCornerShape(28.dp)
-    val pillShape = RoundedCornerShape(20.dp)
+    val pillShape = RoundedCornerShape(16.dp)
+    val snappyTween = tween<Float>(durationMillis = 220, easing = FastOutSlowInEasing)
     val animatedIndex by animateFloatAsState(
         targetValue = selectedIndex.toFloat(),
-        animationSpec = spring(
-            dampingRatio = 0.78f,
-            stiffness = Spring.StiffnessMediumLow
-        ),
+        animationSpec = snappyTween,
         label = "slidingPillIndex"
     )
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = Color.White,
+        shadowElevation = 0.dp
     ) {
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp)
-                .shadow(
-                    elevation = 6.dp,
-                    shape = dockShape,
-                    ambientColor = Color(0xFF0A344A).copy(alpha = 0.12f),
-                    spotColor = Color(0xFF0A344A).copy(alpha = 0.12f)
-                )
-                .clip(dockShape)
-                .background(Color.White)
-                .border(1.dp, NavBarBorderColor, dockShape)
-                .padding(horizontal = 6.dp, vertical = 6.dp)
-        ) {
-            val tabWidth = maxWidth / MainNavTabs.size
-
-            // الكبسولة البرتقالية المنزلقة خلف التبويب النشط
-            Box(
+        Column(modifier = Modifier.fillMaxWidth()) {
+            HorizontalDivider(thickness = 1.dp, color = NavBarTopDivider)
+            BoxWithConstraints(
                 modifier = Modifier
-                    .offset(x = tabWidth * animatedIndex)
-                    .width(tabWidth)
-                    .fillMaxHeight()
-                    .clip(pillShape)
-                    .background(NavActivePillBg)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxSize(),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .height(58.dp)
+                    .padding(horizontal = 10.dp, vertical = 7.dp)
             ) {
-                MainNavTabs.forEachIndexed { index, tab ->
-                    val isSelected = selectedIndex == index
-                    val iconScale by animateFloatAsState(
-                        targetValue = if (isSelected) 1.12f else 1.0f,
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessMediumLow
-                        ),
-                        label = "navIconPop$index"
-                    )
+                val tabWidth = maxWidth / MainNavTabs.size
 
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clip(pillShape)
-                            .bounceClick { onSelect(index) },
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = if (isSelected) tab.activeIcon else tab.inactiveIcon,
-                            contentDescription = tab.label,
-                            tint = if (isSelected) TeamSeatWarmOrange else NavInactiveSlate,
-                            modifier = Modifier
-                                .size(22.dp)
-                                .graphicsLayer {
-                                    scaleX = iconScale
-                                    scaleY = iconScale
-                                }
+                // الكبسولة النعناعية المنزلقة بسرعة واستجابة فورية خلف التبويب النشط
+                Box(
+                    modifier = Modifier
+                        .offset(x = tabWidth * animatedIndex)
+                        .width(tabWidth)
+                        .fillMaxHeight()
+                        .clip(pillShape)
+                        .background(NavActiveMintPill)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    MainNavTabs.forEachIndexed { index, tab ->
+                        val isSelected = selectedIndex == index
+                        val iconScale by animateFloatAsState(
+                            targetValue = if (isSelected) 1.1f else 1.0f,
+                            animationSpec = snappyTween,
+                            label = "navIconScale$index"
                         )
-                        AnimatedVisibility(
-                            visible = isSelected,
-                            enter = expandHorizontally(
-                                animationSpec = spring(
-                                    dampingRatio = 0.78f,
-                                    stiffness = Spring.StiffnessMediumLow
-                                )
-                            ) + fadeIn(tween(180)),
-                            exit = shrinkHorizontally(tween(140)) + fadeOut(tween(100))
+
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clip(pillShape)
+                                .bounceClick { onSelect(index) },
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Spacer(modifier = Modifier.width(5.dp))
-                                Text(
-                                    text = tab.label,
-                                    fontFamily = TajawalFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
-                                    color = TeamSeatWarmOrange,
-                                    maxLines = 1,
-                                    softWrap = false
-                                )
+                            Icon(
+                                imageVector = if (isSelected) tab.activeIcon else tab.inactiveIcon,
+                                contentDescription = tab.label,
+                                tint = if (isSelected) TeamSeatPrimaryTeal else NavInactiveSlate,
+                                modifier = Modifier
+                                    .size(22.dp)
+                                    .graphicsLayer {
+                                        scaleX = iconScale
+                                        scaleY = iconScale
+                                    }
+                            )
+                            AnimatedVisibility(
+                                visible = isSelected,
+                                enter = expandHorizontally(
+                                    animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing)
+                                ) + fadeIn(tween(durationMillis = 220, easing = FastOutSlowInEasing)),
+                                exit = shrinkHorizontally(
+                                    animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing)
+                                ) + fadeOut(tween(durationMillis = 140))
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Text(
+                                        text = tab.label,
+                                        fontFamily = TajawalFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
+                                        color = TeamSeatPrimaryTeal,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
+                                }
                             }
                         }
                     }
@@ -295,15 +284,8 @@ fun TeamSeatFloatingNavBar(
 
 @Preview(showBackground = true)
 @Composable
-fun TeamSeatFloatingNavBarPreview() {
+fun TeamSeatDockedNavBarPreview() {
     TeamSeatTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(TeamSeatBgOffWhite)
-                .padding(vertical = 16.dp)
-        ) {
-            TeamSeatFloatingNavBar(selectedIndex = 0, onSelect = {})
-        }
+        TeamSeatDockedNavBar(selectedIndex = 0, onSelect = {})
     }
 }
