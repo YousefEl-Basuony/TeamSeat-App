@@ -44,6 +44,7 @@ fun AppNavGraph(
     NavHost(
         navController = navController,
         startDestination = startDestination
+        
     ) {
         // شاشة لوحة التطوير المركزية
         composable(ScreenRoutes.DEV_HUB) {
@@ -86,8 +87,7 @@ fun AppNavGraph(
         }
 
         composable(ScreenRoutes.EDIT_TEAM_SEATS) {
-            EditTeamSeatsScreen(
-                seats = seats,
+            ManageSeatsScreen(
                 onSaveSeatsClick = { navController.popBackStack() },
                 onBackClick = { navController.popBackStack() }
             )
