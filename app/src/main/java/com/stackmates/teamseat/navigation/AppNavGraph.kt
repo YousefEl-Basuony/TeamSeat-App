@@ -1,5 +1,7 @@
 package com.stackmates.teamseat.navigation
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -7,10 +9,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.stackmates.teamseat.R
 import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.SeatStatus
 import com.stackmates.teamseat.core.utils.PdfExporter
@@ -121,8 +128,48 @@ fun AppNavGraph(
         }
 
         composable(ScreenRoutes.LOGIN) {
+            val context = LocalContext.current
             var authError by remember { mutableStateOf<String?>(null) }
             var isLoading by remember { mutableStateOf(false) }
+
+            val googleSignInClient = remember(context) {
+                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken(context.getString(R.string.default_web_client_id))
+                    .requestEmail()
+                    .build()
+                GoogleSignIn.getClient(context, gso)
+            }
+
+            val googleLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.StartActivityForResult()
+            ) { activityResult ->
+                val task = GoogleSignIn.getSignedInAccountFromIntent(activityResult.data)
+                try {
+                    val account = task.getResult(ApiException::class.java)
+                    val idToken = account.idToken
+                    if (idToken.isNullOrBlank()) {
+                        authError = "تعذر الحصول على رمز Google ID Token"
+                    } else {
+                        scope.launch {
+                            isLoading = true
+                            authError = null
+                            val result = authRepository.signInWithGoogle(idToken)
+                            isLoading = false
+                            if (result.isSuccess) {
+                                navController.navigate(ScreenRoutes.HOME) {
+                                    popUpTo(ScreenRoutes.LOGIN) { inclusive = true }
+                                }
+                            } else {
+                                authError = result.exceptionOrNull()?.localizedMessage
+                                    ?: "فشل تسجيل الدخول بحساب Google"
+                            }
+                        }
+                    }
+                } catch (e: ApiException) {
+                    authError = "تم إلغاء تسجيل الدخول بحساب Google (${e.statusCode})"
+                }
+            }
+
             LoginScreen(
                 onLoginClick = { email, password ->
                     scope.launch {
@@ -141,6 +188,10 @@ fun AppNavGraph(
                     }
                 },
                 onNavigateToRegister = { navController.navigate(ScreenRoutes.REGISTER) },
+                onGoogleSignInClick = {
+                    authError = null
+                    googleLauncher.launch(googleSignInClient.signInIntent)
+                },
                 errorMessage = authError,
                 isLoading = isLoading
             )

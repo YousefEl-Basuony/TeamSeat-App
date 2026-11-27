@@ -55,6 +55,7 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit = {},
     onNavigateToRegister: () -> Unit = {},
     onForgotPassword: () -> Unit = {},
+    onGoogleSignInClick: () -> Unit = {},
     errorMessage: String? = null,
     isLoading: Boolean = false
 ) {
@@ -113,8 +114,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // عنوان الترحيب
-            Text(
+             Text(
                 text = "Welcome Back!",
                 fontFamily = TajawalFontFamily,
                 color = DeepNavy,
@@ -338,7 +338,10 @@ fun LoginScreen(
 
                     // زر تسجيل الدخول بواسطة Google مع الأيقونة الملونة الرسمية
                     OutlinedButton(
-                        onClick = { /* Google Login */ },
+                        onClick = {
+                            if (!isLoading) onGoogleSignInClick()
+                        },
+                        enabled = !isLoading,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),

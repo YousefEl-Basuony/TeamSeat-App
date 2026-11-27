@@ -1,6 +1,7 @@
 package com.stackmates.teamseat.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.DemoPersona
@@ -101,6 +102,26 @@ class FirebaseAuthRepository(
             saveUserProfile(newUser)
             _currentUser.value = newUser
             newUser
+        }
+    }
+
+    override suspend fun signInWithGoogle(idToken: String): Result<User> {
+        return runCatching {
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            val authResult = auth.signInWithCredential(credential).await()
+            val firebaseUser = authResult.user ?: error("تعذر تسجيل الدخول بحساب Google")
+            val uid = firebaseUser.uid
+
+            val profile = loadUserProfile(uid) ?: User(
+                uid = uid,
+                name = firebaseUser.displayName ?: firebaseUser.email?.substringBefore("@") ?: "طالب",
+                studentId = "",
+                email = firebaseUser.email ?: "",
+                roleTag = "Android Developer"
+            ).also { saveUserProfile(it) }
+
+            _currentUser.value = profile
+            profile
         }
     }
 

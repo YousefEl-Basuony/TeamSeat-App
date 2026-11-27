@@ -17,6 +17,7 @@ interface AuthRepository {
 
     suspend fun login(emailOrId: String, password: String): Result<User>
     suspend fun register(name: String, studentId: String, email: String, password: String): Result<User>
+    suspend fun signInWithGoogle(idToken: String): Result<User>
     fun logout()
     fun switchDemoPersona()
 }
@@ -51,6 +52,12 @@ class FakeAuthRepository : AuthRepository {
         )
         _currentUser.value = newUser
         return Result.success(newUser)
+    }
+
+    override suspend fun signInWithGoogle(idToken: String): Result<User> {
+        val user = MockDataProvider.saraStudent
+        _currentUser.value = user
+        return Result.success(user)
     }
 
     override fun logout() {
