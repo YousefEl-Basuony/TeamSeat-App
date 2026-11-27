@@ -271,6 +271,9 @@ fun AppNavGraph(
                 onSwitchPersona = { authRepository.switchDemoPersona() },
                 onOpenCalendarClick = { navController.navigate(ScreenRoutes.TEAM_CALENDAR) },
                 onOpenTASheetClick = { navController.navigate(ScreenRoutes.TA_SHEET_PREVIEW) },
+                onSaveProfileChanges = { role, github, linkedin ->
+                    scope.launch { authRepository.updateProfile(role, github, linkedin) }
+                },
                 onLogoutClick = {
                     authRepository.logout()
                     navController.navigate(ScreenRoutes.LOGIN) {

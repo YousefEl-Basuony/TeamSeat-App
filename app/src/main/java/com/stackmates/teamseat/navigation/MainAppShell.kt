@@ -105,6 +105,7 @@ fun MainAppShell(
     onSwitchPersona: () -> Unit,
     onOpenCalendarClick: () -> Unit,
     onOpenTASheetClick: () -> Unit,
+    onSaveProfileChanges: (String, String, String) -> Unit = { _, _, _ -> },
     onLogoutClick: () -> Unit
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
@@ -170,6 +171,9 @@ fun MainAppShell(
 
                         else -> MyProfileScreen(
                             user = currentUser,
+                            onSaveChangesClick = { role, github, linkedin ->
+                                onSaveProfileChanges(role, github, linkedin)
+                            },
                             onLogoutClick = onLogoutClick,
                             onBackClick = { selectedTab = 0 }
                         )

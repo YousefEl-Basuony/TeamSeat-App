@@ -1,5 +1,14 @@
 package com.stackmates.teamseat.Screens.explore_khaled
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -8,6 +17,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -34,6 +44,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
@@ -51,6 +62,7 @@ import com.stackmates.teamseat.core.model.User
 import com.stackmates.teamseat.core.theme.TajawalFontFamily
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
 import com.stackmates.teamseat.ui.components.ProjectCategoryIllustration
+import com.stackmates.teamseat.ui.components.StaggeredAnimatedItem
 import com.stackmates.teamseat.ui.components.TeamSeatBgOffWhite
 import com.stackmates.teamseat.ui.components.TeamSeatBodyMuted
 import com.stackmates.teamseat.ui.components.TeamSeatCard
@@ -123,7 +135,27 @@ fun HomeScreen(
             )
         },
         floatingActionButton = {
+            val fabTransition = rememberInfiniteTransition(label = "fabFloat")
+            val fabFloatY by fabTransition.animateFloat(
+                initialValue = -2.5f,
+                targetValue = 2.5f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 1900, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "fabFloatY"
+            )
+            val rayAlpha by fabTransition.animateFloat(
+                initialValue = 0.45f,
+                targetValue = 1.0f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "rayAlpha"
+            )
             Row(
+                modifier = Modifier.graphicsLayer { translationY = fabFloatY.dp.toPx() },
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
@@ -168,6 +200,7 @@ fun HomeScreen(
                     modifier = Modifier
                         .size(22.dp)
                         .offset(y = (-6).dp)
+                        .graphicsLayer { alpha = rayAlpha }
                 ) {
                     drawLine(
                         color = TealPrimary,
@@ -237,8 +270,20 @@ fun HomeScreen(
                         }
                     }
 
-                    // 3. بطاقتا الإحصائيات السريعة
+                    // 3. بطاقتا الإحصائيات السريعة مع عداد متحرك
                     item {
+                        var statsStarted by remember { mutableStateOf(false) }
+                        LaunchedEffect(Unit) { statsStarted = true }
+                        val availableProjectsCount by animateIntAsState(
+                            targetValue = if (statsStarted) 12 else 0,
+                            animationSpec = tween(durationMillis = 650, easing = FastOutSlowInEasing),
+                            label = "stat1"
+                        )
+                        val needMembersCount by animateIntAsState(
+                            targetValue = if (statsStarted) 8 else 0,
+                            animationSpec = tween(durationMillis = 650, easing = FastOutSlowInEasing),
+                            label = "stat2"
+                        )
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -247,15 +292,15 @@ fun HomeScreen(
                         ) {
                             QuickStatCard(
                                 modifier = Modifier.weight(1f),
-                                number = "12",
+                                number = availableProjectsCount.toString(),
                                 label = "مشروع متاح",
                                 icon = Icons.Rounded.Folder,
                                 onClick = onSearchClick
                             )
                             QuickStatCard(
                                 modifier = Modifier.weight(1f),
-                                number = "8",
-                                label = "فريق يحتاج أعضاء",
+                                number = needMembersCount.toString(),
+                                label = "تيمات محتاجة أعضاء",
                                 icon = Icons.Rounded.Groups,
                                 showInnerWave = true,
                                 onClick = { selectedFilter = "متاح الآن" }
@@ -263,7 +308,7 @@ fun HomeScreen(
                         }
                     }
 
-                    // 4. عنوان القسم: المشاريع المقترحة لك
+                    // 4. عنوان القسم: مشاريع مقترحة ليك
                     item {
                         Row(
                             modifier = Modifier
@@ -283,7 +328,7 @@ fun HomeScreen(
                                     modifier = Modifier.size(19.dp)
                                 )
                                 Text(
-                                    text = "المشاريع المقترحة لك",
+                                    text = "مشاريع مقترحة ليك",
                                     fontFamily = TajawalFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     color = TextTitleDark,
@@ -294,7 +339,7 @@ fun HomeScreen(
                             }
 
                             Text(
-                                text = "عرض الكل ←",
+                                text = "شوف الكل ←",
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
                                     .clickable(onClick = onSearchClick)
@@ -333,12 +378,14 @@ fun HomeScreen(
                             }
                         }
                     } else {
-                        items(filteredTeams, key = { it.teamId }) { team ->
-                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                                RecommendedProjectCard(
-                                    team = team,
-                                    onClick = { onTeamClick(team.teamId) }
-                                )
+                        itemsIndexed(filteredTeams, key = { _, team -> team.teamId }) { index, team ->
+                            StaggeredAnimatedItem(index = index) {
+                                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                    RecommendedProjectCard(
+                                        team = team,
+                                        onClick = { onTeamClick(team.teamId) }
+                                    )
+                                }
                             }
                         }
                     }
@@ -388,10 +435,23 @@ private fun HomeTopHeaderRow(
                     )
                 }
 
+                val onlinePulse by rememberInfiniteTransition(label = "onlineDot").animateFloat(
+                    initialValue = 1.0f,
+                    targetValue = 1.24f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "onlinePulse"
+                )
                 Box(
                     modifier = Modifier
                         .size(12.dp)
                         .align(Alignment.BottomEnd)
+                        .graphicsLayer {
+                            scaleX = onlinePulse
+                            scaleY = onlinePulse
+                        }
                         .clip(CircleShape)
                         .background(OnlineGreen)
                         .border(2.dp, HomeBg, CircleShape)
@@ -559,12 +619,26 @@ private fun HomeFilterChip(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    val bgColor by animateColorAsState(
+        targetValue = if (isSelected) TealPrimary else Color.White,
+        animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
+        label = "chipBg"
+    )
+    val chipScale by animateFloatAsState(
+        targetValue = if (isSelected) 1.04f else 1.0f,
+        animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
+        label = "chipScale"
+    )
     Box(
         modifier = Modifier
             .height(36.dp)
             .wrapContentWidth()
+            .graphicsLayer {
+                scaleX = chipScale
+                scaleY = chipScale
+            }
             .clip(RoundedCornerShape(18.dp))
-            .background(if (isSelected) TealPrimary else Color.White)
+            .background(bgColor)
             .border(
                 width = 1.dp,
                 color = if (isSelected) TealPrimary else SearchBorderColor,

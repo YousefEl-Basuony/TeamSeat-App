@@ -1,5 +1,7 @@
 package com.stackmates.teamseat.Screens.requests_hossam
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -23,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDirection
@@ -46,13 +49,14 @@ import kotlinx.coroutines.launch
 @Composable
 fun MyProfileScreen(
     user: User = MockDataProvider.saraStudent,
-    onSaveChangesClick: (updatedRole: String, updatedGithub: String) -> Unit = { _, _ -> },
+    onSaveChangesClick: (updatedRole: String, updatedGithub: String, updatedLinkedin: String) -> Unit = { _, _, _ -> },
     onLogoutClick: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
-    var selectedRole by remember { mutableStateOf(user.roleTag) }
-    var githubUrl by remember { mutableStateOf(user.githubUrl) }
-    var linkedinUrl by remember { mutableStateOf(user.linkedinUrl) }
+    val context = LocalContext.current
+    var selectedRole by remember(user.uid, user.roleTag) { mutableStateOf(user.roleTag) }
+    var githubUrl by remember(user.uid, user.githubUrl) { mutableStateOf(user.githubUrl) }
+    var linkedinUrl by remember(user.uid, user.linkedinUrl) { mutableStateOf(user.linkedinUrl) }
     var showLogoutSheet by remember { mutableStateOf(false) }
     var showSavedBanner by remember { mutableStateOf(false) }
 
@@ -248,6 +252,83 @@ fun MyProfileScreen(
                                     maxLines = 1,
                                     softWrap = false
                                 )
+                            }
+
+                            if (githubUrl.isNotBlank() || linkedinUrl.isNotBlank()) {
+                                Row(
+                                    modifier = Modifier.padding(top = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    if (githubUrl.isNotBlank()) {
+                                        Row(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Color(0xFF0F172A))
+                                                .bounceClick {
+                                                    val url = if (githubUrl.startsWith("http")) githubUrl else "https://$githubUrl"
+                                                    runCatching {
+                                                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                                                    }
+                                                }
+                                                .padding(horizontal = 9.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Code,
+                                                contentDescription = "GitHub",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                            Text(
+                                                text = "GitHub",
+                                                fontFamily = TajawalFontFamily,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White,
+                                                fontSize = 11.sp,
+                                                maxLines = 1,
+                                                softWrap = false
+                                            )
+                                        }
+                                    }
+
+                                    if (linkedinUrl.isNotBlank()) {
+                                        Row(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Color(0xFF0A66C2))
+                                                .bounceClick {
+                                                    val url = if (linkedinUrl.startsWith("http")) linkedinUrl else "https://$linkedinUrl"
+                                                    runCatching {
+                                                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                                                    }
+                                                }
+                                                .padding(horizontal = 9.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Text(
+                                                text = "in",
+                                                fontFamily = TajawalFontFamily,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = Color.White,
+                                                fontSize = 11.5.sp,
+                                                maxLines = 1,
+                                                softWrap = false
+                                            )
+                                            Text(
+                                                text = "LinkedIn",
+                                                fontFamily = TajawalFontFamily,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White,
+                                                fontSize = 11.sp,
+                                                maxLines = 1,
+                                                softWrap = false
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -448,7 +529,7 @@ fun MyProfileScreen(
                         .clip(RoundedCornerShape(14.dp))
                         .background(TeamSeatPrimaryTeal)
                         .bounceClick {
-                            onSaveChangesClick(selectedRole, githubUrl)
+                            onSaveChangesClick(selectedRole, githubUrl, linkedinUrl)
                             showSavedBanner = true
                             scope.launch {
                                 snackbarHostState.showSnackbar("تمام! حفظنا تعديلات حسابك")

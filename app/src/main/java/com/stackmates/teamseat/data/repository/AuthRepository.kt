@@ -25,6 +25,7 @@ interface AuthRepository {
     ): Result<User>
     suspend fun signInWithGoogle(idToken: String): Result<User>
     suspend fun completeProfile(name: String, studentId: String, roleTag: String): Result<User>
+    suspend fun updateProfile(roleTag: String, githubUrl: String, linkedinUrl: String): Result<User>
     fun logout()
     fun switchDemoPersona()
 }
@@ -77,6 +78,20 @@ class FakeAuthRepository : AuthRepository {
             name = name,
             studentId = studentId,
             roleTag = roleTag
+        )
+        _currentUser.value = updated
+        return Result.success(updated)
+    }
+
+    override suspend fun updateProfile(
+        roleTag: String,
+        githubUrl: String,
+        linkedinUrl: String
+    ): Result<User> {
+        val updated = (_currentUser.value ?: MockDataProvider.saraStudent).copy(
+            roleTag = roleTag,
+            githubUrl = githubUrl,
+            linkedinUrl = linkedinUrl
         )
         _currentUser.value = updated
         return Result.success(updated)

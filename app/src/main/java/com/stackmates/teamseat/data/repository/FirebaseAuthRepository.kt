@@ -158,6 +158,33 @@ class FirebaseAuthRepository(
         }
     }
 
+    override suspend fun updateProfile(
+        roleTag: String,
+        githubUrl: String,
+        linkedinUrl: String
+    ): Result<User> {
+        return runCatching {
+            val uid = auth.currentUser?.uid ?: _currentUser.value?.uid
+                ?: error("المستخدم غير مسجل الدخول")
+            val cleanGithub = githubUrl.trim()
+            val cleanLinkedin = linkedinUrl.trim()
+            usersCollection.document(uid).update(
+                mapOf(
+                    "roleTag" to roleTag,
+                    "githubUrl" to cleanGithub,
+                    "linkedinUrl" to cleanLinkedin
+                )
+            ).await()
+            val updated = (_currentUser.value ?: loadUserProfile(uid))?.copy(
+                roleTag = roleTag,
+                githubUrl = cleanGithub,
+                linkedinUrl = cleanLinkedin
+            ) ?: error("تعذر تحديث الحساب")
+            _currentUser.value = updated
+            updated
+        }
+    }
+
     override fun logout() {
         auth.signOut()
         _currentUser.value = null
