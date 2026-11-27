@@ -37,8 +37,8 @@ fun Modifier.bounceClick(
     val scale by animateFloatAsState(
         targetValue = if (isPressed && enabled) scaleDown else 1f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessHigh
         ),
         label = "bounceClickScale"
     )
@@ -63,23 +63,23 @@ fun Modifier.bounceClick(
 @Composable
 fun StaggeredAnimatedItem(
     index: Int,
-    delayPerItemMs: Long = 50L,
+    delayPerItemMs: Long = 30L,
     content: @Composable () -> Unit
 ) {
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay(index * delayPerItemMs)
+        delay(index.coerceAtMost(5) * delayPerItemMs)
         visible = true
     }
 
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn(
-            animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing)
+            animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)
         ) + slideInVertically(
-            animationSpec = tween(durationMillis = 340, easing = FastOutSlowInEasing),
-            initialOffsetY = { fullHeight -> fullHeight / 4 }
+            animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing),
+            initialOffsetY = { fullHeight -> fullHeight / 6 }
         )
     ) {
         content()

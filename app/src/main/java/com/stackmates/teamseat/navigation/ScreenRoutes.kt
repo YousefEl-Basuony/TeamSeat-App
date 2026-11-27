@@ -18,6 +18,7 @@ object ScreenRoutes {
     const val ONBOARDING = "onboarding"
     const val LOGIN = "login"
     const val REGISTER = "register"
+    const val COMPLETE_PROFILE = "complete_profile"
 
     // 🔍 3. خالد (Explore, Feed & Details)
     const val HOME = "home"

@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -68,35 +69,42 @@ fun TeamSeatScreenContainer(
                 .fillMaxSize()
                 .background(TeamSeatBgOffWhite)
         ) {
-            // الموجتان العضويتان في الزاوية العلوية اليسرى والسفلية اليمنى
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val w = size.width
-                val h = size.height
+            // الموجتان العضويتان في الزاوية العلوية اليسرى والسفلية اليمنى (مع cache للمسارات لتحسين الأداء)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .drawWithCache {
+                        val w = size.width
+                        val h = size.height
 
-                val topLeftWave = Path().apply {
-                    moveTo(0f, 0f)
-                    lineTo(0f, h * 0.24f)
-                    cubicTo(
-                        w * 0.16f, h * 0.20f,
-                        w * 0.42f, h * 0.15f,
-                        w * 0.62f, 0f
-                    )
-                    close()
-                }
-                drawPath(path = topLeftWave, color = TeamSeatWaveMint)
+                        val topLeftWave = Path().apply {
+                            moveTo(0f, 0f)
+                            lineTo(0f, h * 0.24f)
+                            cubicTo(
+                                w * 0.16f, h * 0.20f,
+                                w * 0.42f, h * 0.15f,
+                                w * 0.62f, 0f
+                            )
+                            close()
+                        }
 
-                val bottomRightWave = Path().apply {
-                    moveTo(w * 0.35f, h)
-                    cubicTo(
-                        w * 0.50f, h * 0.88f,
-                        w * 0.78f, h * 0.78f,
-                        w, h * 0.80f
-                    )
-                    lineTo(w, h)
-                    close()
-                }
-                drawPath(path = bottomRightWave, color = TeamSeatWaveMint)
-            }
+                        val bottomRightWave = Path().apply {
+                            moveTo(w * 0.35f, h)
+                            cubicTo(
+                                w * 0.50f, h * 0.88f,
+                                w * 0.78f, h * 0.78f,
+                                w, h * 0.80f
+                            )
+                            lineTo(w, h)
+                            close()
+                        }
+
+                        onDrawBehind {
+                            drawPath(path = topLeftWave, color = TeamSeatWaveMint)
+                            drawPath(path = bottomRightWave, color = TeamSeatWaveMint)
+                        }
+                    }
+            )
 
             Scaffold(
                 containerColor = Color.Transparent,

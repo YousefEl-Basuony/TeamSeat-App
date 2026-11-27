@@ -156,8 +156,15 @@ fun AppNavGraph(
                             val result = authRepository.signInWithGoogle(idToken)
                             isLoading = false
                             if (result.isSuccess) {
-                                navController.navigate(ScreenRoutes.HOME) {
-                                    popUpTo(ScreenRoutes.LOGIN) { inclusive = true }
+                                val signedInUser = result.getOrNull()
+                                if (signedInUser != null && signedInUser.studentId.isBlank()) {
+                                    navController.navigate(ScreenRoutes.COMPLETE_PROFILE) {
+                                        popUpTo(ScreenRoutes.LOGIN) { inclusive = true }
+                                    }
+                                } else {
+                                    navController.navigate(ScreenRoutes.HOME) {
+                                        popUpTo(ScreenRoutes.LOGIN) { inclusive = true }
+                                    }
                                 }
                             } else {
                                 authError = result.exceptionOrNull()?.localizedMessage
@@ -201,11 +208,11 @@ fun AppNavGraph(
             var authError by remember { mutableStateOf<String?>(null) }
             var isLoading by remember { mutableStateOf(false) }
             RegisterScreen(
-                onRegisterClick = { name, studentId, email, password ->
+                onRegisterWithRoleClick = { name, studentId, email, password, role ->
                     scope.launch {
                         isLoading = true
                         authError = null
-                        val result = authRepository.register(name, studentId, email, password)
+                        val result = authRepository.register(name, studentId, email, password, role)
                         isLoading = false
                         if (result.isSuccess) {
                             navController.navigate(ScreenRoutes.HOME) {
@@ -219,6 +226,32 @@ fun AppNavGraph(
                 },
                 onBackToLogin = { navController.popBackStack() },
                 errorMessage = authError,
+                isLoading = isLoading
+            )
+        }
+
+        composable(ScreenRoutes.COMPLETE_PROFILE) {
+            var profileError by remember { mutableStateOf<String?>(null) }
+            var isLoading by remember { mutableStateOf(false) }
+            CompleteProfileScreen(
+                initialName = currentUser?.name.orEmpty(),
+                onSaveProfileClick = { name, studentId, role ->
+                    scope.launch {
+                        isLoading = true
+                        profileError = null
+                        val result = authRepository.completeProfile(name, studentId, role)
+                        isLoading = false
+                        if (result.isSuccess) {
+                            navController.navigate(ScreenRoutes.HOME) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        } else {
+                            profileError = result.exceptionOrNull()?.localizedMessage
+                                ?: "تعذر حفظ البيانات، حاول مرة أخرى"
+                        }
+                    }
+                },
+                errorMessage = profileError,
                 isLoading = isLoading
             )
         }
@@ -296,8 +329,11 @@ fun AppNavGraph(
         }
 
         composable(ScreenRoutes.MY_APPLICATIONS) {
+            val myAppliedSeats = remember(seats, currentUser) {
+                seats.filter { it.applicantId == currentUser?.uid || it.status == SeatStatus.PENDING }
+            }
             MyApplicationsScreen(
-                myAppliedSeats = seats.filter { it.applicantId == currentUser?.uid || it.status == SeatStatus.PENDING },
+                myAppliedSeats = myAppliedSeats,
                 onCancelApplicationClick = { seatId ->
                     scope.launch { teamRepository.rejectOrCancelSeat(seatId) }
                 },
@@ -385,8 +421,11 @@ fun AppNavGraph(
         }
 
         composable(ScreenRoutes.REVIEW_APPLICATIONS) {
+            val pendingSeats = remember(seats) {
+                seats.filter { it.status == SeatStatus.PENDING }
+            }
             ReviewApplicationsScreen(
-                pendingSeats = seats.filter { it.status == SeatStatus.PENDING },
+                pendingSeats = pendingSeats,
                 onAcceptApplicantClick = { seat ->
                     scope.launch {
                         seat.applicantId?.let { applicantId ->

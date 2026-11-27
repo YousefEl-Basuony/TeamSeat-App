@@ -79,7 +79,8 @@ class FirebaseAuthRepository(
         name: String,
         studentId: String,
         email: String,
-        password: String
+        password: String,
+        roleTag: String
     ): Result<User> {
         return runCatching {
             val cleanEmail = email.trim()
@@ -97,7 +98,7 @@ class FirebaseAuthRepository(
                 name = cleanName,
                 studentId = cleanId,
                 email = cleanEmail,
-                roleTag = "Android Developer"
+                roleTag = roleTag
             )
             saveUserProfile(newUser)
             _currentUser.value = newUser
@@ -117,11 +118,43 @@ class FirebaseAuthRepository(
                 name = firebaseUser.displayName ?: firebaseUser.email?.substringBefore("@") ?: "طالب",
                 studentId = "",
                 email = firebaseUser.email ?: "",
-                roleTag = "Android Developer"
+                roleTag = "Developer"
             ).also { saveUserProfile(it) }
 
             _currentUser.value = profile
             profile
+        }
+    }
+
+    override suspend fun completeProfile(
+        name: String,
+        studentId: String,
+        roleTag: String
+    ): Result<User> {
+        return runCatching {
+            val cleanName = name.trim()
+            val cleanId = studentId.trim()
+            require(cleanName.isNotEmpty() && cleanId.isNotEmpty()) {
+                "من فضلك ادخل الاسم والرقم الجامعي"
+            }
+            val uid = auth.currentUser?.uid ?: _currentUser.value?.uid
+                ?: error("المستخدم غير مسجل الدخول")
+
+            val baseUser = _currentUser.value ?: loadUserProfile(uid) ?: User(
+                uid = uid,
+                name = cleanName,
+                studentId = cleanId,
+                email = auth.currentUser?.email ?: "",
+                roleTag = roleTag
+            )
+            val updated = baseUser.copy(
+                name = cleanName,
+                studentId = cleanId,
+                roleTag = roleTag
+            )
+            saveUserProfile(updated)
+            _currentUser.value = updated
+            updated
         }
     }
 
