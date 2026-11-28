@@ -50,7 +50,13 @@ class FirebaseAuthRepository(
         userProfileListener?.remove()
         userProfileListener = usersCollection.document(uid).addSnapshotListener { doc, _ ->
             if (doc != null && doc.exists()) {
-                _currentUser.value = doc.toUser(uid)
+                val user = doc.toUser(uid)
+                if (user.isBanned) {
+                    auth.signOut()
+                    _currentUser.value = null
+                } else {
+                    _currentUser.value = user
+                }
             }
         }
     }
@@ -84,6 +90,11 @@ class FirebaseAuthRepository(
                 email = resolvedEmail,
                 roleTag = "Android Developer"
             ).also { saveUserProfile(it) }
+
+            if (profile.isBanned) {
+                auth.signOut()
+                throw IllegalStateException("تم تعطيل هذا الحساب من قبل إدارة التطبيق")
+            }
 
             _currentUser.value = profile
             profile
@@ -237,7 +248,8 @@ class FirebaseAuthRepository(
         linkedinUrl = getString("linkedinUrl") ?: "",
         isLeader = getBoolean("isLeader") ?: false,
         avatarEmoji = getString("avatarEmoji") ?: "👩‍💻",
-        major = getString("major") ?: "علوم حاسب (Computer Science)"
+        major = getString("major") ?: "علوم حاسب (Computer Science)",
+        isBanned = getBoolean("isBanned") ?: false
     )
 
     private suspend fun saveUserProfile(user: User) {
@@ -252,7 +264,8 @@ class FirebaseAuthRepository(
             "linkedinUrl" to user.linkedinUrl,
             "isLeader" to user.isLeader,
             "avatarEmoji" to user.avatarEmoji,
-            "major" to user.major
+            "major" to user.major,
+            "isBanned" to user.isBanned
         )
         usersCollection.document(user.uid).set(data).await()
     }

@@ -49,6 +49,7 @@ import androidx.compose.material.icons.rounded.PriorityHigh
 import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.Storage
+import androidx.compose.material.icons.rounded.AdminPanelSettings
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Info
@@ -58,7 +59,9 @@ import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material.icons.rounded.VerifiedUser
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -95,6 +98,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -136,11 +140,13 @@ fun MyProfileScreen(
     onRemoveSavedAccountClick: (SavedAccount) -> Unit = {},
     onLogoutClick: () -> Unit = {},
     onOpenDemoCenterClick: () -> Unit = {},
+    onOpenSuperAdminClick: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
     val isEn = appSettings.languageCode == "en"
+    val isSuperAdmin = user.email.equals("youssefmohamedelbasouny@gmail.com", ignoreCase = true)
     var selectedRole by remember(user.uid, user.roleTag) { mutableStateOf(user.roleTag) }
     var githubUrl by remember(user.uid, user.githubUrl) { mutableStateOf(user.githubUrl) }
     var linkedinUrl by remember(user.uid, user.linkedinUrl) { mutableStateOf(user.linkedinUrl) }
@@ -150,6 +156,9 @@ fun MyProfileScreen(
     var showLogoutSheet by remember { mutableStateOf(false) }
     var showAccountSwitcherSheet by remember { mutableStateOf(false) }
     var showSettingsSheet by remember { mutableStateOf(false) }
+    var showAdminPasscodeDialog by remember { mutableStateOf(false) }
+    var adminPasscodeInput by remember { mutableStateOf("") }
+    var adminPasscodeError by remember { mutableStateOf<String?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -1239,6 +1248,44 @@ fun MyProfileScreen(
                     }
                 }
 
+                if (isSuperAdmin) {
+                    TeamSeatCard(isWarmHighlight = true, contentPadding = 12.dp) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .bounceClick {
+                                    showSettingsSheet = false
+                                    adminPasscodeInput = ""
+                                    adminPasscodeError = null
+                                    showAdminPasscodeDialog = true
+                                },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.AdminPanelSettings,
+                                contentDescription = null,
+                                tint = TeamSeatWarmOrange
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = if (isEn) "Super Admin Panel" else "لوحة تحكم المسؤول (Admin)",
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (appSettings.isDarkMode) Color(0xFFE6F1F1) else TeamSeatTitleDark,
+                                    fontSize = 14.sp
+                                )
+                                Text(
+                                    text = if (isEn) "Manage users & teams" else "إدارة المستخدمين وحظرهم والتحكم في التيمات",
+                                    fontFamily = TajawalFontFamily,
+                                    color = TeamSeatBodyMuted,
+                                    fontSize = 11.5.sp
+                                )
+                            }
+                        }
+                    }
+                }
+
                 TeamSeatCard(isWarmHighlight = true, contentPadding = 14.dp) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(
@@ -1300,6 +1347,83 @@ fun MyProfileScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
+    }
+
+    if (showAdminPasscodeDialog) {
+        AlertDialog(
+            onDismissRequest = { showAdminPasscodeDialog = false },
+            title = {
+                Text(
+                    text = if (isEn) "Admin Verification" else "تأكيد دخول المسؤول",
+                    fontFamily = TajawalFontFamily,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = if (isEn) "Enter Admin password to continue" else "أدخل كلمة مرور المسؤول للمتابعة",
+                        fontFamily = TajawalFontFamily,
+                        fontSize = 13.sp,
+                        color = TeamSeatBodyMuted
+                    )
+                    OutlinedTextField(
+                        value = adminPasscodeInput,
+                        onValueChange = {
+                            adminPasscodeInput = it
+                            adminPasscodeError = null
+                        },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        label = {
+                            Text(
+                                text = if (isEn) "Password" else "كلمة المرور",
+                                fontFamily = TajawalFontFamily
+                            )
+                        },
+                        isError = adminPasscodeError != null
+                    )
+                    if (adminPasscodeError != null) {
+                        Text(
+                            text = adminPasscodeError.orEmpty(),
+                            fontFamily = TajawalFontFamily,
+                            color = TeamSeatDangerRed,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val digest = java.security.MessageDigest.getInstance("SHA-256")
+                            .digest(adminPasscodeInput.toByteArray(Charsets.UTF_8))
+                            .joinToString("") { "%02x".format(it) }
+                        if (digest == "de22ca1b8761d7e31493b7795d0f2212ccc8e69321660824eef0fce4c4e9e458") {
+                            showAdminPasscodeDialog = false
+                            onOpenSuperAdminClick()
+                        } else {
+                            adminPasscodeError = if (isEn) "Incorrect password" else "كلمة المرور غير صحيحة"
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = TeamSeatPrimaryTeal)
+                ) {
+                    Text(
+                        text = if (isEn) "Enter" else "دخول",
+                        fontFamily = TajawalFontFamily,
+                        color = Color.White
+                    )
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showAdminPasscodeDialog = false }) {
+                    Text(
+                        text = if (isEn) "Cancel" else "إلغاء",
+                        fontFamily = TajawalFontFamily
+                    )
+                }
+            }
+        )
     }
 
     if (showLogoutSheet) {

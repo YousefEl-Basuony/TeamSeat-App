@@ -7,6 +7,7 @@ import com.stackmates.teamseat.core.model.Seat
 import com.stackmates.teamseat.core.model.SeatStatus
 import com.stackmates.teamseat.core.model.Team
 import com.stackmates.teamseat.core.model.TeamChatMessage
+import com.stackmates.teamseat.core.model.User
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -45,6 +46,10 @@ interface TeamSeatRepository {
     fun observeUserNotifications(userId: String): Flow<List<NotificationItem>>
     suspend fun markAllNotificationsRead(userId: String): Result<Unit>
     suspend fun clearUserNotifications(userId: String): Result<Unit>
+    fun observeAllUsers(): Flow<List<User>>
+    suspend fun setUserBanned(uid: String, banned: Boolean): Result<Unit>
+    suspend fun deleteUserRecord(uid: String): Result<Unit>
+    suspend fun setTeamLocked(teamId: String, locked: Boolean): Result<Unit>
 }
 
 class FakeTeamSeatRepository : TeamSeatRepository {
@@ -268,4 +273,13 @@ class FakeTeamSeatRepository : TeamSeatRepository {
         _notifications.value = emptyList()
         return Result.success(Unit)
     }
+
+    override fun observeAllUsers(): Flow<List<User>> =
+        MutableStateFlow(listOf(MockDataProvider.ahmedLeader, MockDataProvider.saraStudent))
+
+    override suspend fun setUserBanned(uid: String, banned: Boolean): Result<Unit> = Result.success(Unit)
+
+    override suspend fun deleteUserRecord(uid: String): Result<Unit> = Result.success(Unit)
+
+    override suspend fun setTeamLocked(teamId: String, locked: Boolean): Result<Unit> = Result.success(Unit)
 }

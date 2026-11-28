@@ -14,7 +14,8 @@ data class User(
     val linkedinUrl: String = "",
     val isLeader: Boolean = false,
     val avatarEmoji: String = if (isLeader) "👨‍💻" else "👩‍💻",
-    val major: String = "علوم حاسب (Computer Science)"
+    val major: String = "علوم حاسب (Computer Science)",
+    val isBanned: Boolean = false
 )
 
 /**

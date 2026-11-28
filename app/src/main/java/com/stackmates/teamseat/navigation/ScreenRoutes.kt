@@ -12,6 +12,7 @@ object ScreenRoutes {
     const val LOCK_TEAM = "lock_team"
     const val DEMO_CONTROL_CENTER = "demo_control_center"
     const val EDIT_TEAM_SEATS = "edit_team_seats"
+    const val SUPER_ADMIN = "super_admin"
 
     // 🌸 2. نُهى (Auth & Onboarding)
     const val SPLASH = "splash"

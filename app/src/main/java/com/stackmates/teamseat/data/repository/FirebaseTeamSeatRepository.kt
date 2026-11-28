@@ -10,6 +10,7 @@ import com.stackmates.teamseat.core.model.Seat
 import com.stackmates.teamseat.core.model.SeatStatus
 import com.stackmates.teamseat.core.model.Team
 import com.stackmates.teamseat.core.model.TeamChatMessage
+import com.stackmates.teamseat.core.model.User
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -569,6 +570,64 @@ class FirebaseTeamSeatRepository(
             .collection("notifications")
             .add(data)
             .await()
+    }
+
+    override fun observeAllUsers(): Flow<List<User>> = callbackFlow {
+        val registration = firestore.collection("users")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                val users = snapshot.documents.map { doc ->
+                    User(
+                        uid = doc.getString("uid") ?: doc.id,
+                        name = doc.getString("name") ?: "",
+                        studentId = doc.getString("studentId") ?: "",
+                        email = doc.getString("email") ?: "",
+                        roleTag = doc.getString("roleTag") ?: "Android Developer",
+                        currentTeamId = doc.getString("currentTeamId"),
+                        githubUrl = doc.getString("githubUrl") ?: "",
+                        linkedinUrl = doc.getString("linkedinUrl") ?: "",
+                        isLeader = doc.getBoolean("isLeader") ?: false,
+                        avatarEmoji = doc.getString("avatarEmoji") ?: "👩‍💻",
+                        major = doc.getString("major") ?: "علوم حاسب (Computer Science)",
+                        isBanned = doc.getBoolean("isBanned") ?: false
+                    )
+                }
+                trySend(users)
+            }
+        awaitClose { registration.remove() }
+    }
+
+    override suspend fun setUserBanned(uid: String, banned: Boolean): Result<Unit> = runCatching {
+        firestore.collection("users").document(uid).update("isBanned", banned).await()
+        Unit
+    }
+
+    override suspend fun deleteUserRecord(uid: String): Result<Unit> = runCatching {
+        val seatsSnap = seatsCollection.whereEqualTo("applicantId", uid).get().await()
+        val batch = firestore.batch()
+        seatsSnap.documents.forEach { doc ->
+            batch.update(
+                doc.reference,
+                mapOf(
+                    "status" to SeatStatus.AVAILABLE.name,
+                    "applicantId" to null,
+                    "applicantName" to null,
+                    "applicantNote" to null,
+                    "expiresAt" to null
+                )
+            )
+        }
+        batch.delete(firestore.collection("users").document(uid))
+        batch.commit().await()
+        Unit
+    }
+
+    override suspend fun setTeamLocked(teamId: String, locked: Boolean): Result<Unit> = runCatching {
+        teamsCollection.document(teamId).update("isLocked", locked).await()
+        Unit
     }
 
     private fun DocumentSnapshot.toTeam(): Team? {

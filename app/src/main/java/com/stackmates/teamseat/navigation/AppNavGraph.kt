@@ -192,6 +192,48 @@ fun AppNavGraph(
             )
         }
 
+        composable(ScreenRoutes.SUPER_ADMIN) {
+            val allUsers by teamRepository.observeAllUsers().collectAsState(initial = emptyList())
+            SuperAdminScreen(
+                adminEmail = currentUser?.email ?: "youssefmohamedelbasouny@gmail.com",
+                users = allUsers,
+                teams = teams,
+                onToggleBanUser = { uid, banned ->
+                    scope.launch {
+                        teamRepository.setUserBanned(uid, banned)
+                        Toast.makeText(
+                            appContext,
+                            if (banned) "تم حظر المستخدم" else "تم فك الحظر عن المستخدم",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                },
+                onDeleteUser = { uid ->
+                    scope.launch {
+                        teamRepository.deleteUserRecord(uid)
+                        Toast.makeText(appContext, "تم حذف بيانات المستخدم", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onToggleLockTeam = { teamId, locked ->
+                    scope.launch {
+                        teamRepository.setTeamLocked(teamId, locked)
+                        Toast.makeText(
+                            appContext,
+                            if (locked) "تم قفل التيم" else "تم فتح التيم",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                },
+                onDeleteTeam = { teamId ->
+                    scope.launch {
+                        teamRepository.deleteTeam(teamId)
+                        Toast.makeText(appContext, "تم حذف التيم", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
         // =====================================================================
         // 🌸 2. شاشات نُهى (Auth & Onboarding)
         // =====================================================================
@@ -424,6 +466,7 @@ fun AppNavGraph(
                     }
                 },
                 onOpenDemoCenterClick = { navController.navigate(ScreenRoutes.DEMO_CONTROL_CENTER) },
+                onOpenSuperAdminClick = { navController.navigate(ScreenRoutes.SUPER_ADMIN) },
                 onSaveProfileChanges = { role, github, linkedin ->
                     scope.launch { authRepository.updateProfile(role, github, linkedin) }
                 },

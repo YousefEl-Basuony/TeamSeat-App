@@ -127,6 +127,7 @@ fun MainAppShell(
     onRemoveMemberClick: (Seat) -> Unit = {},
     onDeleteTeamClick: () -> Unit = {},
     onOpenDemoCenterClick: () -> Unit = {},
+    onOpenSuperAdminClick: () -> Unit = {},
     onSaveProfileChanges: (String, String, String) -> Unit = { _, _, _ -> },
     onSwitchToAccountClick: (SavedAccount) -> Unit = {},
     onRemoveSavedAccountClick: (SavedAccount) -> Unit = {},
@@ -231,6 +232,7 @@ fun MainAppShell(
                             onRemoveSavedAccountClick = onRemoveSavedAccountClick,
                             onLogoutClick = onLogoutClick,
                             onOpenDemoCenterClick = onOpenDemoCenterClick,
+                            onOpenSuperAdminClick = onOpenSuperAdminClick,
                             onBackClick = { selectedTab = 0 }
                         )
                     }
