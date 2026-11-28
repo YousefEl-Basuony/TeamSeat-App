@@ -605,6 +605,28 @@ class FirebaseTeamSeatRepository(
         Unit
     }
 
+    override suspend fun getUserById(uid: String): User? {
+        if (uid.isBlank()) return null
+        return runCatching {
+            val doc = firestore.collection("users").document(uid).get().await()
+            if (!doc.exists()) return null
+            User(
+                uid = doc.getString("uid") ?: doc.id,
+                name = doc.getString("name") ?: "",
+                studentId = doc.getString("studentId") ?: "",
+                email = doc.getString("email") ?: "",
+                roleTag = doc.getString("roleTag") ?: "Android Developer",
+                currentTeamId = doc.getString("currentTeamId"),
+                githubUrl = doc.getString("githubUrl") ?: "",
+                linkedinUrl = doc.getString("linkedinUrl") ?: "",
+                isLeader = doc.getBoolean("isLeader") ?: false,
+                avatarEmoji = doc.getString("avatarEmoji") ?: "👩‍💻",
+                major = doc.getString("major") ?: "علوم حاسب (Computer Science)",
+                isBanned = doc.getBoolean("isBanned") ?: false
+            )
+        }.getOrNull()
+    }
+
     override suspend fun deleteUserRecord(uid: String): Result<Unit> = runCatching {
         val seatsSnap = seatsCollection.whereEqualTo("applicantId", uid).get().await()
         val batch = firestore.batch()

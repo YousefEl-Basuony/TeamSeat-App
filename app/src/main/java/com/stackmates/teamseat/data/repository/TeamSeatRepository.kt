@@ -47,6 +47,7 @@ interface TeamSeatRepository {
     suspend fun markAllNotificationsRead(userId: String): Result<Unit>
     suspend fun clearUserNotifications(userId: String): Result<Unit>
     fun observeAllUsers(): Flow<List<User>>
+    suspend fun getUserById(uid: String): User?
     suspend fun setUserBanned(uid: String, banned: Boolean): Result<Unit>
     suspend fun deleteUserRecord(uid: String): Result<Unit>
     suspend fun setTeamLocked(teamId: String, locked: Boolean): Result<Unit>
@@ -276,6 +277,10 @@ class FakeTeamSeatRepository : TeamSeatRepository {
 
     override fun observeAllUsers(): Flow<List<User>> =
         MutableStateFlow(listOf(MockDataProvider.ahmedLeader, MockDataProvider.saraStudent))
+
+    override suspend fun getUserById(uid: String): User? =
+        listOf(MockDataProvider.ahmedLeader, MockDataProvider.saraStudent).firstOrNull { it.uid == uid }
+            ?: MockDataProvider.saraStudent
 
     override suspend fun setUserBanned(uid: String, banned: Boolean): Result<Unit> = Result.success(Unit)
 

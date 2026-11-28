@@ -13,6 +13,7 @@ import com.stackmates.teamseat.core.theme.TeamSeatTheme
 import com.stackmates.teamseat.data.local.AppSettingsManager
 import com.stackmates.teamseat.data.local.LocalAppSettings
 import com.stackmates.teamseat.navigation.AppNavGraph
+import com.stackmates.teamseat.ui.components.appDarkModeEnabled
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,6 +22,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settingsManager = remember { AppSettingsManager(applicationContext) }
             var appSettings by remember { mutableStateOf(settingsManager.getSettings()) }
+            appDarkModeEnabled = appSettings.isDarkMode
 
             CompositionLocalProvider(LocalAppSettings provides appSettings) {
                 TeamSeatTheme(
@@ -31,6 +33,7 @@ class MainActivity : ComponentActivity() {
                         appSettings = appSettings,
                         onUpdateAppSettings = { updated ->
                             appSettings = updated
+                            appDarkModeEnabled = updated.isDarkMode
                             settingsManager.saveSettings(updated)
                         }
                     )

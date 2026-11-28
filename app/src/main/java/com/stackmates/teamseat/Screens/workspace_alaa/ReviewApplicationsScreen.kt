@@ -72,6 +72,7 @@ private enum class LocalDecision { PENDING, ACCEPTED, REJECTED }
 @Composable
 fun ReviewApplicationsScreen(
     pendingSeats: List<Seat> = MockDataProvider.sampleSeats.filter { it.status == SeatStatus.PENDING },
+    onViewProfileClick: (applicantId: String) -> Unit = {},
     onAcceptApplicantClick: (Seat) -> Unit = {},
     onRejectApplicantClick: (Seat) -> Unit = {},
     onBackClick: () -> Unit = {}
@@ -167,6 +168,9 @@ fun ReviewApplicationsScreen(
                             ApplicantReviewCard(
                                 seat = seat,
                                 decision = decision,
+                                onViewProfile = {
+                                    seat.applicantId?.let { onViewProfileClick(it) }
+                                },
                                 onAccept = {
                                     decisions[seat.id] = LocalDecision.ACCEPTED
                                     onAcceptApplicantClick(seat)
@@ -188,6 +192,7 @@ fun ReviewApplicationsScreen(
 private fun ApplicantReviewCard(
     seat: Seat,
     decision: LocalDecision,
+    onViewProfile: () -> Unit,
     onAccept: () -> Unit,
     onReject: () -> Unit
 ) {
@@ -289,7 +294,7 @@ private fun ApplicantReviewCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF6FAFA))
+                    .background(TeamSeatSoftTealPill.copy(alpha = 0.45f))
                     .padding(12.dp)
             ) {
                 Text(
@@ -298,6 +303,30 @@ private fun ApplicantReviewCard(
                     color = TeamSeatTitleDark,
                     fontSize = 13.5.sp,
                     lineHeight = 20.sp
+                )
+            }
+        }
+
+        if (!seat.applicantId.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(10.dp))
+            OutlinedButton(
+                onClick = onViewProfile,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.PersonSearch,
+                    contentDescription = null,
+                    tint = TeamSeatPrimaryTeal,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "عرض بروفايل الطالب",
+                    fontFamily = TajawalFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = TeamSeatPrimaryTeal,
+                    fontSize = 12.5.sp
                 )
             }
         }

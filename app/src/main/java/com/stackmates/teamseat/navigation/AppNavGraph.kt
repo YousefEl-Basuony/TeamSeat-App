@@ -788,8 +788,20 @@ fun AppNavGraph(
             val pendingSeats = remember(leaderSeats) {
                 leaderSeats.filter { it.status == SeatStatus.PENDING }
             }
+            var inspectedApplicant by remember { mutableStateOf<com.stackmates.teamseat.core.model.User?>(null) }
+
             ReviewApplicationsScreen(
                 pendingSeats = pendingSeats,
+                onViewProfileClick = { applicantId ->
+                    scope.launch {
+                        val userProfile = teamRepository.getUserById(applicantId)
+                        if (userProfile != null) {
+                            inspectedApplicant = userProfile
+                        } else {
+                            Toast.makeText(appContext, "تعذر تحميل بروفايل الطالب", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
                 onAcceptApplicantClick = { seat ->
                     scope.launch {
                         seat.applicantId?.let { applicantId ->
@@ -802,6 +814,29 @@ fun AppNavGraph(
                 },
                 onBackClick = { navController.popBackStack() }
             )
+
+            val applicantToShow = inspectedApplicant
+            if (applicantToShow != null) {
+                androidx.compose.ui.window.Dialog(
+                    onDismissRequest = { inspectedApplicant = null }
+                ) {
+                    StudentPublicProfileSheet(
+                        student = applicantToShow,
+                        onOpenGithubClick = { url ->
+                            runCatching {
+                                val normalized = if (url.startsWith("http")) url else "https://$url"
+                                appContext.startActivity(
+                                    android.content.Intent(
+                                        android.content.Intent.ACTION_VIEW,
+                                        android.net.Uri.parse(normalized)
+                                    )
+                                )
+                            }
+                        },
+                        onDismiss = { inspectedApplicant = null }
+                    )
+                }
+            }
         }
     }
 }

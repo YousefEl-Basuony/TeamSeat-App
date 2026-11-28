@@ -17,6 +17,9 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
@@ -29,25 +32,40 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.stackmates.teamseat.data.local.LocalAppSettings
 
+var appDarkModeEnabled by mutableStateOf(false)
+
 // =============================================================================
 // 🎨 النظام البصري الموحد المستخلص من HomeScreen (Visual System Tokens)
 // =============================================================================
-val TeamSeatBgOffWhite = Color(0xFFF8FAFA)
-val TeamSeatWaveMint = Color(0xFFD7ECEA)
-val TeamSeatPrimaryTeal = Color(0xFF136F78)
-val TeamSeatTitleDark = Color(0xFF0F292E)
-val TeamSeatBodyMuted = Color(0xFF52606D)
+val TeamSeatBgOffWhite: Color
+    get() = if (appDarkModeEnabled) Color(0xFF0D1719) else Color(0xFFF8FAFA)
+val TeamSeatWaveMint: Color
+    get() = if (appDarkModeEnabled) Color(0xFF15282C) else Color(0xFFD7ECEA)
+val TeamSeatPrimaryTeal: Color
+    get() = if (appDarkModeEnabled) Color(0xFF4DB6AC) else Color(0xFF136F78)
+val TeamSeatTitleDark: Color
+    get() = if (appDarkModeEnabled) Color(0xFFE8F4F4) else Color(0xFF0F292E)
+val TeamSeatBodyMuted: Color
+    get() = if (appDarkModeEnabled) Color(0xFFA8C2C5) else Color(0xFF52606D)
 
-val TeamSeatCardTopTeal = Color(0xFFF3F9F9)
-val TeamSeatCardBorderTeal = Color(0xFFA3D1CE)
+val TeamSeatCardTopTeal: Color
+    get() = if (appDarkModeEnabled) Color(0xFF162528) else Color(0xFFF3F9F9)
+val TeamSeatCardBorderTeal: Color
+    get() = if (appDarkModeEnabled) Color(0xFF2B4B50) else Color(0xFFA3D1CE)
 
-val TeamSeatCardTopWarm = Color(0xFFFFF9F2)
-val TeamSeatCardBorderWarm = Color(0xFFF5C293)
-val TeamSeatWarmOrange = Color(0xFFEA580C)
+val TeamSeatCardTopWarm: Color
+    get() = if (appDarkModeEnabled) Color(0xFF2B2017) else Color(0xFFFFF9F2)
+val TeamSeatCardBorderWarm: Color
+    get() = if (appDarkModeEnabled) Color(0xFF8C5327) else Color(0xFFF5C293)
+val TeamSeatWarmOrange: Color
+    get() = if (appDarkModeEnabled) Color(0xFFFF8A3D) else Color(0xFFEA580C)
 
-val TeamSeatSoftTealPill = Color(0xFFE0F2F1)
-val TeamSeatDividerColor = Color(0xFFE5ECEC)
-val TeamSeatDangerRed = Color(0xFFC62828)
+val TeamSeatSoftTealPill: Color
+    get() = if (appDarkModeEnabled) Color(0xFF1B3538) else Color(0xFFE0F2F1)
+val TeamSeatDividerColor: Color
+    get() = if (appDarkModeEnabled) Color(0xFF263E42) else Color(0xFFE5ECEC)
+val TeamSeatDangerRed: Color
+    get() = if (appDarkModeEnabled) Color(0xFFEF5350) else Color(0xFFC62828)
 
 /**
  * 🌊 حاوية الشاشات الموحدة (TeamSeatScreenContainer)
