@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.Team
+import com.stackmates.teamseat.core.model.TeamChatMessage
 import com.stackmates.teamseat.core.theme.TajawalFontFamily
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
 import com.stackmates.teamseat.ui.components.StaggeredAnimatedItem
@@ -81,17 +82,30 @@ data class ChatMessage(
 @Composable
 fun TeamGroupChatScreen(
     team: Team = MockDataProvider.sampleTeam,
+    liveMessages: List<TeamChatMessage>? = null,
+    currentUserId: String = "",
     onSendMessageClick: (messageText: String) -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
     var messageInput by remember { mutableStateOf("") }
-    val messages = remember {
+    val localMessages = remember {
         mutableStateListOf(
             ChatMessage("1", "آلاء", "السلام عليكم يا شباب، رفعت شاشات الـ Workspace على البرانش.", "10:15 ص", isMe = true),
             ChatMessage("2", "سارة", "عاش يا آلاء! أنا خلصت شاشات التقديم وطلباتي.", "10:17 ص", isMe = false),
             ChatMessage("3", "يوسف", "ممتاز، هنراجع كل الشاشات النهارده قبل تسليم م. شهد.", "10:19 ص", isMe = false),
             ChatMessage("4", "آلاء", "تمام جداً، خلونا نتابع المواعيد في تقويم التيم.", "10:21 ص", isMe = true)
         )
+    }
+    val displayMessages = remember(liveMessages, localMessages.size, currentUserId) {
+        liveMessages?.map { msg ->
+            ChatMessage(
+                id = msg.id,
+                senderName = msg.senderName,
+                text = msg.text,
+                timestamp = msg.timeLabel,
+                isMe = currentUserId.isNotBlank() && msg.senderId == currentUserId
+            )
+        } ?: localMessages
     }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
@@ -197,15 +211,17 @@ fun TeamGroupChatScreen(
                                     .bounceClick {
                                         val trimmed = messageInput.trim()
                                         if (trimmed.isNotEmpty()) {
-                                            messages.add(
-                                                ChatMessage(
-                                                    id = (messages.size + 1).toString(),
-                                                    senderName = "أنا",
-                                                    text = trimmed,
-                                                    timestamp = "الآن",
-                                                    isMe = true
+                                            if (liveMessages == null) {
+                                                localMessages.add(
+                                                    ChatMessage(
+                                                        id = (localMessages.size + 1).toString(),
+                                                        senderName = "أنا",
+                                                        text = trimmed,
+                                                        timestamp = "الآن",
+                                                        isMe = true
+                                                    )
                                                 )
-                                            )
+                                            }
                                             onSendMessageClick(trimmed)
                                             messageInput = ""
                                         }
@@ -232,7 +248,7 @@ fun TeamGroupChatScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp)
             ) {
-                itemsIndexed(messages, key = { _, msg -> msg.id }) { index, msg ->
+                itemsIndexed(displayMessages, key = { _, msg -> msg.id }) { index, msg ->
                     StaggeredAnimatedItem(index = index) {
                         ChatBubble(message = msg)
                     }

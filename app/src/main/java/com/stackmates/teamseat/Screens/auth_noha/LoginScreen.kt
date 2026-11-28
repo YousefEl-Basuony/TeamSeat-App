@@ -51,6 +51,7 @@ import com.stackmates.teamseat.ui.components.bounceClick
  */
 @Composable
 fun LoginScreen(
+    initialEmail: String = "",
     onLoginClick: (email: String, pass: String) -> Unit = { _, _ -> },
     onLoginSuccess: () -> Unit = {},
     onNavigateToRegister: () -> Unit = {},
@@ -59,7 +60,7 @@ fun LoginScreen(
     errorMessage: String? = null,
     isLoading: Boolean = false
 ) {
-    var emailOrId by remember { mutableStateOf("") }
+    var emailOrId by remember(initialEmail) { mutableStateOf(initialEmail) }
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
 

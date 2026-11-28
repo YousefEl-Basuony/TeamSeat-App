@@ -2,7 +2,9 @@ package com.stackmates.teamseat.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.DemoPersona
 import com.stackmates.teamseat.core.model.User
@@ -29,13 +31,26 @@ class FirebaseAuthRepository(
     private val _currentUser = MutableStateFlow<User?>(null)
     override val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
+    private var userProfileListener: ListenerRegistration? = null
+
     init {
-        val firebaseUser = auth.currentUser
-        if (firebaseUser != null) {
-            scope.launch {
-                loadUserProfile(firebaseUser.uid)?.let { user ->
-                    _currentUser.value = user
-                }
+        auth.addAuthStateListener { firebaseAuth ->
+            val uid = firebaseAuth.currentUser?.uid
+            if (uid != null) {
+                startObservingUserProfile(uid)
+            } else {
+                userProfileListener?.remove()
+                userProfileListener = null
+                _currentUser.value = null
+            }
+        }
+    }
+
+    private fun startObservingUserProfile(uid: String) {
+        userProfileListener?.remove()
+        userProfileListener = usersCollection.document(uid).addSnapshotListener { doc, _ ->
+            if (doc != null && doc.exists()) {
+                _currentUser.value = doc.toUser(uid)
             }
         }
     }
@@ -80,7 +95,8 @@ class FirebaseAuthRepository(
         studentId: String,
         email: String,
         password: String,
-        roleTag: String
+        roleTag: String,
+        major: String
     ): Result<User> {
         return runCatching {
             val cleanEmail = email.trim()
@@ -98,7 +114,8 @@ class FirebaseAuthRepository(
                 name = cleanName,
                 studentId = cleanId,
                 email = cleanEmail,
-                roleTag = roleTag
+                roleTag = roleTag,
+                major = major
             )
             saveUserProfile(newUser)
             _currentUser.value = newUser
@@ -129,7 +146,8 @@ class FirebaseAuthRepository(
     override suspend fun completeProfile(
         name: String,
         studentId: String,
-        roleTag: String
+        roleTag: String,
+        major: String
     ): Result<User> {
         return runCatching {
             val cleanName = name.trim()
@@ -145,12 +163,14 @@ class FirebaseAuthRepository(
                 name = cleanName,
                 studentId = cleanId,
                 email = auth.currentUser?.email ?: "",
-                roleTag = roleTag
+                roleTag = roleTag,
+                major = major
             )
             val updated = baseUser.copy(
                 name = cleanName,
                 studentId = cleanId,
-                roleTag = roleTag
+                roleTag = roleTag,
+                major = major
             )
             saveUserProfile(updated)
             _currentUser.value = updated
@@ -203,20 +223,22 @@ class FirebaseAuthRepository(
     private suspend fun loadUserProfile(uid: String): User? {
         val doc = usersCollection.document(uid).get().await()
         if (!doc.exists()) return null
-        return User(
-            uid = doc.getString("uid") ?: uid,
-            name = doc.getString("name") ?: "",
-            studentId = doc.getString("studentId") ?: "",
-            email = doc.getString("email") ?: "",
-            roleTag = doc.getString("roleTag") ?: "Android Developer",
-            currentTeamId = doc.getString("currentTeamId"),
-            githubUrl = doc.getString("githubUrl") ?: "",
-            linkedinUrl = doc.getString("linkedinUrl") ?: "",
-            isLeader = doc.getBoolean("isLeader") ?: false,
-            avatarEmoji = doc.getString("avatarEmoji") ?: "👩‍💻",
-            major = doc.getString("major") ?: "علوم حاسب (Computer Science)"
-        )
+        return doc.toUser(uid)
     }
+
+    private fun DocumentSnapshot.toUser(fallbackUid: String): User = User(
+        uid = getString("uid") ?: fallbackUid,
+        name = getString("name") ?: "",
+        studentId = getString("studentId") ?: "",
+        email = getString("email") ?: "",
+        roleTag = getString("roleTag") ?: "Android Developer",
+        currentTeamId = getString("currentTeamId"),
+        githubUrl = getString("githubUrl") ?: "",
+        linkedinUrl = getString("linkedinUrl") ?: "",
+        isLeader = getBoolean("isLeader") ?: false,
+        avatarEmoji = getString("avatarEmoji") ?: "👩‍💻",
+        major = getString("major") ?: "علوم حاسب (Computer Science)"
+    )
 
     private suspend fun saveUserProfile(user: User) {
         val data = hashMapOf(

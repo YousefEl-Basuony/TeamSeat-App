@@ -65,11 +65,14 @@ import androidx.compose.ui.unit.sp
 import com.stackmates.teamseat.Screens.explore_khaled.HomeScreen
 import com.stackmates.teamseat.Screens.explore_khaled.SearchAndFilterScreen
 import com.stackmates.teamseat.Screens.requests_hossam.MyProfileScreen
+import com.stackmates.teamseat.Screens.workspace_alaa.NoTeamWorkspaceScreen
 import com.stackmates.teamseat.Screens.workspace_alaa.TeamWorkspaceScreen
 import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.Seat
+import com.stackmates.teamseat.core.model.SeatStatus
 import com.stackmates.teamseat.core.model.Team
 import com.stackmates.teamseat.core.model.User
+import com.stackmates.teamseat.data.local.SavedAccount
 import com.stackmates.teamseat.core.theme.TajawalFontFamily
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
 import com.stackmates.teamseat.ui.components.TeamSeatBgOffWhite
@@ -98,6 +101,9 @@ fun MainAppShell(
     currentUser: User,
     teams: List<Team>,
     seats: List<Seat>,
+    myTeamSeats: List<Seat> = seats,
+    unreadNotificationsCount: Int = 0,
+    savedAccounts: List<SavedAccount> = emptyList(),
     onTeamClick: (String) -> Unit,
     onCreateTeamClick: () -> Unit,
     onNotificationsClick: () -> Unit,
@@ -105,7 +111,14 @@ fun MainAppShell(
     onSwitchPersona: () -> Unit,
     onOpenCalendarClick: () -> Unit,
     onOpenTASheetClick: () -> Unit,
+    onOpenChatClick: () -> Unit = {},
+    onReviewRequestsClick: () -> Unit = {},
+    onRemoveMemberClick: (Seat) -> Unit = {},
+    onDeleteTeamClick: () -> Unit = {},
+    onOpenDemoCenterClick: () -> Unit = {},
     onSaveProfileChanges: (String, String, String) -> Unit = { _, _, _ -> },
+    onSwitchToAccountClick: (SavedAccount) -> Unit = {},
+    onRemoveSavedAccountClick: (SavedAccount) -> Unit = {},
     onLogoutClick: () -> Unit
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
@@ -143,12 +156,13 @@ fun MainAppShell(
                         0 -> HomeScreen(
                             currentUser = currentUser,
                             teams = teams,
+                            unreadNotificationsCount = unreadNotificationsCount,
                             onTeamClick = onTeamClick,
                             onCreateTeamClick = onCreateTeamClick,
                             onSearchClick = { selectedTab = 1 },
                             onNotificationsClick = onNotificationsClick,
                             onMyApplicationsClick = onMyApplicationsClick,
-                            onSwitchPersona = onSwitchPersona,
+                            onSwitchPersona = { selectedTab = 3 },
                             onExploreClick = { selectedTab = 1 },
                             onMyTeamClick = { selectedTab = 2 },
                             onProfileClick = { selectedTab = 3 },
@@ -161,20 +175,45 @@ fun MainAppShell(
                             onBackClick = { selectedTab = 0 }
                         )
 
-                        2 -> TeamWorkspaceScreen(
-                            team = teams.firstOrNull() ?: MockDataProvider.sampleTeam,
-                            seats = seats,
-                            onOpenCalendarClick = onOpenCalendarClick,
-                            onOpenTASheetClick = onOpenTASheetClick,
-                            onBackClick = { selectedTab = 0 }
-                        )
+                        2 -> {
+                            val myTeam = teams.firstOrNull {
+                                !currentUser.currentTeamId.isNullOrBlank() && it.teamId == currentUser.currentTeamId
+                            } ?: teams.firstOrNull { it.leaderId == currentUser.uid }
+
+                            if (myTeam == null) {
+                                NoTeamWorkspaceScreen(
+                                    onExploreTeamsClick = { selectedTab = 1 },
+                                    onCreateTeamClick = onCreateTeamClick,
+                                    onMyApplicationsClick = onMyApplicationsClick,
+                                    onBackClick = { selectedTab = 0 }
+                                )
+                            } else {
+                                TeamWorkspaceScreen(
+                                    team = myTeam,
+                                    seats = myTeamSeats,
+                                    isLeader = myTeam.leaderId == currentUser.uid,
+                                    pendingRequestsCount = myTeamSeats.count { it.status == SeatStatus.PENDING },
+                                    onReviewRequestsClick = onReviewRequestsClick,
+                                    onRemoveMemberClick = onRemoveMemberClick,
+                                    onDeleteTeamClick = onDeleteTeamClick,
+                                    onOpenCalendarClick = onOpenCalendarClick,
+                                    onOpenTASheetClick = onOpenTASheetClick,
+                                    onOpenChatClick = onOpenChatClick,
+                                    onBackClick = { selectedTab = 0 }
+                                )
+                            }
+                        }
 
                         else -> MyProfileScreen(
                             user = currentUser,
+                            savedAccounts = savedAccounts,
                             onSaveChangesClick = { role, github, linkedin ->
                                 onSaveProfileChanges(role, github, linkedin)
                             },
+                            onSwitchToAccountClick = onSwitchToAccountClick,
+                            onRemoveSavedAccountClick = onRemoveSavedAccountClick,
                             onLogoutClick = onLogoutClick,
+                            onOpenDemoCenterClick = onOpenDemoCenterClick,
                             onBackClick = { selectedTab = 0 }
                         )
                     }

@@ -107,14 +107,13 @@ fun HomeScreen(
     onExploreClick: () -> Unit = onSearchClick,
     onMyTeamClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
+    unreadNotificationsCount: Int? = null,
     showBottomBar: Boolean = true
 ) {
     var selectedFilter by remember { mutableStateOf("الكل") }
     var selectedNavIndex by remember { mutableIntStateOf(0) }
 
-    val unreadNotifCount = remember {
-        MockDataProvider.sampleNotifications.count { !it.isRead }.coerceAtLeast(3)
-    }
+    val unreadNotifCount = unreadNotificationsCount ?: 0
 
     val filteredTeams = remember(teams, selectedFilter) {
         when (selectedFilter) {
@@ -272,16 +271,14 @@ fun HomeScreen(
 
                     // 3. بطاقتا الإحصائيات السريعة مع عداد متحرك
                     item {
-                        var statsStarted by remember { mutableStateOf(false) }
-                        LaunchedEffect(Unit) { statsStarted = true }
                         val availableProjectsCount by animateIntAsState(
-                            targetValue = if (statsStarted) 12 else 0,
-                            animationSpec = tween(durationMillis = 650, easing = FastOutSlowInEasing),
+                            targetValue = teams.size,
+                            animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
                             label = "stat1"
                         )
                         val needMembersCount by animateIntAsState(
-                            targetValue = if (statsStarted) 8 else 0,
-                            animationSpec = tween(durationMillis = 650, easing = FastOutSlowInEasing),
+                            targetValue = teams.count { !it.isLocked },
+                            animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
                             label = "stat2"
                         )
                         Row(

@@ -24,3 +24,13 @@ data class CalendarEvent(
     val time: String,
     val type: String // "مناقشة", "تسليم ديدلاين", "ميتنج"
 )
+
+data class TeamChatMessage(
+    val id: String = "",
+    val teamId: String = "",
+    val senderId: String = "",
+    val senderName: String = "",
+    val text: String = "",
+    val timeLabel: String = "",
+    val timestampMs: Long = System.currentTimeMillis()
+)

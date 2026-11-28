@@ -2,10 +2,17 @@ package com.stackmates.teamseat.data.repository
 
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.stackmates.teamseat.core.data.MockDataProvider
+import com.google.firebase.firestore.Query
+import com.stackmates.teamseat.core.model.CalendarEvent
+import com.stackmates.teamseat.core.model.NotificationItem
+import com.stackmates.teamseat.core.model.NotificationType
 import com.stackmates.teamseat.core.model.Seat
 import com.stackmates.teamseat.core.model.SeatStatus
 import com.stackmates.teamseat.core.model.Team
+import com.stackmates.teamseat.core.model.TeamChatMessage
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -23,7 +30,6 @@ class FirebaseTeamSeatRepository(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val teamsCollection = firestore.collection("teams")
     private val seatsCollection = firestore.collection("seats")
-    private val seededOnce = AtomicBoolean(false)
 
     companion object {
         private const val FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000L
@@ -32,33 +38,28 @@ class FirebaseTeamSeatRepository(
 
     override fun observeTeams(): Flow<List<Team>> = callbackFlow {
         val registration = teamsCollection.addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                trySend(MockDataProvider.sampleTeamsList)
-                return@addSnapshotListener
-            }
-            if (snapshot == null || snapshot.isEmpty) {
-                if (seededOnce.compareAndSet(false, true)) {
-                    scope.launch { seedInitialDataIfEmpty() }
-                }
-                trySend(MockDataProvider.sampleTeamsList)
+            if (error != null || snapshot == null) {
+                trySend(emptyList())
                 return@addSnapshotListener
             }
             val teams = snapshot.documents.mapNotNull { it.toTeam() }
+                .sortedByDescending { it.createdAt }
             trySend(teams)
         }
         awaitClose { registration.remove() }
     }
 
     override fun observeTeamSeats(teamId: String): Flow<List<Seat>> = callbackFlow {
+        if (teamId.isBlank()) {
+            trySend(emptyList())
+            awaitClose { }
+            return@callbackFlow
+        }
         val registration = seatsCollection
             .whereEqualTo("teamId", teamId)
             .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(MockDataProvider.sampleSeats)
-                    return@addSnapshotListener
-                }
-                if (snapshot == null || snapshot.isEmpty) {
-                    trySend(MockDataProvider.sampleSeats)
+                if (error != null || snapshot == null) {
+                    trySend(emptyList())
                     return@addSnapshotListener
                 }
                 val now = System.currentTimeMillis()
@@ -75,6 +76,84 @@ class FirebaseTeamSeatRepository(
                 trySend(seats)
             }
         awaitClose { registration.remove() }
+    }
+
+    override fun observeApplicantSeats(applicantId: String): Flow<List<Seat>> = callbackFlow {
+        if (applicantId.isBlank()) {
+            trySend(emptyList())
+            awaitClose { }
+            return@callbackFlow
+        }
+        val registration = seatsCollection
+            .whereEqualTo("applicantId", applicantId)
+            .whereEqualTo("status", SeatStatus.PENDING.name)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                val now = System.currentTimeMillis()
+                val seats = snapshot.documents.mapNotNull { it.toSeat() }
+                val validSeats = seats.filter { it.expiresAt == null || now <= it.expiresAt }
+                val expiredIds = seats
+                    .filter { it.expiresAt != null && now > it.expiresAt }
+                    .map { it.id }
+                if (expiredIds.isNotEmpty()) {
+                    scope.launch {
+                        expiredIds.forEach { rejectOrCancelSeat(it) }
+                    }
+                }
+                trySend(validSeats)
+            }
+        awaitClose { registration.remove() }
+    }
+
+    override suspend fun createTeam(
+        projectName: String,
+        category: String,
+        description: String,
+        leaderId: String,
+        leaderName: String,
+        seatRoles: List<String>
+    ): Result<Team> = runCatching {
+        val teamId = "team_${System.currentTimeMillis()}"
+        val cleanRoles = if (seatRoles.isEmpty()) listOf("Lead Developer", "Developer") else seatRoles
+        val newTeam = Team(
+            teamId = teamId,
+            projectName = projectName.ifBlank { "مشروع جديد" },
+            category = category.ifBlank { "مشروع تخرج" },
+            description = description.ifBlank { "مشروع تعاوني عبر TeamSeat" },
+            leaderId = leaderId,
+            leaderName = leaderName,
+            totalSeats = cleanRoles.size
+        )
+
+        val batch = firestore.batch()
+        batch.set(teamsCollection.document(teamId), newTeam.toMap())
+
+        cleanRoles.forEachIndexed { index, role ->
+            val seatId = "${teamId}_seat_${index + 1}"
+            val seat = Seat(
+                id = seatId,
+                teamId = teamId,
+                seatNumber = index + 1,
+                roleRequired = role,
+                status = if (index == 0) SeatStatus.BOOKED else SeatStatus.AVAILABLE,
+                applicantId = if (index == 0) leaderId else null,
+                applicantName = if (index == 0) leaderName else null
+            )
+            batch.set(seatsCollection.document(seatId), seat.toMap())
+        }
+
+        batch.commit().await()
+
+        runCatching {
+            firestore.collection("users").document(leaderId).update(
+                mapOf("isLeader" to true, "currentTeamId" to teamId)
+            ).await()
+        }
+
+        newTeam
     }
 
     override suspend fun requestSeatBooking(
@@ -94,12 +173,16 @@ class FirebaseTeamSeatRepository(
         }
 
         val seatRef = seatsCollection.document(seatId)
+        var targetTeamId = ""
+        var targetRole = ""
         firestore.runTransaction { transaction ->
             val snap = transaction.get(seatRef)
             val currentStatus = snap.getString("status") ?: SeatStatus.AVAILABLE.name
             if (currentStatus != SeatStatus.AVAILABLE.name) {
                 throw IllegalStateException("المقعد لم يعد متاحاً للحجز")
             }
+            targetTeamId = snap.getString("teamId").orEmpty()
+            targetRole = snap.getString("roleRequired").orEmpty()
             transaction.update(
                 seatRef,
                 mapOf(
@@ -111,10 +194,30 @@ class FirebaseTeamSeatRepository(
                 )
             )
         }.await()
+
+        if (targetTeamId.isNotBlank()) {
+            runCatching {
+                val teamDoc = teamsCollection.document(targetTeamId).get().await()
+                val leaderId = teamDoc.getString("leaderId").orEmpty()
+                val projectName = teamDoc.getString("projectName").orEmpty()
+                if (leaderId.isNotBlank() && leaderId != studentId) {
+                    sendUserNotification(
+                        userId = leaderId,
+                        title = "طلب انضمام جديد لفريقك",
+                        message = "تقدم $studentName لحجز مقعد ($targetRole) في فريق $projectName.",
+                        type = NotificationType.NEW_REQUEST
+                    )
+                }
+            }
+        }
         Unit
     }
 
     override suspend fun acceptApplicantBatch(seatId: String, applicantId: String): Result<Unit> = runCatching {
+        val seatDoc = seatsCollection.document(seatId).get().await()
+        val teamId = seatDoc.getString("teamId")
+        val roleRequired = seatDoc.getString("roleRequired").orEmpty()
+
         val otherPendingSnap = seatsCollection
             .whereEqualTo("applicantId", applicantId)
             .whereEqualTo("status", SeatStatus.PENDING.name)
@@ -146,10 +249,31 @@ class FirebaseTeamSeatRepository(
             }
 
         batch.commit().await()
+
+        if (!teamId.isNullOrBlank()) {
+            runCatching {
+                firestore.collection("users").document(applicantId)
+                    .update("currentTeamId", teamId)
+                    .await()
+                val teamDoc = teamsCollection.document(teamId).get().await()
+                val projectName = teamDoc.getString("projectName").orEmpty()
+                sendUserNotification(
+                    userId = applicantId,
+                    title = "تم قبول طلبك!",
+                    message = "أهلاً بك في فريق $projectName! تم تأكيد مقعدك ($roleRequired).",
+                    type = NotificationType.ACCEPTED
+                )
+            }
+        }
         Unit
     }
 
     override suspend fun rejectOrCancelSeat(seatId: String): Result<Unit> = runCatching {
+        val seatDoc = seatsCollection.document(seatId).get().await()
+        val applicantId = seatDoc.getString("applicantId")
+        val teamId = seatDoc.getString("teamId")
+        val roleRequired = seatDoc.getString("roleRequired").orEmpty()
+
         seatsCollection.document(seatId).update(
             mapOf(
                 "status" to SeatStatus.AVAILABLE.name,
@@ -159,6 +283,57 @@ class FirebaseTeamSeatRepository(
                 "expiresAt" to null
             )
         ).await()
+
+        if (!applicantId.isNullOrBlank() && !teamId.isNullOrBlank()) {
+            runCatching {
+                val teamDoc = teamsCollection.document(teamId).get().await()
+                val projectName = teamDoc.getString("projectName").orEmpty()
+                sendUserNotification(
+                    userId = applicantId,
+                    title = "تحديث بخصوص طلبك",
+                    message = "لم يتم تأكيد مقعد ($roleRequired) في فريق $projectName وأصبح متاحاً من جديد.",
+                    type = NotificationType.REJECTED
+                )
+            }
+        }
+        Unit
+    }
+
+    override suspend fun removeMemberFromTeam(seatId: String): Result<Unit> = runCatching {
+        val seatDoc = seatsCollection.document(seatId).get().await()
+        val applicantId = seatDoc.getString("applicantId")
+        val teamId = seatDoc.getString("teamId")
+        val roleRequired = seatDoc.getString("roleRequired").orEmpty()
+
+        seatsCollection.document(seatId).update(
+            mapOf(
+                "status" to SeatStatus.AVAILABLE.name,
+                "applicantId" to null,
+                "applicantName" to null,
+                "applicantNote" to null,
+                "expiresAt" to null
+            )
+        ).await()
+
+        if (!applicantId.isNullOrBlank()) {
+            runCatching {
+                firestore.collection("users").document(applicantId)
+                    .update("currentTeamId", null)
+                    .await()
+            }
+            if (!teamId.isNullOrBlank()) {
+                runCatching {
+                    val teamDoc = teamsCollection.document(teamId).get().await()
+                    val projectName = teamDoc.getString("projectName").orEmpty()
+                    sendUserNotification(
+                        userId = applicantId,
+                        title = "تم إزالتك من الفريق",
+                        message = "قام قائد فريق $projectName بإزالة مقعدك ($roleRequired).",
+                        type = NotificationType.REJECTED
+                    )
+                }
+            }
+        }
         Unit
     }
 
@@ -167,20 +342,233 @@ class FirebaseTeamSeatRepository(
         Unit
     }
 
-    private suspend fun seedInitialDataIfEmpty() {
-        runCatching {
-            val existing = teamsCollection.limit(1).get().await()
-            if (!existing.isEmpty) return
+    override suspend fun deleteTeam(teamId: String): Result<Unit> = runCatching {
+        val teamDoc = teamsCollection.document(teamId).get().await()
+        val projectName = teamDoc.getString("projectName").orEmpty()
+        val leaderId = teamDoc.getString("leaderId").orEmpty()
 
+        val seatsSnap = seatsCollection.whereEqualTo("teamId", teamId).get().await()
+        val memberIds = seatsSnap.documents
+            .mapNotNull { it.getString("applicantId") }
+            .filter { it.isNotBlank() && it != leaderId }
+            .distinct()
+
+        val batch = firestore.batch()
+        seatsSnap.documents.forEach { batch.delete(it.reference) }
+        batch.delete(teamsCollection.document(teamId))
+        batch.commit().await()
+
+        if (leaderId.isNotBlank()) {
+            runCatching {
+                firestore.collection("users").document(leaderId).update(
+                    mapOf("currentTeamId" to null, "isLeader" to false)
+                ).await()
+            }
+        }
+        memberIds.forEach { memberId ->
+            runCatching {
+                firestore.collection("users").document(memberId)
+                    .update("currentTeamId", null)
+                    .await()
+                sendUserNotification(
+                    userId = memberId,
+                    title = "تم حذف الفريق",
+                    message = "قام قائد فريق $projectName بحذف الفريق.",
+                    type = NotificationType.REJECTED
+                )
+            }
+        }
+        Unit
+    }
+
+    override suspend fun updateTeamSeats(teamId: String, updatedSeats: List<Seat>): Result<Unit> = runCatching {
+        val existingSnap = seatsCollection.whereEqualTo("teamId", teamId).get().await()
+        val updatedIds = updatedSeats.map { it.id }.toSet()
+        val batch = firestore.batch()
+
+        existingSnap.documents
+            .filter { it.id !in updatedIds }
+            .forEach { batch.delete(it.reference) }
+
+        updatedSeats.forEachIndexed { index, seat ->
+            val fixedSeat = seat.copy(teamId = teamId, seatNumber = index + 1)
+            batch.set(seatsCollection.document(fixedSeat.id), fixedSeat.toMap())
+        }
+
+        batch.update(teamsCollection.document(teamId), "totalSeats", updatedSeats.size)
+        batch.commit().await()
+        Unit
+    }
+
+    override fun observeTeamMessages(teamId: String): Flow<List<TeamChatMessage>> = callbackFlow {
+        val registration = teamsCollection.document(teamId)
+            .collection("messages")
+            .orderBy("timestampMs", Query.Direction.ASCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                val msgs = snapshot.documents.mapNotNull { doc ->
+                    val text = doc.getString("text") ?: return@mapNotNull null
+                    TeamChatMessage(
+                        id = doc.id,
+                        teamId = teamId,
+                        senderId = doc.getString("senderId") ?: "",
+                        senderName = doc.getString("senderName") ?: "عضو",
+                        text = text,
+                        timeLabel = doc.getString("timeLabel") ?: "",
+                        timestampMs = doc.getLong("timestampMs") ?: 0L
+                    )
+                }
+                trySend(msgs)
+            }
+        awaitClose { registration.remove() }
+    }
+
+    override suspend fun sendTeamMessage(
+        teamId: String,
+        senderId: String,
+        senderName: String,
+        text: String
+    ): Result<Unit> = runCatching {
+        val now = System.currentTimeMillis()
+        val timeLabel = SimpleDateFormat("hh:mm a", Locale("ar")).format(Date(now))
+        val data = hashMapOf(
+            "teamId" to teamId,
+            "senderId" to senderId,
+            "senderName" to senderName,
+            "text" to text.trim(),
+            "timeLabel" to timeLabel,
+            "timestampMs" to now
+        )
+        teamsCollection.document(teamId).collection("messages").add(data).await()
+        Unit
+    }
+
+    override fun observeTeamEvents(teamId: String): Flow<List<CalendarEvent>> = callbackFlow {
+        val registration = teamsCollection.document(teamId)
+            .collection("events")
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                val events = snapshot.documents.mapNotNull { doc ->
+                    val title = doc.getString("title") ?: return@mapNotNull null
+                    CalendarEvent(
+                        id = doc.id,
+                        teamId = teamId,
+                        title = title,
+                        date = doc.getString("date") ?: "",
+                        time = doc.getString("time") ?: "",
+                        type = doc.getString("type") ?: "ميتنج"
+                    )
+                }
+                trySend(events)
+            }
+        awaitClose { registration.remove() }
+    }
+
+    override suspend fun addTeamEvent(
+        teamId: String,
+        title: String,
+        date: String,
+        time: String,
+        type: String
+    ): Result<Unit> = runCatching {
+        val data = hashMapOf(
+            "teamId" to teamId,
+            "title" to title.trim(),
+            "date" to date.trim(),
+            "time" to time.trim(),
+            "type" to type,
+            "createdAt" to System.currentTimeMillis()
+        )
+        teamsCollection.document(teamId).collection("events").add(data).await()
+        Unit
+    }
+
+    override fun observeUserNotifications(userId: String): Flow<List<NotificationItem>> = callbackFlow {
+        if (userId.isBlank()) {
+            trySend(emptyList())
+            awaitClose { }
+            return@callbackFlow
+        }
+        val registration = firestore.collection("users")
+            .document(userId)
+            .collection("notifications")
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                val items = snapshot.documents.mapNotNull { doc ->
+                    val title = doc.getString("title") ?: return@mapNotNull null
+                    val typeName = doc.getString("type") ?: NotificationType.NEW_REQUEST.name
+                    val type = runCatching { NotificationType.valueOf(typeName) }
+                        .getOrDefault(NotificationType.NEW_REQUEST)
+                    NotificationItem(
+                        id = doc.id,
+                        title = title,
+                        message = doc.getString("message") ?: "",
+                        timeAgo = doc.getString("timeAgo") ?: "الآن",
+                        type = type,
+                        isRead = doc.getBoolean("isRead") ?: false
+                    )
+                }
+                trySend(items)
+            }
+        awaitClose { registration.remove() }
+    }
+
+    override suspend fun markAllNotificationsRead(userId: String): Result<Unit> = runCatching {
+        if (userId.isBlank()) return@runCatching
+        val notifCollection = firestore.collection("users").document(userId).collection("notifications")
+        val unreadSnap = notifCollection.whereEqualTo("isRead", false).get().await()
+        if (!unreadSnap.isEmpty) {
             val batch = firestore.batch()
-            MockDataProvider.sampleTeamsList.forEach { team ->
-                batch.set(teamsCollection.document(team.teamId), team.toMap())
-            }
-            MockDataProvider.sampleSeats.forEach { seat ->
-                batch.set(seatsCollection.document(seat.id), seat.toMap())
-            }
+            unreadSnap.documents.forEach { batch.update(it.reference, "isRead", true) }
             batch.commit().await()
         }
+        Unit
+    }
+
+    override suspend fun clearUserNotifications(userId: String): Result<Unit> = runCatching {
+        if (userId.isBlank()) return@runCatching
+        val notifCollection = firestore.collection("users").document(userId).collection("notifications")
+        val snap = notifCollection.get().await()
+        if (!snap.isEmpty) {
+            val batch = firestore.batch()
+            snap.documents.forEach { batch.delete(it.reference) }
+            batch.commit().await()
+        }
+        Unit
+    }
+
+    private suspend fun sendUserNotification(
+        userId: String,
+        title: String,
+        message: String,
+        type: NotificationType
+    ) {
+        val now = System.currentTimeMillis()
+        val timeLabel = SimpleDateFormat("hh:mm a", Locale("ar")).format(Date(now))
+        val data = hashMapOf(
+            "title" to title,
+            "message" to message,
+            "timeAgo" to timeLabel,
+            "type" to type.name,
+            "isRead" to false,
+            "createdAt" to now
+        )
+        firestore.collection("users")
+            .document(userId)
+            .collection("notifications")
+            .add(data)
+            .await()
     }
 
     private fun DocumentSnapshot.toTeam(): Team? {

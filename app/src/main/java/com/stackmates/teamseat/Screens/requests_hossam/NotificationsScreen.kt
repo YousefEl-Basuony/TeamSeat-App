@@ -45,9 +45,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun NotificationsScreen(
     notifications: List<NotificationItem> = MockDataProvider.sampleNotifications,
+    onNotificationClick: (NotificationItem) -> Unit = {},
+    onMarkAllReadClick: () -> Unit = {},
+    onClearAllClick: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
-    val notificationList = remember { mutableStateListOf(*notifications.toTypedArray()) }
+    val notificationList = remember(notifications) { mutableStateListOf(*notifications.toTypedArray()) }
     var selectedFilter by remember { mutableStateOf("الكل") }
     var showMarkedAllBanner by remember { mutableStateOf(false) }
     var showClearSheet by remember { mutableStateOf(false) }
@@ -124,6 +127,7 @@ fun NotificationsScreen(
                                     for (i in notificationList.indices) {
                                         notificationList[i] = notificationList[i].copy(isRead = true)
                                     }
+                                    onMarkAllReadClick()
                                     showMarkedAllBanner = true
                                     scope.launch {
                                         snackbarHostState.showSnackbar("تم تعليم كل الإشعارات كمقروءة ✓")
@@ -401,6 +405,7 @@ fun NotificationsScreen(
                             if (index != -1) {
                                 notificationList[index] = item.copy(isRead = true)
                             }
+                            onNotificationClick(item)
                         }
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -595,6 +600,7 @@ fun NotificationsScreen(
                             .bounceClick {
                                 showClearSheet = false
                                 notificationList.clear()
+                                onClearAllClick()
                                 scope.launch {
                                     snackbarHostState.showSnackbar("تم مسح كل الإشعارات")
                                 }

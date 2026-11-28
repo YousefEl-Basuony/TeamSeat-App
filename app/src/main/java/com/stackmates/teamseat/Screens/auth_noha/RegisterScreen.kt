@@ -14,12 +14,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.PhoneAndroid
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.*
@@ -35,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -49,12 +54,14 @@ import com.stackmates.teamseat.core.theme.*
 /**
  * 🌸 شاشة إنشاء الحساب (Register Screen)
  * مسؤولية: نُهى (Noha) — تصميم عصري وجذاب متوافق تماماً مع الهوية البصرية لتطبيق TeamSeat.
- * مزودة بقسم اختيار الدور والتخصص التقني (Designer, Developer, Frontend, QA) بتصميم شبكي (2x2) فائق الأناقة والوضوح.
+ * عند الضغط على Register تظهر نافذة Pop-up أنيقة لاختيار الشعبة (CS, IS, IT, AI, SE, DS) والتخصص التقني.
  */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun RegisterScreen(
     onRegisterClick: (name: String, studentId: String, email: String, pass: String) -> Unit = { _, _, _, _ -> },
     onRegisterWithRoleClick: (name: String, studentId: String, email: String, pass: String, role: String) -> Unit = { _, _, _, _, _ -> },
+    onRegisterCompleteClick: (name: String, studentId: String, email: String, pass: String, role: String, major: String) -> Unit = { _, _, _, _, _, _ -> },
     onRegisterSuccess: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {},
     onBackToLogin: () -> Unit = onNavigateToLogin,
@@ -67,8 +74,11 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
 
-    // التخصص / الدور التقني في الفريق (Designer, Developer, Frontend, QA)
-    var selectedRole by remember { mutableStateOf("Developer") }
+    // التخصص والشعبة يختارهم في الـ Pop-up عند الضغط على Register
+    var selectedRole by remember { mutableStateOf("Android Developer") }
+    var selectedMajor by remember { mutableStateOf("CS") }
+    var showRolePopup by remember { mutableStateOf(false) }
+    var localValidationError by remember { mutableStateOf<String?>(null) }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Box(
@@ -324,92 +334,17 @@ fun RegisterScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                     )
 
-                    // =========================================================
-                    // 5. قسم اختيار التخصص / الدور التقني (Role / Track Selection)
-                    // =========================================================
-                    Column(
-                        modifier = Modifier.padding(top = 2.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Select Your Role",
-                                fontFamily = TajawalFontFamily,
-                                color = DeepNavy,
-                                fontSize = 14.5.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "تخصصك في الفريق",
-                                fontFamily = TajawalFontFamily,
-                                color = DeepTeal,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
+                    Spacer(modifier = Modifier.height(2.dp))
 
-                        // شبكة 2x2 للكروت الأنيقة للتخصصات الأربعة
-                        // الصف الأول: Designer & Developer
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            RoleOptionCard(
-                                title = "Designer",
-                                subtitle = "UI/UX & Design",
-                                icon = Icons.Outlined.Palette,
-                                isSelected = selectedRole == "Designer",
-                                onClick = { selectedRole = "Designer" },
-                                modifier = Modifier.weight(1f)
-                            )
-                            RoleOptionCard(
-                                title = "Developer",
-                                subtitle = "Mobile & Backend",
-                                icon = Icons.Outlined.Code,
-                                isSelected = selectedRole == "Developer",
-                                onClick = { selectedRole = "Developer" },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        // الصف الثاني: Frontend & QA
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            RoleOptionCard(
-                                title = "Frontend",
-                                subtitle = "Web & Client",
-                                icon = Icons.Outlined.Devices,
-                                isSelected = selectedRole == "Frontend",
-                                onClick = { selectedRole = "Frontend" },
-                                modifier = Modifier.weight(1f)
-                            )
-                            RoleOptionCard(
-                                title = "QA",
-                                subtitle = "Testing & Review",
-                                icon = Icons.Outlined.BugReport,
-                                isSelected = selectedRole == "QA",
-                                onClick = { selectedRole = "QA" },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    if (!errorMessage.isNullOrBlank()) {
+                    val displayError = localValidationError ?: errorMessage
+                    if (!displayError.isNullOrBlank()) {
                         Surface(
                             color = Color(0xFFFDECEC),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = errorMessage,
+                                text = displayError,
                                 fontFamily = TajawalFontFamily,
                                 color = Color(0xFFC62828),
                                 fontSize = 12.5.sp,
@@ -418,13 +353,22 @@ fun RegisterScreen(
                         }
                     }
 
-                    // زرار إنشاء الحساب: -> Register
+                    // زرار إنشاء الحساب: يفتح Pop-up اختيار الشعبة والتخصص
                     Button(
                         onClick = {
                             if (!isLoading) {
-                                onRegisterClick(fullName, studentId, email, password)
-                                onRegisterWithRoleClick(fullName, studentId, email, password, selectedRole)
-                                onRegisterSuccess()
+                                when {
+                                    fullName.isBlank() || studentId.isBlank() || email.isBlank() -> {
+                                        localValidationError = "من فضلك املأ الاسم والرقم الجامعي والإيميل الأول"
+                                    }
+                                    password.length < 6 -> {
+                                        localValidationError = "كلمة المرور لازم تكون 6 أحرف على الأقل"
+                                    }
+                                    else -> {
+                                        localValidationError = null
+                                        showRolePopup = true
+                                    }
+                                }
                             }
                         },
                         enabled = !isLoading,
@@ -486,6 +430,196 @@ fun RegisterScreen(
                 )
             }
         }
+
+        if (showRolePopup) {
+            RoleAndMajorBottomSheet(
+                selectedMajor = selectedMajor,
+                selectedRole = selectedRole,
+                onMajorSelected = { selectedMajor = it },
+                onRoleSelected = { selectedRole = it },
+                onDismiss = { showRolePopup = false },
+                onConfirm = {
+                    showRolePopup = false
+                    onRegisterClick(fullName, studentId, email, password)
+                    onRegisterWithRoleClick(fullName, studentId, email, password, selectedRole)
+                    onRegisterCompleteClick(fullName, studentId, email, password, selectedRole, selectedMajor)
+                    onRegisterSuccess()
+                }
+            )
+        }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun RoleAndMajorBottomSheet(
+    selectedMajor: String,
+    selectedRole: String,
+    onMajorSelected: (String) -> Unit,
+    onRoleSelected: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val majors = listOf("CS", "IS", "IT", "AI", "SE", "DS")
+    val roles: List<Pair<String, ImageVector>> = listOf(
+        "Android Developer" to Icons.Outlined.PhoneAndroid,
+        "Flutter Developer" to Icons.Outlined.Devices,
+        "Backend Developer" to Icons.Outlined.Code,
+        "Frontend Developer" to Icons.Outlined.Devices,
+        "UI/UX Designer" to Icons.Outlined.Palette,
+        "AI / ML Engineer" to Icons.Outlined.Psychology,
+        "Cyber Security" to Icons.Outlined.Security,
+        "QA & Tester" to Icons.Outlined.BugReport,
+        "DevOps / Cloud" to Icons.Outlined.Cloud
+    )
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = "Almost Done!",
+                    fontFamily = TajawalFontFamily,
+                    color = DeepNavy,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                Text(
+                    text = "اختار الشعبة وتخصصك في التيم عشان نكمل حسابك",
+                    fontFamily = TajawalFontFamily,
+                    color = DeepTeal,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Department / الشعبة",
+                    fontFamily = TajawalFontFamily,
+                    color = DeepNavy,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    majors.forEach { major ->
+                        val active = selectedMajor == major
+                        Surface(
+                            modifier = Modifier
+                                .height(36.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable { onMajorSelected(major) },
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (active) Color(0xFF136F78) else SoftBeige.copy(alpha = 0.28f),
+                            border = BorderStroke(
+                                1.dp,
+                                if (active) Color(0xFF136F78) else SoftGray.copy(alpha = 0.55f)
+                            )
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            ) {
+                                Text(
+                                    text = major,
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = if (active) Color.White else DeepNavy,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Team Role / التخصص التقني",
+                    fontFamily = TajawalFontFamily,
+                    color = DeepNavy,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    roles.forEach { (roleTitle, roleIcon) ->
+                        val active = selectedRole == roleTitle
+                        Surface(
+                            modifier = Modifier
+                                .height(38.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { onRoleSelected(roleTitle) },
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (active) Color(0xFF136F78) else Color(0xFFF6FAFA),
+                            border = BorderStroke(
+                                1.dp,
+                                if (active) Color(0xFF136F78) else Color(0xFFA3D1CE)
+                            )
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = roleIcon,
+                                    contentDescription = null,
+                                    tint = if (active) Color.White else Color(0xFF136F78),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = roleTitle,
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.5.sp,
+                                    color = if (active) Color.White else DeepNavy,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Button(
+                onClick = onConfirm,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(26.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = DeepNavy)
+            ) {
+                Text(
+                    text = "Confirm & Create Account",
+                    fontFamily = TajawalFontFamily,
+                    color = Color.White,
+                    fontSize = 15.5.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
         }
     }
 }
@@ -493,6 +627,53 @@ fun RegisterScreen(
 /**
  * 🎴 كارت اختيار التخصص الأنيق (Designer, Developer, Frontend, QA)
  */
+@Composable
+private fun CompactRolePill(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .height(40.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        color = if (isSelected) Color(0xFF136F78) else SoftBeige.copy(alpha = 0.28f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (isSelected) Color(0xFF136F78) else SoftGray.copy(alpha = 0.55f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (isSelected) Color.White else DeepNavy.copy(alpha = 0.75f),
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = title,
+                fontFamily = TajawalFontFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                color = if (isSelected) Color.White else DeepNavy,
+                maxLines = 1,
+                softWrap = false
+            )
+        }
+    }
+}
+
 @Composable
 private fun RoleOptionCard(
     title: String,

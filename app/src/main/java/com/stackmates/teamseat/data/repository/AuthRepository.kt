@@ -21,10 +21,16 @@ interface AuthRepository {
         studentId: String,
         email: String,
         password: String,
-        roleTag: String = "Android Developer"
+        roleTag: String = "Android Developer",
+        major: String = "CS"
     ): Result<User>
     suspend fun signInWithGoogle(idToken: String): Result<User>
-    suspend fun completeProfile(name: String, studentId: String, roleTag: String): Result<User>
+    suspend fun completeProfile(
+        name: String,
+        studentId: String,
+        roleTag: String,
+        major: String = "CS"
+    ): Result<User>
     suspend fun updateProfile(roleTag: String, githubUrl: String, linkedinUrl: String): Result<User>
     fun logout()
     fun switchDemoPersona()
@@ -49,7 +55,8 @@ class FakeAuthRepository : AuthRepository {
         studentId: String,
         email: String,
         password: String,
-        roleTag: String
+        roleTag: String,
+        major: String
     ): Result<User> {
         // TODO (Backend): استبدل بـ FirebaseAuth + إنشاء Document في users collection
         val newUser = User(
@@ -57,7 +64,8 @@ class FakeAuthRepository : AuthRepository {
             name = name,
             studentId = studentId,
             email = email,
-            roleTag = roleTag
+            roleTag = roleTag,
+            major = major
         )
         _currentUser.value = newUser
         return Result.success(newUser)
@@ -72,12 +80,14 @@ class FakeAuthRepository : AuthRepository {
     override suspend fun completeProfile(
         name: String,
         studentId: String,
-        roleTag: String
+        roleTag: String,
+        major: String
     ): Result<User> {
         val updated = (_currentUser.value ?: MockDataProvider.saraStudent).copy(
             name = name,
             studentId = studentId,
-            roleTag = roleTag
+            roleTag = roleTag,
+            major = major
         )
         _currentUser.value = updated
         return Result.success(updated)

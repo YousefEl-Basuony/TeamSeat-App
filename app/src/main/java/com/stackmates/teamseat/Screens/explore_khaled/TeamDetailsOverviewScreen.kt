@@ -3,7 +3,21 @@ package com.stackmates.teamseat.Screens.explore_khaled
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -11,20 +25,32 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material.icons.rounded.EventSeat
+import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.HourglassTop
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PersonAddAlt1
-import androidx.compose.material.icons.rounded.SupervisorAccount
-import androidx.compose.material.icons.rounded.WorkspacePremium
-import androidx.compose.material3.*
+import androidx.compose.material.icons.rounded.RocketLaunch
+import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDirection
@@ -38,12 +64,23 @@ import com.stackmates.teamseat.core.model.SeatStatus
 import com.stackmates.teamseat.core.model.Team
 import com.stackmates.teamseat.core.theme.TajawalFontFamily
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
-import com.stackmates.teamseat.ui.components.*
+import com.stackmates.teamseat.ui.components.ProjectCategoryIllustration
+import com.stackmates.teamseat.ui.components.StaggeredAnimatedItem
+import com.stackmates.teamseat.ui.components.TeamSeatBodyMuted
+import com.stackmates.teamseat.ui.components.TeamSeatCard
+import com.stackmates.teamseat.ui.components.TeamSeatCardBorderTeal
+import com.stackmates.teamseat.ui.components.TeamSeatCardBorderWarm
+import com.stackmates.teamseat.ui.components.TeamSeatPrimaryTeal
+import com.stackmates.teamseat.ui.components.TeamSeatScreenContainer
+import com.stackmates.teamseat.ui.components.TeamSeatSoftTealPill
+import com.stackmates.teamseat.ui.components.TeamSeatTitleDark
+import com.stackmates.teamseat.ui.components.TeamSeatWarmOrange
+import com.stackmates.teamseat.ui.components.bounceClick
+import com.stackmates.teamseat.ui.components.rememberAnimatedProgress
 
 /**
  * 🔍 المسؤول عن الشاشة: خالد (Khaled) — [KHALED-4]
  * شاشة تفاصيل المشروع قبل فتح خريطة الكراسي (TeamDetailsOverviewScreen)
- * تستخدم TeamSeatScreenContainer (بالموجتين العضويتين) و TeamSeatCard.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,24 +94,17 @@ fun TeamDetailsOverviewScreen(
     val bookedCount = seats.count { it.status == SeatStatus.BOOKED }
     val availableCount = seats.count { it.status == SeatStatus.AVAILABLE }
     val pendingCount = seats.count { it.status == SeatStatus.PENDING }
-
-    val targetProgress = if (totalSeats > 0) bookedCount.toFloat() / totalSeats else 0f
-    val animatedProgress by rememberAnimatedProgress(targetProgress = targetProgress, durationMillis = 800)
-    val animatedPercent = (animatedProgress * 100).toInt()
-
-    val isArabicFirst = team.projectName.firstOrNull()?.let {
-        Character.getDirectionality(it) == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC ||
-            Character.getDirectionality(it) == Character.DIRECTIONALITY_RIGHT_TO_LEFT
-    } == true
+    val rawProgress = if (totalSeats > 0) bookedCount.toFloat() / totalSeats else 0f
+    val animatedProgress by rememberAnimatedProgress(targetProgress = rawProgress)
 
     TeamSeatScreenContainer(
         topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+            CenterAlignedTopAppBar(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
                 navigationIcon = {
                     Box(
                         modifier = Modifier
-                            .padding(start = 12.dp, end = 6.dp)
+                            .padding(start = 12.dp)
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(Color.White)
@@ -91,13 +121,13 @@ fun TeamDetailsOverviewScreen(
                     }
                 },
                 title = {
-                    Column {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = "تفاصيل المشروع",
                             fontFamily = TajawalFontFamily,
                             fontWeight = FontWeight.Bold,
                             color = TeamSeatTitleDark,
-                            fontSize = 18.sp,
+                            fontSize = 19.sp,
                             maxLines = 1,
                             softWrap = false
                         )
@@ -115,46 +145,50 @@ fun TeamDetailsOverviewScreen(
             )
         },
         bottomBar = {
-            Surface(
-                color = Color.White,
-                shadowElevation = 0.dp,
-                border = BorderStroke(1.dp, TeamSeatDividerColor)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .height(52.dp)
+                        .shadow(
+                            elevation = 8.dp,
+                            shape = RoundedCornerShape(50),
+                            ambientColor = TeamSeatPrimaryTeal,
+                            spotColor = TeamSeatPrimaryTeal
+                        )
+                        .clip(RoundedCornerShape(50))
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(TeamSeatPrimaryTeal, Color(0xFF0D4E55))
+                            )
+                        )
+                        .bounceClick(onClick = onOpenSeatMapClick),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(if (team.isLocked) Color(0xFF94A3B8) else TeamSeatPrimaryTeal)
-                            .bounceClick(enabled = !team.isLocked, onClick = onOpenSeatMapClick),
-                        contentAlignment = Alignment.Center
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (team.isLocked) Icons.Rounded.Lock else Icons.Rounded.EventSeat,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(19.dp)
-                            )
-                            Text(
-                                text = if (team.isLocked) "التيم مقفول ومكتمل" else "افتح خريطة المقاعد واحجز مكانك ←",
-                                fontFamily = TajawalFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                fontSize = 14.sp,
-                                maxLines = 1,
-                                softWrap = false
-                            )
-                        }
+                        Icon(
+                            imageVector = if (team.isLocked) Icons.Rounded.Lock else Icons.Rounded.EventSeat,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = if (team.isLocked) "التيم مقفول ومكتمل" else "افتح خريطة المقاعد واحجز مكانك",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            maxLines = 1,
+                            softWrap = false
+                        )
                     }
                 }
             }
@@ -166,269 +200,478 @@ fun TeamDetailsOverviewScreen(
                 start = 16.dp,
                 end = 16.dp,
                 top = safePadding.calculateTopPadding() + 8.dp,
-                bottom = safePadding.calculateBottomPadding()
+                bottom = safePadding.calculateBottomPadding() + 14.dp
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 1. بطاقة المشروع الرئيسية + الرسم التوضيحي
+            // 1. بطاقة المشروع الرئيسية
             item {
-                TeamSeatCard(contentPadding = 16.dp) {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            ProjectCategoryIllustration(category = "${team.projectName} ${team.category}")
-
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                StaggeredAnimatedItem(index = 0) {
+                    TeamSeatCard(contentPadding = 16.dp) {
+                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                verticalAlignment = Alignment.Top
                             ) {
-                                Text(
-                                    text = team.projectName,
-                                    style = TextStyle(
-                                        fontFamily = TajawalFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        color = TeamSeatTitleDark,
-                                        fontSize = 17.sp,
-                                        textDirection = if (isArabicFirst) TextDirection.Rtl else TextDirection.Ltr
-                                    ),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Person,
-                                        contentDescription = null,
-                                        tint = TeamSeatPrimaryTeal,
-                                        modifier = Modifier.size(15.dp)
+                                // رسمة التخصص + شارة الصاروخ
+                                Box(modifier = Modifier.size(86.dp)) {
+                                    ProjectCategoryIllustration(
+                                        category = team.category,
+                                        modifier = Modifier.size(82.dp)
                                     )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .align(Alignment.BottomEnd)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF0F4C54))
+                                            .border(2.dp, Color.White, CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.RocketLaunch,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                    }
+                                }
+
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Surface(
+                                        color = TeamSeatSoftTealPill,
+                                        shape = RoundedCornerShape(50)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Groups,
+                                                contentDescription = null,
+                                                tint = TeamSeatPrimaryTeal,
+                                                modifier = Modifier.size(15.dp)
+                                            )
+                                            Text(
+                                                text = team.projectName,
+                                                style = TextStyle(
+                                                    fontFamily = TajawalFontFamily,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = TeamSeatTitleDark,
+                                                    fontSize = 12.5.sp,
+                                                    textDirection = TextDirection.Ltr
+                                                ),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Person,
+                                            contentDescription = null,
+                                            tint = TeamSeatTitleDark,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Text(
+                                            text = "قائد التيم: ${team.leaderName}",
+                                            fontFamily = TajawalFontFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TeamSeatTitleDark,
+                                            fontSize = 13.5.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+
                                     Text(
-                                        text = "قائد التيم: ${team.leaderName.substringBefore(" (")}",
+                                        text = team.description,
                                         fontFamily = TajawalFontFamily,
-                                        fontWeight = FontWeight.SemiBold,
+                                        fontWeight = FontWeight.Normal,
                                         color = TeamSeatBodyMuted,
-                                        fontSize = 12.5.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                                        fontSize = 12.sp,
+                                        lineHeight = 18.sp
                                     )
                                 }
                             }
+
+                            // شريط اكتمال المقاعد
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "اكتمال المقاعد (${(rawProgress * 100).toInt()}%)",
+                                        fontFamily = TajawalFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TeamSeatTitleDark,
+                                        fontSize = 13.sp
+                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Groups,
+                                            contentDescription = null,
+                                            tint = TeamSeatPrimaryTeal,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Text(
+                                            text = "\u200E$bookedCount / $totalSeats\u200E مقاعد",
+                                            fontFamily = TajawalFontFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TeamSeatPrimaryTeal,
+                                            fontSize = 12.5.sp,
+                                            maxLines = 1,
+                                            softWrap = false
+                                        )
+                                    }
+                                }
+                                LinearProgressIndicator(
+                                    progress = { animatedProgress },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(8.dp)
+                                        .clip(RoundedCornerShape(50)),
+                                    color = TeamSeatPrimaryTeal,
+                                    trackColor = Color(0xFFE0EEEE),
+                                    strokeCap = StrokeCap.Round
+                                )
+                            }
                         }
-
-                        Text(
-                            text = team.description,
-                            fontFamily = TajawalFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            color = TeamSeatBodyMuted,
-                            fontSize = 13.sp,
-                            lineHeight = 20.sp
-                        )
-
-                        HorizontalDivider(color = TeamSeatDividerColor, thickness = 0.8.dp)
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "اكتمال المقاعد ($animatedPercent%)",
-                                fontFamily = TajawalFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                color = TeamSeatTitleDark,
-                                fontSize = 12.5.sp
-                            )
-                            Text(
-                                text = "\u200E$bookedCount / $totalSeats\u200E مقاعد",
-                                fontFamily = TajawalFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                color = TeamSeatPrimaryTeal,
-                                fontSize = 12.5.sp
-                            )
-                        }
-
-                        LinearProgressIndicator(
-                            progress = { animatedProgress },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(8.dp)
-                                .clip(RoundedCornerShape(4.dp)),
-                            color = TeamSeatPrimaryTeal,
-                            trackColor = Color.White
-                        )
                     }
                 }
             }
 
-            // 2. بطاقة الإشراف الأكاديمي وملخص الحالات
+            // 2. شريط الإشراف وحالة المقاعد المتاحة
             item {
-                TeamSeatCard(isWarmHighlight = true, contentPadding = 14.dp) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                StaggeredAnimatedItem(index = 1) {
+                    TeamSeatCard(isWarmHighlight = true, contentPadding = 12.dp) {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(IntrinsicSize.Min),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = Icons.Rounded.SupervisorAccount,
+                                imageVector = Icons.Rounded.Groups,
                                 contentDescription = null,
                                 tint = TeamSeatWarmOrange,
                                 modifier = Modifier.size(20.dp)
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "${team.supervisorDoctor} • ${team.teachingAssistant}",
                                 fontFamily = TajawalFontFamily,
-                                fontWeight = FontWeight.SemiBold,
+                                fontWeight = FontWeight.Medium,
                                 color = TeamSeatTitleDark,
-                                fontSize = 12.5.sp,
+                                fontSize = 12.sp,
                                 maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f)
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            VerticalDivider(
+                                modifier = Modifier.fillMaxHeight(),
+                                thickness = 1.dp,
+                                color = TeamSeatCardBorderWarm
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Surface(
+                                color = Color(0xFFFFECD9),
+                                shape = RoundedCornerShape(50),
+                                border = BorderStroke(1.dp, TeamSeatCardBorderWarm)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Schedule,
+                                        contentDescription = null,
+                                        tint = TeamSeatWarmOrange,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Text(
+                                        text = "متاح $availableCount • معلق $pendingCount",
+                                        fontFamily = TajawalFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TeamSeatWarmOrange,
+                                        fontSize = 11.sp,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
+                                }
+                            }
                         }
+                    }
+                }
+            }
 
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.White)
-                                .border(1.dp, TeamSeatCardBorderWarm, RoundedCornerShape(8.dp))
-                                .padding(horizontal = 8.dp, vertical = 3.dp)
+            // 3. عنوان توزيع مقاعد الفريق
+            item {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(top = 2.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Groups,
+                        contentDescription = null,
+                        tint = TeamSeatPrimaryTeal,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "توزيع مقاعد الفريق",
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = TeamSeatTitleDark,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+
+            // 4. كروت المقاعد
+            itemsIndexed(seats, key = { _, seat -> seat.id }) { index, seat ->
+                StaggeredAnimatedItem(index = index + 2) {
+                    TeamOverviewSeatCard(
+                        seat = seat,
+                        onClick = onOpenSeatMapClick
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TeamOverviewSeatCard(
+    seat: Seat,
+    onClick: () -> Unit
+) {
+    val isBooked = seat.status == SeatStatus.BOOKED
+    val isPending = seat.status == SeatStatus.PENDING
+    val isAvailable = seat.status == SeatStatus.AVAILABLE
+
+    TeamSeatCard(
+        isWarmHighlight = isPending,
+        contentPadding = 12.dp,
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // دائرة رقم المقعد S1, S2...
+            Box(modifier = Modifier.size(44.dp)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape)
+                        .background(
+                            when {
+                                isBooked -> TeamSeatPrimaryTeal
+                                isPending -> Color(0xFFFFF0E0)
+                                else -> TeamSeatSoftTealPill
+                            }
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = when {
+                                isBooked -> TeamSeatPrimaryTeal
+                                isPending -> TeamSeatCardBorderWarm
+                                else -> TeamSeatCardBorderTeal
+                            },
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = seat.seatLabel,
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = when {
+                            isBooked -> Color.White
+                            isPending -> TeamSeatWarmOrange
+                            else -> TeamSeatPrimaryTeal
+                        },
+                        fontSize = 13.5.sp,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
+                if (isBooked) {
+                    Box(
+                        modifier = Modifier
+                            .size(11.dp)
+                            .align(Alignment.BottomStart)
+                            .clip(CircleShape)
+                            .background(Color(0xFF22C55E))
+                            .border(1.5.dp, Color.White, CircleShape)
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = when {
+                        isAvailable -> "مكان فاضي مستنيك"
+                        !seat.applicantName.isNullOrBlank() -> seat.applicantName
+                        else -> "عضو معتمد"
+                    },
+                    fontFamily = TajawalFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = TeamSeatTitleDark,
+                    fontSize = 14.5.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = seat.roleRequired,
+                    style = TextStyle(
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        color = TeamSeatBodyMuted,
+                        fontSize = 12.sp,
+                        textDirection = TextDirection.Ltr
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            // شارة الحالة على اليسار
+            when {
+                seat.isLeader -> {
+                    Surface(
+                        color = Color(0xFFFFF0E0),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, TeamSeatCardBorderWarm)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
+                            Icon(
+                                imageVector = Icons.Rounded.EmojiEvents,
+                                contentDescription = null,
+                                tint = TeamSeatWarmOrange,
+                                modifier = Modifier.size(14.dp)
+                            )
                             Text(
-                                text = "متاح $availableCount • معلق $pendingCount",
+                                text = "قائد التيم",
                                 fontFamily = TajawalFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = TeamSeatWarmOrange,
-                                fontSize = 11.sp,
+                                fontSize = 11.5.sp,
                                 maxLines = 1,
                                 softWrap = false
                             )
                         }
                     }
                 }
-            }
-
-            // 3. قائمة المقاعد والتخصصات في التيم
-            item {
-                Text(
-                    text = "توزيع مقاعد الفريق",
-                    fontFamily = TajawalFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = TeamSeatTitleDark,
-                    fontSize = 15.sp,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-
-            itemsIndexed(seats, key = { _, seat -> seat.id }) { index, seat ->
-                val isWarm = seat.status == SeatStatus.PENDING || index == 0
-                val badgeText = when {
-                    index == 0 -> "قائد التيم"
-                    seat.status == SeatStatus.BOOKED -> "محجوز"
-                    seat.status == SeatStatus.PENDING -> "قيد المراجعة"
-                    else -> "متاح للحجز"
-                }
-                val accent = if (isWarm) TeamSeatWarmOrange else TeamSeatPrimaryTeal
-                val border = if (isWarm) TeamSeatCardBorderWarm else TeamSeatCardBorderTeal
-
-                StaggeredAnimatedItem(index = index) {
-                    TeamSeatCard(isWarmHighlight = isWarm, contentPadding = 12.dp) {
+                isBooked -> {
+                    Surface(
+                        color = Color.White,
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, TeamSeatCardBorderTeal)
+                    ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(if (seat.status == SeatStatus.AVAILABLE) Color.White else accent)
-                                    .then(
-                                        if (seat.status == SeatStatus.AVAILABLE) {
-                                            Modifier.border(1.dp, border, RoundedCornerShape(10.dp))
-                                        } else Modifier
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "S${seat.seatNumber}",
-                                    fontFamily = TajawalFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (seat.status == SeatStatus.AVAILABLE) TeamSeatTitleDark else Color.White,
-                                    fontSize = 12.5.sp,
-                                    maxLines = 1,
-                                    softWrap = false
-                                )
-                            }
-
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(2.dp)
-                            ) {
-                                Text(
-                                    text = seat.applicantName ?: "مكان فاضي مستنيك",
-                                    fontFamily = TajawalFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (seat.applicantName != null) TeamSeatTitleDark else TeamSeatBodyMuted,
-                                    fontSize = 14.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = seat.roleRequired,
-                                    style = TextStyle(
-                                        fontFamily = TajawalFontFamily,
-                                        fontWeight = FontWeight.Medium,
-                                        color = TeamSeatBodyMuted,
-                                        fontSize = 12.sp,
-                                        textDirection = TextDirection.Ltr
-                                    ),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(Color.White)
-                                    .border(1.dp, border, RoundedCornerShape(8.dp))
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = when {
-                                            index == 0 -> Icons.Rounded.WorkspacePremium
-                                            seat.status == SeatStatus.BOOKED -> Icons.Rounded.CheckCircle
-                                            seat.status == SeatStatus.PENDING -> Icons.Rounded.HourglassTop
-                                            else -> Icons.Rounded.PersonAddAlt1
-                                        },
-                                        contentDescription = null,
-                                        tint = accent,
-                                        modifier = Modifier.size(13.dp)
-                                    )
-                                    Text(
-                                        text = badgeText,
-                                        fontFamily = TajawalFontFamily,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = accent,
-                                        fontSize = 11.5.sp,
-                                        maxLines = 1,
-                                        softWrap = false
-                                    )
-                                }
-                            }
+                            Icon(
+                                imageVector = Icons.Rounded.CheckCircle,
+                                contentDescription = null,
+                                tint = TeamSeatPrimaryTeal,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = "محجوز",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = TeamSeatPrimaryTeal,
+                                fontSize = 11.5.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
+                }
+                isPending -> {
+                    Surface(
+                        color = Color(0xFFFFF0E0),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, TeamSeatCardBorderWarm)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.HourglassTop,
+                                contentDescription = null,
+                                tint = TeamSeatWarmOrange,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = "قيد المراجعة",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = TeamSeatWarmOrange,
+                                fontSize = 11.5.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
+                }
+                else -> {
+                    Surface(
+                        color = Color.White,
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, TeamSeatCardBorderTeal)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.PersonAddAlt1,
+                                contentDescription = null,
+                                tint = TeamSeatPrimaryTeal,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = "متاح للحجز",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = TeamSeatPrimaryTeal,
+                                fontSize = 11.5.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
                         }
                     }
                 }
@@ -439,7 +682,7 @@ fun TeamDetailsOverviewScreen(
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-private fun TeamDetailsOverviewScreenPreview() {
+fun TeamDetailsOverviewScreenPreview() {
     TeamSeatTheme {
         TeamDetailsOverviewScreen()
     }
