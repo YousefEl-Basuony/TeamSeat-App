@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.stackmates.teamseat.data.local.LocalAppSettings
 
 // =============================================================================
 // 🎨 النظام البصري الموحد المستخلص من HomeScreen (Visual System Tokens)
@@ -63,11 +64,17 @@ fun TeamSeatScreenContainer(
     snackbarHostState: SnackbarHostState? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+    val appSettings = LocalAppSettings.current
+    val isDark = appSettings.isDarkMode
+    val layoutDirection = if (appSettings.languageCode == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
+    val bgColor = if (isDark) Color(0xFF0D1719) else TeamSeatBgOffWhite
+    val waveColor = if (isDark) Color(0xFF15282C) else TeamSeatWaveMint
+
+    CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(TeamSeatBgOffWhite)
+                .background(bgColor)
         ) {
             // الموجتان العضويتان في الزاوية العلوية اليسرى والسفلية اليمنى (مع cache للمسارات لتحسين الأداء)
             Box(
@@ -100,8 +107,8 @@ fun TeamSeatScreenContainer(
                         }
 
                         onDrawBehind {
-                            drawPath(path = topLeftWave, color = TeamSeatWaveMint)
-                            drawPath(path = bottomRightWave, color = TeamSeatWaveMint)
+                            drawPath(path = topLeftWave, color = waveColor)
+                            drawPath(path = bottomRightWave, color = waveColor)
                         }
                     }
             )
@@ -139,15 +146,27 @@ fun TeamSeatCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val topColor = if (isWarmHighlight) TeamSeatCardTopWarm else TeamSeatCardTopTeal
-    val borderColor = if (isWarmHighlight) TeamSeatCardBorderWarm else TeamSeatCardBorderTeal
+    val isDark = LocalAppSettings.current.isDarkMode
+    val topColor = when {
+        isDark && isWarmHighlight -> Color(0xFF2B2017)
+        isDark -> Color(0xFF162528)
+        isWarmHighlight -> TeamSeatCardTopWarm
+        else -> TeamSeatCardTopTeal
+    }
+    val bottomColor = if (isDark) Color(0xFF111D20) else Color.White
+    val borderColor = when {
+        isDark && isWarmHighlight -> Color(0xFF8C5327)
+        isDark -> Color(0xFF28474B)
+        isWarmHighlight -> TeamSeatCardBorderWarm
+        else -> TeamSeatCardBorderTeal
+    }
 
     val baseModifier = modifier
         .fillMaxWidth()
         .clip(RoundedCornerShape(16.dp))
         .background(
             brush = Brush.verticalGradient(
-                colors = listOf(topColor, Color.White)
+                colors = listOf(topColor, bottomColor)
             )
         )
         .border(1.5.dp, borderColor, RoundedCornerShape(16.dp))

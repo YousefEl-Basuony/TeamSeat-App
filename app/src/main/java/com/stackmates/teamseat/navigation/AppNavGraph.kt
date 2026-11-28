@@ -26,6 +26,8 @@ import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.NotificationType
 import com.stackmates.teamseat.core.model.SeatStatus
 import com.stackmates.teamseat.core.utils.PdfExporter
+import com.stackmates.teamseat.data.local.AppSettings
+import com.stackmates.teamseat.data.local.LocalAppSettings
 import com.stackmates.teamseat.data.local.SavedAccountManager
 import com.stackmates.teamseat.data.repository.AuthRepository
 import com.stackmates.teamseat.data.repository.FirebaseAuthRepository
@@ -46,7 +48,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppNavGraph(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = ScreenRoutes.SPLASH
+    startDestination: String = ScreenRoutes.SPLASH,
+    appSettings: AppSettings = LocalAppSettings.current,
+    onUpdateAppSettings: (AppSettings) -> Unit = {}
 ) {
     val authRepository: AuthRepository = remember { FirebaseAuthRepository() }
     val teamRepository: TeamSeatRepository = remember { FirebaseTeamSeatRepository() }
@@ -367,8 +371,10 @@ fun AppNavGraph(
                 teams = teams,
                 seats = seats,
                 myTeamSeats = myTeamSeats,
-                unreadNotificationsCount = userNotifications.count { !it.isRead },
+                unreadNotificationsCount = if (appSettings.notificationsEnabled) userNotifications.count { !it.isRead } else 0,
                 savedAccounts = savedAccounts,
+                appSettings = appSettings,
+                onUpdateSettings = onUpdateAppSettings,
                 onTeamClick = { teamId ->
                     selectedTeamId = teamId
                     navController.navigate(ScreenRoutes.TEAM_DETAILS_OVERVIEW)

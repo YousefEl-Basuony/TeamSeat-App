@@ -28,8 +28,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Logout
@@ -47,12 +49,19 @@ import androidx.compose.material.icons.rounded.PriorityHigh
 import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.Storage
+import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material.icons.rounded.VerifiedUser
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -93,6 +102,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.stackmates.teamseat.core.data.MockDataProvider
 import com.stackmates.teamseat.core.model.User
+import com.stackmates.teamseat.data.local.AppSettings
 import com.stackmates.teamseat.data.local.SavedAccount
 import com.stackmates.teamseat.core.theme.TajawalFontFamily
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
@@ -119,6 +129,8 @@ import kotlinx.coroutines.launch
 fun MyProfileScreen(
     user: User = MockDataProvider.saraStudent,
     savedAccounts: List<SavedAccount> = emptyList(),
+    appSettings: AppSettings = AppSettings(),
+    onUpdateSettings: (AppSettings) -> Unit = {},
     onSaveChangesClick: (updatedRole: String, updatedGithub: String, updatedLinkedin: String) -> Unit = { _, _, _ -> },
     onSwitchToAccountClick: (SavedAccount) -> Unit = {},
     onRemoveSavedAccountClick: (SavedAccount) -> Unit = {},
@@ -128,6 +140,7 @@ fun MyProfileScreen(
 ) {
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
+    val isEn = appSettings.languageCode == "en"
     var selectedRole by remember(user.uid, user.roleTag) { mutableStateOf(user.roleTag) }
     var githubUrl by remember(user.uid, user.githubUrl) { mutableStateOf(user.githubUrl) }
     var linkedinUrl by remember(user.uid, user.linkedinUrl) { mutableStateOf(user.linkedinUrl) }
@@ -136,6 +149,7 @@ fun MyProfileScreen(
     var editingLinkedin by remember { mutableStateOf(false) }
     var showLogoutSheet by remember { mutableStateOf(false) }
     var showAccountSwitcherSheet by remember { mutableStateOf(false) }
+    var showSettingsSheet by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -180,7 +194,7 @@ fun MyProfileScreen(
                 title = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "حسابي ومهاراتي",
+                            text = if (isEn) "My Profile & Skills" else "حسابي ومهاراتي",
                             fontFamily = TajawalFontFamily,
                             fontWeight = FontWeight.Bold,
                             color = TeamSeatTitleDark,
@@ -189,7 +203,7 @@ fun MyProfileScreen(
                             softWrap = false
                         )
                         Text(
-                            text = "ظبّط تخصصك وروابطك عشان التيمات تلاقيك بسهولة",
+                            text = if (isEn) "Set your role & links so teams find you easily" else "ظبّط تخصصك وروابطك عشان التيمات تلاقيك بسهولة",
                             fontFamily = TajawalFontFamily,
                             fontWeight = FontWeight.Normal,
                             color = TeamSeatBodyMuted,
@@ -207,7 +221,23 @@ fun MyProfileScreen(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color.White)
+                                .border(1.dp, TeamSeatCardBorderTeal, CircleShape)
+                                .bounceClick { showSettingsSheet = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Settings,
+                                contentDescription = if (isEn) "Settings" else "الإعدادات",
+                                tint = TeamSeatTitleDark,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
                                 .clip(CircleShape)
                                 .background(Color.White)
                                 .border(1.dp, TeamSeatCardBorderTeal, CircleShape)
@@ -216,14 +246,14 @@ fun MyProfileScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.SwapHoriz,
-                                contentDescription = "تبديل الحساب",
+                                contentDescription = if (isEn) "Switch Account" else "تبديل الحساب",
                                 tint = TeamSeatPrimaryTeal,
-                                modifier = Modifier.size(19.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
                                 .background(Color.White)
                                 .border(1.dp, TeamSeatWarmOrange.copy(alpha = 0.45f), CircleShape)
@@ -232,7 +262,7 @@ fun MyProfileScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Rounded.Logout,
-                                contentDescription = "تسجيل خروج",
+                                contentDescription = if (isEn) "Logout" else "تسجيل خروج",
                                 tint = TeamSeatWarmOrange,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -1033,7 +1063,7 @@ fun MyProfileScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = TeamSeatPrimaryTeal)
                 ) {
                     Text(
-                        text = "+ تسجيل الدخول بحساب آخر (Google / Email)",
+                        text = if (isEn) "+ Sign in with another account (Google / Email)" else "+ تسجيل الدخول بحساب آخر (Google / Email)",
                         fontFamily = TajawalFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
@@ -1041,27 +1071,233 @@ fun MyProfileScreen(
                         softWrap = false
                     )
                 }
-                OutlinedButton(
-                    onClick = {
-                        showAccountSwitcherSheet = false
-                        onOpenDemoCenterClick()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(46.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, TeamSeatCardBorderTeal)
-                ) {
-                    Text(
-                        text = "مركز تبديل الحسابات التجريبي (Demo)",
-                        fontFamily = TajawalFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        color = TeamSeatTitleDark,
-                        maxLines = 1,
-                        softWrap = false
-                    )
-                }
                 Spacer(modifier = Modifier.height(6.dp))
+            }
+        }
+    }
+
+    if (showSettingsSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSettingsSheet = false },
+            containerColor = if (appSettings.isDarkMode) Color(0xFF111D20) else TeamSeatBgOffWhite,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .navigationBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = if (isEn) "Settings & About" else "الإعدادات وحول التطبيق",
+                    fontFamily = TajawalFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = if (appSettings.isDarkMode) Color(0xFFE6F1F1) else TeamSeatTitleDark,
+                    fontSize = 18.sp
+                )
+
+                TeamSeatCard(contentPadding = 12.dp) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.NotificationsActive,
+                            contentDescription = null,
+                            tint = TeamSeatPrimaryTeal
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (isEn) "Notifications" else "الإشعارات",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = if (appSettings.isDarkMode) Color(0xFFE6F1F1) else TeamSeatTitleDark,
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = if (isEn) "Alerts for join requests & updates" else "تنبيهات طلبات الانضمام وتحديثات الفريق",
+                                fontFamily = TajawalFontFamily,
+                                color = TeamSeatBodyMuted,
+                                fontSize = 11.5.sp
+                            )
+                        }
+                        Switch(
+                            checked = appSettings.notificationsEnabled,
+                            onCheckedChange = { enabled ->
+                                onUpdateSettings(appSettings.copy(notificationsEnabled = enabled))
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = TeamSeatPrimaryTeal
+                            )
+                        )
+                    }
+                }
+
+                TeamSeatCard(contentPadding = 12.dp) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.DarkMode,
+                            contentDescription = null,
+                            tint = TeamSeatPrimaryTeal
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (isEn) "Dark Mode" else "الوضع الداكن (Dark Mode)",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = if (appSettings.isDarkMode) Color(0xFFE6F1F1) else TeamSeatTitleDark,
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = if (isEn) "Switch between light and dark theme" else "تبديل مظهر التطبيق بين الفاتح والداكن",
+                                fontFamily = TajawalFontFamily,
+                                color = TeamSeatBodyMuted,
+                                fontSize = 11.5.sp
+                            )
+                        }
+                        Switch(
+                            checked = appSettings.isDarkMode,
+                            onCheckedChange = { dark ->
+                                onUpdateSettings(appSettings.copy(isDarkMode = dark))
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = TeamSeatPrimaryTeal
+                            )
+                        )
+                    }
+                }
+
+                TeamSeatCard(contentPadding = 12.dp) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Language,
+                            contentDescription = null,
+                            tint = TeamSeatPrimaryTeal
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (isEn) "App Language" else "لغة التطبيق",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = if (appSettings.isDarkMode) Color(0xFFE6F1F1) else TeamSeatTitleDark,
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = if (isEn) "English (EN) / العربية (AR)" else "العربية (AR) / English (EN)",
+                                fontFamily = TajawalFontFamily,
+                                color = TeamSeatBodyMuted,
+                                fontSize = 11.5.sp
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Surface(
+                                color = if (!isEn) TeamSeatPrimaryTeal else TeamSeatSoftTealPill,
+                                shape = RoundedCornerShape(50),
+                                modifier = Modifier.bounceClick {
+                                    onUpdateSettings(appSettings.copy(languageCode = "ar"))
+                                }
+                            ) {
+                                Text(
+                                    text = "عربي",
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (!isEn) Color.White else TeamSeatPrimaryTeal,
+                                    fontSize = 11.5.sp,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                )
+                            }
+                            Surface(
+                                color = if (isEn) TeamSeatPrimaryTeal else TeamSeatSoftTealPill,
+                                shape = RoundedCornerShape(50),
+                                modifier = Modifier.bounceClick {
+                                    onUpdateSettings(appSettings.copy(languageCode = "en"))
+                                }
+                            ) {
+                                Text(
+                                    text = "EN",
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isEn) Color.White else TeamSeatPrimaryTeal,
+                                    fontSize = 11.5.sp,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                TeamSeatCard(isWarmHighlight = true, contentPadding = 14.dp) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Info,
+                                contentDescription = null,
+                                tint = TeamSeatWarmOrange
+                            )
+                            Text(
+                                text = if (isEn) "About TeamSeat & StackMates Team" else "عن تطبيق TeamSeat وفريق العمل",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = if (appSettings.isDarkMode) Color(0xFFE6F1F1) else TeamSeatTitleDark,
+                                fontSize = 15.sp
+                            )
+                        }
+                        Text(
+                            text = if (isEn) {
+                                "TeamSeat is a smart seat-booking platform for graduation project teams.\nBuilt with passion by StackMates Team: Youssef El-Basuony (Team Leader), Noha, Khaled, Hossam, Esraa & Alaa."
+                            } else {
+                                "تطبيق TeamSeat لإدارة وتشكيل فرق مشاريع التخرج بنظام حجز المقاعد الذكي.\nتم التطوير بواسطة فريق StackMates: يوسف البسيوني (Team Leader)، نُهى، خالد، حسام، إسراء، وآلاء."
+                            },
+                            fontFamily = TajawalFontFamily,
+                            color = if (appSettings.isDarkMode) Color(0xFFB8CECE) else TeamSeatBodyMuted,
+                            fontSize = 12.5.sp,
+                            lineHeight = 19.sp
+                        )
+                        Button(
+                            onClick = {
+                                runCatching {
+                                    context.startActivity(
+                                        Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("https://www.linkedin.com/in/yousef-el-basuony/")
+                                        )
+                                    )
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = TeamSeatPrimaryTeal)
+                        ) {
+                            Text(
+                                text = if (isEn) "Contact Support on LinkedIn" else "للتواصل مع الدعم (LinkedIn)",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }

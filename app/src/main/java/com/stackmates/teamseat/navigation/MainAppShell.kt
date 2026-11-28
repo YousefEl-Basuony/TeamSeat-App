@@ -72,6 +72,8 @@ import com.stackmates.teamseat.core.model.Seat
 import com.stackmates.teamseat.core.model.SeatStatus
 import com.stackmates.teamseat.core.model.Team
 import com.stackmates.teamseat.core.model.User
+import com.stackmates.teamseat.data.local.AppSettings
+import com.stackmates.teamseat.data.local.LocalAppSettings
 import com.stackmates.teamseat.data.local.SavedAccount
 import com.stackmates.teamseat.core.theme.TajawalFontFamily
 import com.stackmates.teamseat.core.theme.TeamSeatTheme
@@ -89,11 +91,18 @@ private data class MainNavTab(
     val inactiveIcon: ImageVector
 )
 
-private val MainNavTabs = listOf(
+private val MainNavTabsAr = listOf(
     MainNavTab("الرئيسية", Icons.Rounded.Home, Icons.Outlined.Home),
     MainNavTab("استكشاف", Icons.Rounded.Explore, Icons.Outlined.Explore),
     MainNavTab("فريقي", Icons.Rounded.Groups, Icons.Outlined.Groups),
     MainNavTab("حسابي", Icons.Rounded.Person, Icons.Outlined.Person)
+)
+
+private val MainNavTabsEn = listOf(
+    MainNavTab("Home", Icons.Rounded.Home, Icons.Outlined.Home),
+    MainNavTab("Explore", Icons.Rounded.Explore, Icons.Outlined.Explore),
+    MainNavTab("My Team", Icons.Rounded.Groups, Icons.Outlined.Groups),
+    MainNavTab("Profile", Icons.Rounded.Person, Icons.Outlined.Person)
 )
 
 @Composable
@@ -104,6 +113,8 @@ fun MainAppShell(
     myTeamSeats: List<Seat> = seats,
     unreadNotificationsCount: Int = 0,
     savedAccounts: List<SavedAccount> = emptyList(),
+    appSettings: AppSettings = LocalAppSettings.current,
+    onUpdateSettings: (AppSettings) -> Unit = {},
     onTeamClick: (String) -> Unit,
     onCreateTeamClick: () -> Unit,
     onNotificationsClick: () -> Unit,
@@ -122,15 +133,19 @@ fun MainAppShell(
     onLogoutClick: () -> Unit
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    val layoutDirection = if (appSettings.languageCode == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
+    val bgColor = if (appSettings.isDarkMode) Color(0xFF0D1719) else TeamSeatBgOffWhite
 
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+    CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
         Scaffold(
-            containerColor = TeamSeatBgOffWhite,
+            containerColor = bgColor,
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
                 TeamSeatDockedNavBar(
                     selectedIndex = selectedTab,
-                    onSelect = { selectedTab = it }
+                    onSelect = { selectedTab = it },
+                    isDarkMode = appSettings.isDarkMode,
+                    isEnglish = appSettings.languageCode == "en"
                 )
             }
         ) { innerPadding ->
@@ -207,6 +222,8 @@ fun MainAppShell(
                         else -> MyProfileScreen(
                             user = currentUser,
                             savedAccounts = savedAccounts,
+                            appSettings = appSettings,
+                            onUpdateSettings = onUpdateSettings,
                             onSaveChangesClick = { role, github, linkedin ->
                                 onSaveProfileChanges(role, github, linkedin)
                             },
@@ -227,8 +244,11 @@ fun MainAppShell(
 fun TeamSeatDockedNavBar(
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isDarkMode: Boolean = false,
+    isEnglish: Boolean = false
 ) {
+    val tabs = if (isEnglish) MainNavTabsEn else MainNavTabsAr
     val pillShape = RoundedCornerShape(16.dp)
     val snappyTween = tween<Float>(durationMillis = 220, easing = FastOutSlowInEasing)
     val animatedIndex by animateFloatAsState(
@@ -239,11 +259,14 @@ fun TeamSeatDockedNavBar(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = Color.White,
+        color = if (isDarkMode) Color(0xFF111D20) else Color.White,
         shadowElevation = 0.dp
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            HorizontalDivider(thickness = 1.dp, color = NavBarTopDivider)
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = if (isDarkMode) Color(0xFF28474B) else NavBarTopDivider
+            )
             BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -251,7 +274,7 @@ fun TeamSeatDockedNavBar(
                     .height(58.dp)
                     .padding(horizontal = 10.dp, vertical = 7.dp)
             ) {
-                val tabWidth = maxWidth / MainNavTabs.size
+                val tabWidth = maxWidth / tabs.size
 
                 // الكبسولة النعناعية المنزلقة بسرعة واستجابة فورية خلف التبويب النشط
                 Box(
@@ -260,14 +283,14 @@ fun TeamSeatDockedNavBar(
                         .width(tabWidth)
                         .fillMaxHeight()
                         .clip(pillShape)
-                        .background(NavActiveMintPill)
+                        .background(if (isDarkMode) Color(0xFF1A3538) else NavActiveMintPill)
                 )
 
                 Row(
                     modifier = Modifier.fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    MainNavTabs.forEachIndexed { index, tab ->
+                    tabs.forEachIndexed { index, tab ->
                         val isSelected = selectedIndex == index
                         val iconScale by animateFloatAsState(
                             targetValue = if (isSelected) 1.1f else 1.0f,
