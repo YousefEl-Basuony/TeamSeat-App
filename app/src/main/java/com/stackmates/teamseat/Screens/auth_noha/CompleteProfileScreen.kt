@@ -78,6 +78,8 @@ fun CompleteProfileScreen(
     var studentId by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf("Developer") }
 
+
+    
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Box(
             modifier = Modifier
