@@ -31,7 +31,13 @@ interface AuthRepository {
         roleTag: String,
         major: String = "CS"
     ): Result<User>
-    suspend fun updateProfile(roleTag: String, githubUrl: String, linkedinUrl: String): Result<User>
+    suspend fun updateProfile(
+        roleTag: String,
+        githubUrl: String,
+        linkedinUrl: String,
+        name: String? = null
+    ): Result<User>
+    suspend fun updateAvatar(avatarEmoji: String, photoBase64: String = ""): Result<User>
     fun logout()
     fun switchDemoPersona()
 }
@@ -96,12 +102,24 @@ class FakeAuthRepository : AuthRepository {
     override suspend fun updateProfile(
         roleTag: String,
         githubUrl: String,
-        linkedinUrl: String
+        linkedinUrl: String,
+        name: String?
     ): Result<User> {
-        val updated = (_currentUser.value ?: MockDataProvider.saraStudent).copy(
+        val current = _currentUser.value ?: MockDataProvider.saraStudent
+        val updated = current.copy(
+            name = name?.takeIf { it.isNotBlank() } ?: current.name,
             roleTag = roleTag,
             githubUrl = githubUrl,
             linkedinUrl = linkedinUrl
+        )
+        _currentUser.value = updated
+        return Result.success(updated)
+    }
+
+    override suspend fun updateAvatar(avatarEmoji: String, photoBase64: String): Result<User> {
+        val updated = (_currentUser.value ?: MockDataProvider.saraStudent).copy(
+            avatarEmoji = avatarEmoji,
+            photoBase64 = photoBase64
         )
         _currentUser.value = updated
         return Result.success(updated)

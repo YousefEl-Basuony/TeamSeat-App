@@ -12,6 +12,7 @@ data class Team(
     val leaderName: String,
     val totalSeats: Int = 6,        // من 2 إلى 8 مقاعد
     val isLocked: Boolean = false,  // هل تم اعتماد وقفل التيم نهائياً للمعيد؟
+    val isCompleted: Boolean = false, // هل تم تنفيذ المشروع بالكامل؟
     val supervisorDoctor: String = "د. محمد كاظم",
     val teachingAssistant: String = "م. شهد أحمد عبدالسلام",
     val githubRepo: String = "https://github.com/example/team-repo",

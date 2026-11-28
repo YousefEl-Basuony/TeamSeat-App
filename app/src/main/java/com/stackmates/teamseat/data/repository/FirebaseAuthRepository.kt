@@ -192,25 +192,50 @@ class FirebaseAuthRepository(
     override suspend fun updateProfile(
         roleTag: String,
         githubUrl: String,
-        linkedinUrl: String
+        linkedinUrl: String,
+        name: String?
     ): Result<User> {
         return runCatching {
             val uid = auth.currentUser?.uid ?: _currentUser.value?.uid
                 ?: error("المستخدم غير مسجل الدخول")
             val cleanGithub = githubUrl.trim()
             val cleanLinkedin = linkedinUrl.trim()
-            usersCollection.document(uid).update(
-                mapOf(
-                    "roleTag" to roleTag,
-                    "githubUrl" to cleanGithub,
-                    "linkedinUrl" to cleanLinkedin
-                )
-            ).await()
-            val updated = (_currentUser.value ?: loadUserProfile(uid))?.copy(
+            val cleanName = name?.trim()?.takeIf { it.isNotBlank() }
+            val updates = mutableMapOf<String, Any>(
+                "roleTag" to roleTag,
+                "githubUrl" to cleanGithub,
+                "linkedinUrl" to cleanLinkedin
+            )
+            if (cleanName != null) {
+                updates["name"] = cleanName
+            }
+            usersCollection.document(uid).update(updates).await()
+            val base = _currentUser.value ?: loadUserProfile(uid) ?: error("تعذر تحديث الحساب")
+            val updated = base.copy(
+                name = cleanName ?: base.name,
                 roleTag = roleTag,
                 githubUrl = cleanGithub,
                 linkedinUrl = cleanLinkedin
-            ) ?: error("تعذر تحديث الحساب")
+            )
+            _currentUser.value = updated
+            updated
+        }
+    }
+
+    override suspend fun updateAvatar(avatarEmoji: String, photoBase64: String): Result<User> {
+        return runCatching {
+            val uid = auth.currentUser?.uid ?: _currentUser.value?.uid
+                ?: error("المستخدم غير مسجل الدخول")
+            usersCollection.document(uid).update(
+                mapOf(
+                    "avatarEmoji" to avatarEmoji,
+                    "photoBase64" to photoBase64
+                )
+            ).await()
+            val updated = (_currentUser.value ?: loadUserProfile(uid))?.copy(
+                avatarEmoji = avatarEmoji,
+                photoBase64 = photoBase64
+            ) ?: error("تعذر تحديث الصورة")
             _currentUser.value = updated
             updated
         }
@@ -249,7 +274,9 @@ class FirebaseAuthRepository(
         isLeader = getBoolean("isLeader") ?: false,
         avatarEmoji = getString("avatarEmoji") ?: "👩‍💻",
         major = getString("major") ?: "علوم حاسب (Computer Science)",
-        isBanned = getBoolean("isBanned") ?: false
+        isBanned = getBoolean("isBanned") ?: false,
+        isAdmin = getBoolean("isAdmin") ?: false,
+        photoBase64 = getString("photoBase64") ?: ""
     )
 
     private suspend fun saveUserProfile(user: User) {
@@ -265,7 +292,9 @@ class FirebaseAuthRepository(
             "isLeader" to user.isLeader,
             "avatarEmoji" to user.avatarEmoji,
             "major" to user.major,
-            "isBanned" to user.isBanned
+            "isBanned" to user.isBanned,
+            "isAdmin" to user.isAdmin,
+            "photoBase64" to user.photoBase64
         )
         usersCollection.document(user.uid).set(data).await()
     }

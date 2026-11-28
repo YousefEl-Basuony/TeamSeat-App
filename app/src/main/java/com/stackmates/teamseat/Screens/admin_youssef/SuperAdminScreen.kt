@@ -74,6 +74,7 @@ fun SuperAdminScreen(
     users: List<User>,
     teams: List<Team>,
     onToggleBanUser: (uid: String, banned: Boolean) -> Unit,
+    onToggleAdminUser: (uid: String, isAdmin: Boolean) -> Unit = { _, _ -> },
     onDeleteUser: (uid: String) -> Unit,
     onToggleLockTeam: (teamId: String, locked: Boolean) -> Unit,
     onDeleteTeam: (teamId: String) -> Unit,
@@ -243,7 +244,7 @@ fun SuperAdminScreen(
                                 ) {
                                     Text(
                                         text = when {
-                                            isSelfAdmin -> "Admin"
+                                            isSelfAdmin || u.isAdmin -> "Admin"
                                             u.isBanned -> "محظور"
                                             else -> "نشط"
                                         },
@@ -306,6 +307,30 @@ fun SuperAdminScreen(
                                             fontSize = 12.sp
                                         )
                                     }
+                                }
+                                OutlinedButton(
+                                    onClick = { onToggleAdminUser(u.uid, !u.isAdmin) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = BorderStroke(
+                                        1.dp,
+                                        if (u.isAdmin) TeamSeatWarmOrange else TeamSeatPrimaryTeal
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.AdminPanelSettings,
+                                        contentDescription = null,
+                                        tint = if (u.isAdmin) TeamSeatWarmOrange else TeamSeatPrimaryTeal,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.size(6.dp))
+                                    Text(
+                                        text = if (u.isAdmin) "إزالة صلاحية الأدمن" else "ترقية لأدمن (إشراف معك)",
+                                        fontFamily = TajawalFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (u.isAdmin) TeamSeatWarmOrange else TeamSeatPrimaryTeal,
+                                        fontSize = 12.sp
+                                    )
                                 }
                             }
                         }

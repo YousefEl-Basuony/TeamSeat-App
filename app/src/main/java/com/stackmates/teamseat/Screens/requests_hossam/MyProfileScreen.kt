@@ -1,7 +1,13 @@
 package com.stackmates.teamseat.Screens.requests_hossam
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Base64
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -119,7 +125,9 @@ import com.stackmates.teamseat.ui.components.TeamSeatDangerRed
 import com.stackmates.teamseat.ui.components.TeamSeatPrimaryTeal
 import com.stackmates.teamseat.ui.components.TeamSeatScreenContainer
 import com.stackmates.teamseat.ui.components.TeamSeatSoftTealPill
+import com.stackmates.teamseat.ui.components.TeamSeatSurfaceColor
 import com.stackmates.teamseat.ui.components.TeamSeatTitleDark
+import com.stackmates.teamseat.ui.components.UserAvatarContent
 import com.stackmates.teamseat.ui.components.TeamSeatWarmOrange
 import com.stackmates.teamseat.ui.components.bounceClick
 import kotlinx.coroutines.launch
@@ -136,6 +144,8 @@ fun MyProfileScreen(
     appSettings: AppSettings = AppSettings(),
     onUpdateSettings: (AppSettings) -> Unit = {},
     onSaveChangesClick: (updatedRole: String, updatedGithub: String, updatedLinkedin: String) -> Unit = { _, _, _ -> },
+    onUpdateNameClick: (updatedName: String) -> Unit = {},
+    onUpdateAvatarClick: (avatarEmoji: String, photoBase64: String) -> Unit = { _, _ -> },
     onSwitchToAccountClick: (SavedAccount) -> Unit = {},
     onRemoveSavedAccountClick: (SavedAccount) -> Unit = {},
     onLogoutClick: () -> Unit = {},
@@ -146,7 +156,7 @@ fun MyProfileScreen(
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
     val isEn = appSettings.languageCode == "en"
-    val isSuperAdmin = user.email.equals("youssefmohamedelbasouny@gmail.com", ignoreCase = true)
+    val isSuperAdmin = user.email.equals("youssefmohamedelbasouny@gmail.com", ignoreCase = true) || user.isAdmin
     var selectedRole by remember(user.uid, user.roleTag) { mutableStateOf(user.roleTag) }
     var githubUrl by remember(user.uid, user.githubUrl) { mutableStateOf(user.githubUrl) }
     var linkedinUrl by remember(user.uid, user.linkedinUrl) { mutableStateOf(user.linkedinUrl) }
@@ -156,9 +166,38 @@ fun MyProfileScreen(
     var showLogoutSheet by remember { mutableStateOf(false) }
     var showAccountSwitcherSheet by remember { mutableStateOf(false) }
     var showSettingsSheet by remember { mutableStateOf(false) }
+    var showAvatarPickerSheet by remember { mutableStateOf(false) }
+    var showEditNameDialog by remember { mutableStateOf(false) }
+    var editedNameInput by remember(user.uid, user.name) { mutableStateOf(user.name) }
     var showAdminPasscodeDialog by remember { mutableStateOf(false) }
     var adminPasscodeInput by remember { mutableStateOf("") }
     var adminPasscodeError by remember { mutableStateOf<String?>(null) }
+
+    val galleryPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    val original = BitmapFactory.decodeStream(stream)
+                    if (original != null) {
+                        val maxSide = 220f
+                        val scale = minOf(maxSide / original.width, maxSide / original.height, 1f)
+                        val targetW = (original.width * scale).toInt().coerceAtLeast(1)
+                        val targetH = (original.height * scale).toInt().coerceAtLeast(1)
+                        val scaled = Bitmap.createScaledBitmap(original, targetW, targetH, true)
+                        val out = java.io.ByteArrayOutputStream()
+                        scaled.compress(Bitmap.CompressFormat.JPEG, 70, out)
+                        val base64 = Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
+                        showAvatarPickerSheet = false
+                        onUpdateAvatarClick(user.avatarEmoji.ifBlank { "👩‍💻" }, base64)
+                    }
+                }
+            }.onFailure {
+                Toast.makeText(context, "تعذر قراءة الصورة المختارة", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -187,7 +226,7 @@ fun MyProfileScreen(
                             .padding(start = 12.dp)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color.White)
+                            .background(TeamSeatSurfaceColor)
                             .border(1.dp, TeamSeatCardBorderTeal, CircleShape)
                             .bounceClick(onClick = onBackClick),
                         contentAlignment = Alignment.Center
@@ -232,7 +271,7 @@ fun MyProfileScreen(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(Color.White)
+                                .background(TeamSeatSurfaceColor)
                                 .border(1.dp, TeamSeatCardBorderTeal, CircleShape)
                                 .bounceClick { showSettingsSheet = true },
                             contentAlignment = Alignment.Center
@@ -248,7 +287,7 @@ fun MyProfileScreen(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(Color.White)
+                                .background(TeamSeatSurfaceColor)
                                 .border(1.dp, TeamSeatCardBorderTeal, CircleShape)
                                 .bounceClick { showAccountSwitcherSheet = true },
                             contentAlignment = Alignment.Center
@@ -257,22 +296,6 @@ fun MyProfileScreen(
                                 imageVector = Icons.Rounded.SwapHoriz,
                                 contentDescription = if (isEn) "Switch Account" else "تبديل الحساب",
                                 tint = TeamSeatPrimaryTeal,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color.White)
-                                .border(1.dp, TeamSeatWarmOrange.copy(alpha = 0.45f), CircleShape)
-                                .bounceClick { showLogoutSheet = true },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.Logout,
-                                contentDescription = if (isEn) "Logout" else "تسجيل خروج",
-                                tint = TeamSeatWarmOrange,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -308,7 +331,7 @@ fun MyProfileScreen(
                                         .clip(CircleShape)
                                         .background(
                                             Brush.radialGradient(
-                                                listOf(Color(0xFFE0F2F1), Color.White)
+                                                listOf(TeamSeatSoftTealPill, TeamSeatSurfaceColor)
                                             )
                                         )
                                         .border(
@@ -317,12 +340,14 @@ fun MyProfileScreen(
                                                 listOf(Color(0xFF4DB6AC), TeamSeatPrimaryTeal)
                                             ),
                                             shape = CircleShape
-                                        ),
+                                        )
+                                        .clickable { showAvatarPickerSheet = true },
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = user.avatarEmoji.ifBlank { "👩‍💻" },
-                                        fontSize = 36.sp
+                                    UserAvatarContent(
+                                        avatarEmoji = user.avatarEmoji,
+                                        photoBase64 = user.photoBase64,
+                                        emojiFontSizeSp = 36f
                                     )
                                 }
                                 Box(
@@ -331,8 +356,8 @@ fun MyProfileScreen(
                                         .align(Alignment.BottomStart)
                                         .clip(CircleShape)
                                         .background(TeamSeatPrimaryTeal)
-                                        .border(2.dp, Color.White, CircleShape)
-                                        .clickable { editingRole = !editingRole },
+                                        .border(2.dp, TeamSeatSurfaceColor, CircleShape)
+                                        .clickable { showAvatarPickerSheet = true },
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
@@ -404,6 +429,17 @@ fun MyProfileScreen(
                                                         snackbarHostState.showSnackbar("تم نسخ الرقم الجامعي")
                                                     }
                                                 }
+                                            }
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Rounded.Edit,
+                                        contentDescription = "تعديل الاسم",
+                                        tint = TeamSeatPrimaryTeal,
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .clickable {
+                                                editedNameInput = user.name
+                                                showEditNameDialog = true
                                             }
                                     )
                                 }
@@ -728,7 +764,7 @@ fun MyProfileScreen(
                                                     editingRole = false
                                                 },
                                             shape = RoundedCornerShape(50),
-                                            color = if (isSelected) TeamSeatPrimaryTeal else Color.White,
+                                            color = if (isSelected) TeamSeatPrimaryTeal else TeamSeatSurfaceColor,
                                             border = BorderStroke(
                                                 width = 1.dp,
                                                 color = if (isSelected) TeamSeatPrimaryTeal else TeamSeatCardBorderTeal
@@ -832,8 +868,10 @@ fun MyProfileScreen(
                                         textDirection = TextDirection.Ltr
                                     ),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedContainerColor = Color.White,
-                                        unfocusedContainerColor = Color.White,
+                                        focusedContainerColor = TeamSeatSurfaceColor,
+                                        unfocusedContainerColor = TeamSeatSurfaceColor,
+                                        focusedTextColor = TeamSeatTitleDark,
+                                        unfocusedTextColor = TeamSeatTitleDark,
                                         focusedBorderColor = TeamSeatPrimaryTeal,
                                         unfocusedBorderColor = TeamSeatCardBorderTeal
                                     ),
@@ -882,8 +920,10 @@ fun MyProfileScreen(
                                         textDirection = TextDirection.Ltr
                                     ),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedContainerColor = Color.White,
-                                        unfocusedContainerColor = Color.White,
+                                        focusedContainerColor = TeamSeatSurfaceColor,
+                                        unfocusedContainerColor = TeamSeatSurfaceColor,
+                                        focusedTextColor = TeamSeatTitleDark,
+                                        unfocusedTextColor = TeamSeatTitleDark,
                                         focusedBorderColor = TeamSeatPrimaryTeal,
                                         unfocusedBorderColor = TeamSeatCardBorderTeal
                                     ),
@@ -1344,9 +1384,162 @@ fun MyProfileScreen(
                     }
                 }
 
+                TeamSeatCard(contentPadding = 12.dp) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .bounceClick {
+                                showSettingsSheet = false
+                                showLogoutSheet = true
+                            },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.Logout,
+                            contentDescription = null,
+                            tint = TeamSeatDangerRed
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (isEn) "Logout" else "تسجيل الخروج",
+                                fontFamily = TajawalFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = TeamSeatDangerRed,
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = if (isEn) "Sign out from your current account" else "الخروج من الحساب الحالي",
+                                fontFamily = TajawalFontFamily,
+                                color = TeamSeatBodyMuted,
+                                fontSize = 11.5.sp
+                            )
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
+    }
+
+    if (showAvatarPickerSheet) {
+        val avatarOptions = listOf("👨‍💻", "👩‍💻", "🧑‍🎓", "🚀", "⚡", "🎨", "🛡️", "📱", "🤖", "🔥", "💡", "🏆")
+        ModalBottomSheet(
+            onDismissRequest = { showAvatarPickerSheet = false },
+            containerColor = TeamSeatSurfaceColor,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Text(
+                    text = if (isEn) "Choose Profile Photo or Avatar" else "اختر صورة من الهاتف أو أفاتار",
+                    fontFamily = TajawalFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = TeamSeatTitleDark,
+                    fontSize = 17.sp
+                )
+                Button(
+                    onClick = { galleryPickerLauncher.launch("image/*") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(46.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = TeamSeatPrimaryTeal)
+                ) {
+                    Text(
+                        text = if (isEn) "Upload Photo from Gallery" else "رفع صورة من الاستوديو",
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    avatarOptions.forEach { emoji ->
+                        val isSelected = emoji == user.avatarEmoji && user.photoBase64.isBlank()
+                        Box(
+                            modifier = Modifier
+                                .size(54.dp)
+                                .clip(CircleShape)
+                                .background(if (isSelected) TeamSeatSoftTealPill else TeamSeatBgOffWhite)
+                                .border(
+                                    width = if (isSelected) 2.dp else 1.dp,
+                                    color = if (isSelected) TeamSeatPrimaryTeal else TeamSeatCardBorderTeal,
+                                    shape = CircleShape
+                                )
+                                .bounceClick {
+                                    showAvatarPickerSheet = false
+                                    onUpdateAvatarClick(emoji, "")
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = emoji, fontSize = 26.sp)
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+
+    if (showEditNameDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditNameDialog = false },
+            title = {
+                Text(
+                    text = if (isEn) "Edit Name" else "تعديل الاسم",
+                    fontFamily = TajawalFontFamily,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                OutlinedTextField(
+                    value = editedNameInput,
+                    onValueChange = { editedNameInput = it },
+                    singleLine = true,
+                    label = {
+                        Text(
+                            text = if (isEn) "Full Name" else "الاسم الكامل",
+                            fontFamily = TajawalFontFamily
+                        )
+                    }
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (editedNameInput.isNotBlank()) {
+                            onUpdateNameClick(editedNameInput.trim())
+                            showEditNameDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = TeamSeatPrimaryTeal)
+                ) {
+                    Text(
+                        text = if (isEn) "Save" else "حفظ",
+                        fontFamily = TajawalFontFamily,
+                        color = Color.White
+                    )
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showEditNameDialog = false }) {
+                    Text(
+                        text = if (isEn) "Cancel" else "إلغاء",
+                        fontFamily = TajawalFontFamily
+                    )
+                }
+            }
+        )
     }
 
     if (showAdminPasscodeDialog) {
@@ -1510,8 +1703,8 @@ private fun ProfileLinkRowCard(
             .clip(RoundedCornerShape(14.dp))
             .clickable(onClick = onRowClick),
         shape = RoundedCornerShape(14.dp),
-        color = Color(0xFFF6FAFA),
-        border = BorderStroke(1.dp, Color(0xFFDCEAEA))
+        color = TeamSeatSurfaceColor,
+        border = BorderStroke(1.dp, TeamSeatCardBorderTeal)
     ) {
         Row(
             modifier = Modifier
@@ -1542,7 +1735,7 @@ private fun ProfileLinkRowCard(
                 modifier = Modifier
                     .size(34.dp)
                     .clip(CircleShape)
-                    .background(Color.White)
+                    .background(TeamSeatSurfaceColor)
                     .border(1.dp, TeamSeatCardBorderTeal, CircleShape)
                     .clickable(onClick = onOpenClick),
                 contentAlignment = Alignment.Center

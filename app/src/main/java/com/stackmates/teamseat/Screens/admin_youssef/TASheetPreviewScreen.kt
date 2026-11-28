@@ -54,6 +54,7 @@ private data class RosterMember(
 fun TASheetPreviewScreen(
     team: Team = MockDataProvider.sampleTeam,
     seats: List<Seat> = MockDataProvider.sampleSeats,
+    isLeader: Boolean = true,
     onLockTeamClick: () -> Unit = {},
     onExportPdfClick: () -> Unit = {},
     onBackClick: () -> Unit = {}
@@ -150,7 +151,7 @@ fun TASheetPreviewScreen(
                             .padding(end = 12.dp)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color.White)
+                            .background(com.stackmates.teamseat.ui.components.TeamSeatSurfaceColor)
                             .border(1.dp, TeamSeatCardBorderTeal, CircleShape)
                             .bounceClick {
                                 val result = PdfExporter.exportTeamSheetPdf(context, team, pdfSeats)
@@ -176,7 +177,7 @@ fun TASheetPreviewScreen(
         },
         bottomBar = {
             Surface(
-                color = Color.White,
+                color = com.stackmates.teamseat.ui.components.TeamSeatSurfaceColor,
                 shadowElevation = 0.dp,
                 border = BorderStroke(1.dp, TeamSeatDividerColor)
             ) {
@@ -238,40 +239,42 @@ fun TASheetPreviewScreen(
                         }
                     }
 
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
-                            .shadow(
-                                elevation = 8.dp,
-                                shape = RoundedCornerShape(14.dp),
-                                ambientColor = TeamSeatPrimaryTeal,
-                                spotColor = TeamSeatPrimaryTeal
-                            )
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(TeamSeatPrimaryTeal)
-                            .bounceClick(onClick = onLockTeamClick),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    if (isLeader) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(50.dp)
+                                .shadow(
+                                    elevation = 8.dp,
+                                    shape = RoundedCornerShape(14.dp),
+                                    ambientColor = TeamSeatPrimaryTeal,
+                                    spotColor = TeamSeatPrimaryTeal
+                                )
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(TeamSeatPrimaryTeal)
+                                .bounceClick(onClick = onLockTeamClick),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = if (team.isLocked) Icons.Rounded.Lock else Icons.Rounded.LockOpen,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Text(
-                                text = if (team.isLocked) "معتمد ومقفل" else "اعتماد وقفل التيم",
-                                fontFamily = TajawalFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp,
-                                color = Color.White,
-                                maxLines = 1,
-                                softWrap = false
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (team.isLocked) Icons.Rounded.Lock else Icons.Rounded.LockOpen,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = if (team.isLocked) "معتمد ومقفل" else "اعتماد وقفل التيم",
+                                    fontFamily = TajawalFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
                         }
                     }
                 }

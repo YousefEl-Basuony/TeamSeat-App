@@ -26,12 +26,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Chat
+import androidx.compose.material.icons.automirrored.rounded.ExitToApp
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.PersonRemove
@@ -100,9 +102,12 @@ fun TeamWorkspaceScreen(
     seats: List<Seat> = MockDataProvider.sampleSeats,
     isLeader: Boolean = false,
     pendingRequestsCount: Int = 0,
+    hasUnreadCalendar: Boolean = false,
     onReviewRequestsClick: () -> Unit = {},
     onRemoveMemberClick: (Seat) -> Unit = {},
     onDeleteTeamClick: () -> Unit = {},
+    onLeaveTeamClick: () -> Unit = {},
+    onUpdateTeamDetailsClick: (doctor: String, ta: String, github: String, drive: String, isCompleted: Boolean) -> Unit = { _, _, _, _, _ -> },
     onOpenCalendarClick: () -> Unit = {},
     onOpenTASheetClick: () -> Unit = {},
     onOpenChatClick: () -> Unit = {},
@@ -111,6 +116,8 @@ fun TeamWorkspaceScreen(
     val context = LocalContext.current
     var memberToRemove by remember { mutableStateOf<Seat?>(null) }
     var showDeleteTeamDialog by remember { mutableStateOf(false) }
+    var showLeaveTeamDialog by remember { mutableStateOf(false) }
+    var showEditDetailsDialog by remember { mutableStateOf(false) }
     val bookedSeats = seats.filter { it.status == SeatStatus.BOOKED }
     val rawProgress = if (team.totalSeats > 0) bookedSeats.size.toFloat() / team.totalSeats else 0f
     val animatedProgress by rememberAnimatedProgress(targetProgress = rawProgress)
@@ -155,10 +162,25 @@ fun TeamWorkspaceScreen(
                     },
                     actions = {
                         if (isLeader) {
+                            IconButton(onClick = { showEditDetailsDialog = true }) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Edit,
+                                    contentDescription = "تعديل بيانات وروابط التيم",
+                                    tint = TeamSeatPrimaryTeal
+                                )
+                            }
                             IconButton(onClick = { showDeleteTeamDialog = true }) {
                                 Icon(
                                     imageVector = Icons.Rounded.Delete,
                                     contentDescription = "حذف التيم",
+                                    tint = TeamSeatDangerRed
+                                )
+                            }
+                        } else {
+                            IconButton(onClick = { showLeaveTeamDialog = true }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Rounded.ExitToApp,
+                                    contentDescription = "مغادرة الفريق",
                                     tint = TeamSeatDangerRed
                                 )
                             }
@@ -360,12 +382,22 @@ fun TeamWorkspaceScreen(
                                             .background(TeamSeatSoftTealPill),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.CalendarMonth,
-                                            contentDescription = null,
-                                            tint = TeamSeatPrimaryTeal,
-                                            modifier = Modifier.size(20.dp)
-                                        )
+                                        androidx.compose.material3.BadgedBox(
+                                            badge = {
+                                                if (hasUnreadCalendar) {
+                                                    androidx.compose.material3.Badge(
+                                                        containerColor = TeamSeatDangerRed
+                                                    )
+                                                }
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.CalendarMonth,
+                                                contentDescription = null,
+                                                tint = TeamSeatPrimaryTeal,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
                                     }
                                     Icon(
                                         imageVector = Icons.Rounded.ChevronLeft,
@@ -711,6 +743,149 @@ fun TeamWorkspaceScreen(
                 },
                 dismissButton = {
                     OutlinedButton(onClick = { showDeleteTeamDialog = false }) {
+                        Text(
+                            text = "إلغاء",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = TeamSeatTitleDark
+                        )
+                    }
+                }
+            )
+        }
+
+        if (showLeaveTeamDialog) {
+            AlertDialog(
+                onDismissRequest = { showLeaveTeamDialog = false },
+                title = {
+                    Text(
+                        text = "مغادرة الفريق",
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = TeamSeatTitleDark
+                    )
+                },
+                text = {
+                    Text(
+                        text = "هل أنت متأكد من مغادرة فريق ${team.projectName}؟ سيتم إخلاء مقعدك ليصبح متاحاً لغيرك.",
+                        fontFamily = TajawalFontFamily,
+                        color = TeamSeatBodyMuted
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showLeaveTeamDialog = false
+                            onLeaveTeamClick()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = TeamSeatDangerRed)
+                    ) {
+                        Text(
+                            text = "مغادرة",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(onClick = { showLeaveTeamDialog = false }) {
+                        Text(
+                            text = "إلغاء",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = TeamSeatTitleDark
+                        )
+                    }
+                }
+            )
+        }
+
+        if (showEditDetailsDialog) {
+            var docInput by remember(team.teamId, team.supervisorDoctor) { mutableStateOf(team.supervisorDoctor) }
+            var taInput by remember(team.teamId, team.teachingAssistant) { mutableStateOf(team.teachingAssistant) }
+            var githubInput by remember(team.teamId, team.githubRepo) { mutableStateOf(team.githubRepo) }
+            var driveInput by remember(team.teamId, team.driveFolder) { mutableStateOf(team.driveFolder) }
+            var completedInput by remember(team.teamId, team.isCompleted) { mutableStateOf(team.isCompleted) }
+
+            AlertDialog(
+                onDismissRequest = { showEditDetailsDialog = false },
+                title = {
+                    Text(
+                        text = "تعديل الإشراف وروابط المشروع",
+                        fontFamily = TajawalFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = TeamSeatTitleDark
+                    )
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        androidx.compose.material3.OutlinedTextField(
+                            value = docInput,
+                            onValueChange = { docInput = it },
+                            singleLine = true,
+                            label = { Text("اسم الدكتور", fontFamily = TajawalFontFamily) }
+                        )
+                        androidx.compose.material3.OutlinedTextField(
+                            value = taInput,
+                            onValueChange = { taInput = it },
+                            singleLine = true,
+                            label = { Text("اسم المعيد", fontFamily = TajawalFontFamily) }
+                        )
+                        androidx.compose.material3.OutlinedTextField(
+                            value = githubInput,
+                            onValueChange = { githubInput = it },
+                            singleLine = true,
+                            label = { Text("رابط GitHub", fontFamily = TajawalFontFamily) }
+                        )
+                        androidx.compose.material3.OutlinedTextField(
+                            value = driveInput,
+                            onValueChange = { driveInput = it },
+                            singleLine = true,
+                            label = { Text("رابط Google Drive", fontFamily = TajawalFontFamily) }
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "تم تنفيذ المشروع (تم تنفيذه)",
+                                fontFamily = TajawalFontFamily,
+                                fontSize = 13.sp,
+                                color = TeamSeatTitleDark
+                            )
+                            androidx.compose.material3.Switch(
+                                checked = completedInput,
+                                onCheckedChange = { completedInput = it }
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            onUpdateTeamDetailsClick(
+                                docInput,
+                                taInput,
+                                githubInput,
+                                driveInput,
+                                completedInput
+                            )
+                            showEditDetailsDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = TeamSeatPrimaryTeal)
+                    ) {
+                        Text(
+                            text = "حفظ",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(onClick = { showEditDetailsDialog = false }) {
                         Text(
                             text = "إلغاء",
                             fontFamily = TajawalFontFamily,

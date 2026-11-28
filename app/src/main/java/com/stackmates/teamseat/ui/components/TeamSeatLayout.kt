@@ -1,6 +1,9 @@
 package com.stackmates.teamseat.ui.components
 
+import android.graphics.BitmapFactory
+import android.util.Base64
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -26,6 +29,8 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -38,34 +43,36 @@ var appDarkModeEnabled by mutableStateOf(false)
 // 🎨 النظام البصري الموحد المستخلص من HomeScreen (Visual System Tokens)
 // =============================================================================
 val TeamSeatBgOffWhite: Color
-    get() = if (appDarkModeEnabled) Color(0xFF0D1719) else Color(0xFFF8FAFA)
+    get() = if (appDarkModeEnabled) Color(0xFF172428) else Color(0xFFF8FAFA)
 val TeamSeatWaveMint: Color
-    get() = if (appDarkModeEnabled) Color(0xFF15282C) else Color(0xFFD7ECEA)
+    get() = if (appDarkModeEnabled) Color(0xFF1F3439) else Color(0xFFD7ECEA)
 val TeamSeatPrimaryTeal: Color
-    get() = if (appDarkModeEnabled) Color(0xFF4DB6AC) else Color(0xFF136F78)
+    get() = if (appDarkModeEnabled) Color(0xFF52C4BA) else Color(0xFF136F78)
 val TeamSeatTitleDark: Color
-    get() = if (appDarkModeEnabled) Color(0xFFE8F4F4) else Color(0xFF0F292E)
+    get() = if (appDarkModeEnabled) Color(0xFFEAF4F4) else Color(0xFF0F292E)
 val TeamSeatBodyMuted: Color
-    get() = if (appDarkModeEnabled) Color(0xFFA8C2C5) else Color(0xFF52606D)
+    get() = if (appDarkModeEnabled) Color(0xFFB5CCCF) else Color(0xFF52606D)
 
 val TeamSeatCardTopTeal: Color
-    get() = if (appDarkModeEnabled) Color(0xFF162528) else Color(0xFFF3F9F9)
+    get() = if (appDarkModeEnabled) Color(0xFF213338) else Color(0xFFF3F9F9)
 val TeamSeatCardBorderTeal: Color
-    get() = if (appDarkModeEnabled) Color(0xFF2B4B50) else Color(0xFFA3D1CE)
+    get() = if (appDarkModeEnabled) Color(0xFF395960) else Color(0xFFA3D1CE)
 
 val TeamSeatCardTopWarm: Color
-    get() = if (appDarkModeEnabled) Color(0xFF2B2017) else Color(0xFFFFF9F2)
+    get() = if (appDarkModeEnabled) Color(0xFF2E251D) else Color(0xFFFFF9F2)
 val TeamSeatCardBorderWarm: Color
-    get() = if (appDarkModeEnabled) Color(0xFF8C5327) else Color(0xFFF5C293)
+    get() = if (appDarkModeEnabled) Color(0xFF9E6434) else Color(0xFFF5C293)
 val TeamSeatWarmOrange: Color
-    get() = if (appDarkModeEnabled) Color(0xFFFF8A3D) else Color(0xFFEA580C)
+    get() = if (appDarkModeEnabled) Color(0xFFFF964F) else Color(0xFFEA580C)
 
 val TeamSeatSoftTealPill: Color
-    get() = if (appDarkModeEnabled) Color(0xFF1B3538) else Color(0xFFE0F2F1)
+    get() = if (appDarkModeEnabled) Color(0xFF233E42) else Color(0xFFE0F2F1)
 val TeamSeatDividerColor: Color
-    get() = if (appDarkModeEnabled) Color(0xFF263E42) else Color(0xFFE5ECEC)
+    get() = if (appDarkModeEnabled) Color(0xFF2E494F) else Color(0xFFE5ECEC)
 val TeamSeatDangerRed: Color
-    get() = if (appDarkModeEnabled) Color(0xFFEF5350) else Color(0xFFC62828)
+    get() = if (appDarkModeEnabled) Color(0xFFFF6B6B) else Color(0xFFC62828)
+val TeamSeatSurfaceColor: Color
+    get() = if (appDarkModeEnabled) Color(0xFF1E3034) else Color.White
 
 /**
  * 🌊 حاوية الشاشات الموحدة (TeamSeatScreenContainer)
@@ -85,8 +92,8 @@ fun TeamSeatScreenContainer(
     val appSettings = LocalAppSettings.current
     val isDark = appSettings.isDarkMode
     val layoutDirection = if (appSettings.languageCode == "en") LayoutDirection.Ltr else LayoutDirection.Rtl
-    val bgColor = if (isDark) Color(0xFF0D1719) else TeamSeatBgOffWhite
-    val waveColor = if (isDark) Color(0xFF15282C) else TeamSeatWaveMint
+    val bgColor = TeamSeatBgOffWhite
+    val waveColor = TeamSeatWaveMint
 
     CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
         Box(
@@ -164,20 +171,9 @@ fun TeamSeatCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val isDark = LocalAppSettings.current.isDarkMode
-    val topColor = when {
-        isDark && isWarmHighlight -> Color(0xFF2B2017)
-        isDark -> Color(0xFF162528)
-        isWarmHighlight -> TeamSeatCardTopWarm
-        else -> TeamSeatCardTopTeal
-    }
-    val bottomColor = if (isDark) Color(0xFF111D20) else Color.White
-    val borderColor = when {
-        isDark && isWarmHighlight -> Color(0xFF8C5327)
-        isDark -> Color(0xFF28474B)
-        isWarmHighlight -> TeamSeatCardBorderWarm
-        else -> TeamSeatCardBorderTeal
-    }
+    val topColor = if (isWarmHighlight) TeamSeatCardTopWarm else TeamSeatCardTopTeal
+    val bottomColor = if (appDarkModeEnabled) Color(0xFF1B2B2F) else Color.White
+    val borderColor = if (isWarmHighlight) TeamSeatCardBorderWarm else TeamSeatCardBorderTeal
 
     val baseModifier = modifier
         .fillMaxWidth()
@@ -199,4 +195,36 @@ fun TeamSeatCard(
         modifier = interactiveModifier.padding(contentPadding),
         content = content
     )
+}
+
+@Composable
+fun UserAvatarContent(
+    avatarEmoji: String,
+    photoBase64: String,
+    emojiFontSizeSp: Float = 24f,
+    modifier: Modifier = Modifier
+) {
+    val decodedBitmap = androidx.compose.runtime.remember(photoBase64) {
+        if (photoBase64.isBlank()) {
+            null
+        } else {
+            runCatching {
+                val bytes = Base64.decode(photoBase64, Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
+            }.getOrNull()
+        }
+    }
+    if (decodedBitmap != null) {
+        Image(
+            bitmap = decodedBitmap,
+            contentDescription = "صورة البروفايل",
+            contentScale = ContentScale.Crop,
+            modifier = modifier.fillMaxSize()
+        )
+    } else {
+        androidx.compose.material3.Text(
+            text = avatarEmoji.ifBlank { "👩‍💻" },
+            fontSize = androidx.compose.ui.unit.TextUnit(emojiFontSizeSp, androidx.compose.ui.unit.TextUnitType.Sp)
+        )
+    }
 }

@@ -112,6 +112,8 @@ fun MainAppShell(
     seats: List<Seat>,
     myTeamSeats: List<Seat> = seats,
     unreadNotificationsCount: Int = 0,
+    hasUnreadChat: Boolean = false,
+    hasUnreadCalendar: Boolean = false,
     savedAccounts: List<SavedAccount> = emptyList(),
     appSettings: AppSettings = LocalAppSettings.current,
     onUpdateSettings: (AppSettings) -> Unit = {},
@@ -123,12 +125,17 @@ fun MainAppShell(
     onOpenCalendarClick: () -> Unit,
     onOpenTASheetClick: () -> Unit,
     onOpenChatClick: () -> Unit = {},
+    onHomeChatClick: () -> Unit = onOpenChatClick,
     onReviewRequestsClick: () -> Unit = {},
     onRemoveMemberClick: (Seat) -> Unit = {},
     onDeleteTeamClick: () -> Unit = {},
+    onLeaveTeamClick: () -> Unit = {},
+    onUpdateTeamDetailsClick: (String, String, String, String, Boolean) -> Unit = { _, _, _, _, _ -> },
     onOpenDemoCenterClick: () -> Unit = {},
     onOpenSuperAdminClick: () -> Unit = {},
     onSaveProfileChanges: (String, String, String) -> Unit = { _, _, _ -> },
+    onUpdateNameClick: (String) -> Unit = {},
+    onUpdateAvatarClick: (String, String) -> Unit = { _, _ -> },
     onSwitchToAccountClick: (SavedAccount) -> Unit = {},
     onRemoveSavedAccountClick: (SavedAccount) -> Unit = {},
     onLogoutClick: () -> Unit
@@ -145,6 +152,7 @@ fun MainAppShell(
                 TeamSeatDockedNavBar(
                     selectedIndex = selectedTab,
                     onSelect = { selectedTab = it },
+                    hasTeamAlert = hasUnreadChat || hasUnreadCalendar,
                     isDarkMode = appSettings.isDarkMode,
                     isEnglish = appSettings.languageCode == "en"
                 )
@@ -173,6 +181,8 @@ fun MainAppShell(
                             currentUser = currentUser,
                             teams = teams,
                             unreadNotificationsCount = unreadNotificationsCount,
+                            hasUnreadChat = hasUnreadChat,
+                            onChatClick = onHomeChatClick,
                             onTeamClick = onTeamClick,
                             onCreateTeamClick = onCreateTeamClick,
                             onSearchClick = { selectedTab = 1 },
@@ -209,9 +219,12 @@ fun MainAppShell(
                                     seats = myTeamSeats,
                                     isLeader = myTeam.leaderId == currentUser.uid,
                                     pendingRequestsCount = myTeamSeats.count { it.status == SeatStatus.PENDING },
+                                    hasUnreadCalendar = hasUnreadCalendar,
                                     onReviewRequestsClick = onReviewRequestsClick,
                                     onRemoveMemberClick = onRemoveMemberClick,
                                     onDeleteTeamClick = onDeleteTeamClick,
+                                    onLeaveTeamClick = onLeaveTeamClick,
+                                    onUpdateTeamDetailsClick = onUpdateTeamDetailsClick,
                                     onOpenCalendarClick = onOpenCalendarClick,
                                     onOpenTASheetClick = onOpenTASheetClick,
                                     onOpenChatClick = onOpenChatClick,
@@ -228,6 +241,8 @@ fun MainAppShell(
                             onSaveChangesClick = { role, github, linkedin ->
                                 onSaveProfileChanges(role, github, linkedin)
                             },
+                            onUpdateNameClick = onUpdateNameClick,
+                            onUpdateAvatarClick = onUpdateAvatarClick,
                             onSwitchToAccountClick = onSwitchToAccountClick,
                             onRemoveSavedAccountClick = onRemoveSavedAccountClick,
                             onLogoutClick = onLogoutClick,
@@ -247,6 +262,7 @@ fun TeamSeatDockedNavBar(
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    hasTeamAlert: Boolean = false,
     isDarkMode: Boolean = false,
     isEnglish: Boolean = false
 ) {
@@ -309,17 +325,27 @@ fun TeamSeatDockedNavBar(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = if (isSelected) tab.activeIcon else tab.inactiveIcon,
-                                contentDescription = tab.label,
-                                tint = if (isSelected) TeamSeatPrimaryTeal else NavInactiveSlate,
-                                modifier = Modifier
-                                    .size(22.dp)
-                                    .graphicsLayer {
-                                        scaleX = iconScale
-                                        scaleY = iconScale
+                            androidx.compose.material3.BadgedBox(
+                                badge = {
+                                    if (index == 2 && hasTeamAlert) {
+                                        androidx.compose.material3.Badge(
+                                            containerColor = Color(0xFFEF4444)
+                                        )
                                     }
-                            )
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = if (isSelected) tab.activeIcon else tab.inactiveIcon,
+                                    contentDescription = tab.label,
+                                    tint = if (isSelected) TeamSeatPrimaryTeal else NavInactiveSlate,
+                                    modifier = Modifier
+                                        .size(22.dp)
+                                        .graphicsLayer {
+                                            scaleX = iconScale
+                                            scaleY = iconScale
+                                        }
+                                )
+                            }
                             AnimatedVisibility(
                                 visible = isSelected,
                                 enter = expandHorizontally(

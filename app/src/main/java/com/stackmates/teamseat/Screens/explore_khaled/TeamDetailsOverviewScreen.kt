@@ -87,6 +87,7 @@ import com.stackmates.teamseat.ui.components.rememberAnimatedProgress
 fun TeamDetailsOverviewScreen(
     team: Team = MockDataProvider.sampleTeam,
     seats: List<Seat> = MockDataProvider.sampleSeats,
+    canViewMemberNames: Boolean = false,
     onOpenSeatMapClick: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
@@ -283,7 +284,7 @@ fun TeamDetailsOverviewScreen(
                                             modifier = Modifier.size(16.dp)
                                         )
                                         Text(
-                                            text = "قائد التيم: ${team.leaderName}",
+                                            text = if (canViewMemberNames) "قائد التيم: ${team.leaderName}" else "قائد التيم: محجوز",
                                             fontFamily = TajawalFontFamily,
                                             fontWeight = FontWeight.Bold,
                                             color = TeamSeatTitleDark,
@@ -449,6 +450,7 @@ fun TeamDetailsOverviewScreen(
                 StaggeredAnimatedItem(index = index + 2) {
                     TeamOverviewSeatCard(
                         seat = seat,
+                        canViewMemberNames = canViewMemberNames,
                         onClick = onOpenSeatMapClick
                     )
                 }
@@ -460,6 +462,7 @@ fun TeamDetailsOverviewScreen(
 @Composable
 private fun TeamOverviewSeatCard(
     seat: Seat,
+    canViewMemberNames: Boolean = false,
     onClick: () -> Unit
 ) {
     val isBooked = seat.status == SeatStatus.BOOKED
@@ -533,6 +536,8 @@ private fun TeamOverviewSeatCard(
                 Text(
                     text = when {
                         isAvailable -> "مكان فاضي مستنيك"
+                        !canViewMemberNames && isPending -> "مقعد قيد المراجعة"
+                        !canViewMemberNames -> "مقعد محجوز"
                         !seat.applicantName.isNullOrBlank() -> seat.applicantName
                         else -> "عضو معتمد"
                     },

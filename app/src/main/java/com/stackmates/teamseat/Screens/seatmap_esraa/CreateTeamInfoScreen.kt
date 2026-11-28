@@ -338,22 +338,29 @@ private fun StepIndicator(
 @Composable
 fun CreateTeamInfoScreen(
     onNextStepClick: (String, String, String, Int) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onNextWithDetails: ((name: String, course: String, description: String, seatCount: Int, doctor: String, ta: String, github: String, drive: String) -> Unit)? = null
 ) {
     CreateTeamInfoScreen(
         onBack = onBackClick,
-        onNext = onNextStepClick
+        onNext = onNextStepClick,
+        onNextWithDetails = onNextWithDetails
     )
 }
 
 @Composable
 fun CreateTeamInfoScreen(
     onBack: () -> Unit = {},
-    onNext: (name: String, course: String, description: String, seatCount: Int) -> Unit = { _, _, _, _ -> }
+    onNext: (name: String, course: String, description: String, seatCount: Int) -> Unit = { _, _, _, _ -> },
+    onNextWithDetails: ((name: String, course: String, description: String, seatCount: Int, doctor: String, ta: String, github: String, drive: String) -> Unit)? = null
 ) {
     var name by remember { mutableStateOf("") }
     var course by remember { mutableStateOf("") }
     var desc by remember { mutableStateOf("") }
+    var doctor by remember { mutableStateOf("") }
+    var ta by remember { mutableStateOf("") }
+    var github by remember { mutableStateOf("") }
+    var drive by remember { mutableStateOf("") }
     var seatCount by remember { mutableFloatStateOf(6f) }
     val count = seatCount.roundToInt()
     val valid = name.isNotBlank() && course.isNotBlank()
@@ -402,10 +409,50 @@ fun CreateTeamInfoScreen(
                 onValueChange = { desc = it },
                 label = { Text("Description / Goal") },
                 textStyle = LocalTextStyle.current.copy(fontFamily = TajawalFontFamily),
-                minLines = 4,
+                minLines = 3,
                 modifier = Modifier
                     .fillMaxWidth()
                     .staggeredEntrance(3),
+                shape = RoundedCornerShape(14.dp),
+                colors = fieldColors()
+            )
+            OutlinedTextField(
+                value = doctor,
+                onValueChange = { doctor = it },
+                label = { Text("اسم الدكتور المشرف (اختياري)") },
+                textStyle = LocalTextStyle.current.copy(fontFamily = TajawalFontFamily),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = fieldColors()
+            )
+            OutlinedTextField(
+                value = ta,
+                onValueChange = { ta = it },
+                label = { Text("اسم المعيد المتابع (اختياري)") },
+                textStyle = LocalTextStyle.current.copy(fontFamily = TajawalFontFamily),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = fieldColors()
+            )
+            OutlinedTextField(
+                value = github,
+                onValueChange = { github = it },
+                label = { Text("رابط GitHub Repo (اختياري)") },
+                textStyle = LocalTextStyle.current.copy(fontFamily = TajawalFontFamily),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = fieldColors()
+            )
+            OutlinedTextField(
+                value = drive,
+                onValueChange = { drive = it },
+                label = { Text("رابط Google Drive (اختياري)") },
+                textStyle = LocalTextStyle.current.copy(fontFamily = TajawalFontFamily),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
                 colors = fieldColors()
             )
@@ -484,7 +531,14 @@ fun CreateTeamInfoScreen(
                 text = "Next",
                 enabled = valid,
                 modifier = Modifier.staggeredEntrance(5),
-                onClick = { onNext(name, course, desc, count) }
+                onClick = {
+                    val detailsHandler = onNextWithDetails
+                    if (detailsHandler != null) {
+                        detailsHandler(name, course, desc, count, doctor, ta, github, drive)
+                    } else {
+                        onNext(name, course, desc, count)
+                    }
+                }
             )
         }
         }

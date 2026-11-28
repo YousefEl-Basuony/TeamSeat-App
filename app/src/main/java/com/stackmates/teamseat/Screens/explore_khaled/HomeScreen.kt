@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Chat
 import androidx.compose.material.icons.automirrored.rounded.FormatListBulleted
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AutoAwesome
@@ -71,22 +72,24 @@ import com.stackmates.teamseat.ui.components.TeamSeatDividerColor
 import com.stackmates.teamseat.ui.components.TeamSeatPrimaryTeal
 import com.stackmates.teamseat.ui.components.TeamSeatScreenContainer
 import com.stackmates.teamseat.ui.components.TeamSeatSoftTealPill
+import com.stackmates.teamseat.ui.components.TeamSeatSurfaceColor
 import com.stackmates.teamseat.ui.components.TeamSeatTitleDark
+import com.stackmates.teamseat.ui.components.UserAvatarContent
 import com.stackmates.teamseat.ui.components.bounceClick
 
 // =============================================================================
 // 🎨 باليت الشاشة المستوردة من النظام الموحد (TeamSeatLayout)
 // =============================================================================
-private val HomeBg = TeamSeatBgOffWhite
-private val TealPrimary = TeamSeatPrimaryTeal
-private val TextTitleDark = TeamSeatTitleDark
-private val TextBodyMuted = TeamSeatBodyMuted
+private val HomeBg: Color get() = TeamSeatBgOffWhite
+private val TealPrimary: Color get() = TeamSeatPrimaryTeal
+private val TextTitleDark: Color get() = TeamSeatTitleDark
+private val TextBodyMuted: Color get() = TeamSeatBodyMuted
 
-private val SearchBorderColor = Color(0xFFD9E6E6)
-private val StatCardBorderColor = Color(0xFFE2ECEC)
-private val ProjectCardBorder = TeamSeatCardBorderTeal
-private val SoftTealPill = TeamSeatSoftTealPill
-private val IconSquareBg = Color(0xFFE6F2F2)
+private val SearchBorderColor: Color get() = TeamSeatCardBorderTeal
+private val StatCardBorderColor: Color get() = TeamSeatDividerColor
+private val ProjectCardBorder: Color get() = TeamSeatCardBorderTeal
+private val SoftTealPill: Color get() = TeamSeatSoftTealPill
+private val IconSquareBg: Color get() = TeamSeatSoftTealPill
 private val OnlineGreen = Color(0xFF10B981)
 private val BadgeRed = Color(0xFFEF4444)
 
@@ -107,6 +110,8 @@ fun HomeScreen(
     onExploreClick: () -> Unit = onSearchClick,
     onMyTeamClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
+    onChatClick: () -> Unit = {},
+    hasUnreadChat: Boolean = false,
     unreadNotificationsCount: Int? = null,
     showBottomBar: Boolean = true
 ) {
@@ -114,11 +119,16 @@ fun HomeScreen(
     var selectedNavIndex by remember { mutableIntStateOf(0) }
 
     val unreadNotifCount = unreadNotificationsCount ?: 0
+    val currentTeamName = remember(teams, currentUser) {
+        teams.firstOrNull { !currentUser.currentTeamId.isNullOrBlank() && it.teamId == currentUser.currentTeamId }?.projectName
+            ?: teams.firstOrNull { it.leaderId == currentUser.uid }?.projectName
+    }
 
     val filteredTeams = remember(teams, selectedFilter) {
         when (selectedFilter) {
-            "متاح الآن" -> teams.filter { !it.isLocked }
-            "مكتمل" -> teams.filter { it.isLocked }
+            "متاح الآن" -> teams.filter { !it.isLocked && !it.isCompleted }
+            "مكتمل" -> teams.filter { it.isLocked && !it.isCompleted }
+            "تم تنفيذه" -> teams.filter { it.isCompleted }
             else -> teams
         }
     }
@@ -127,7 +137,10 @@ fun HomeScreen(
         topBar = {
             HomeTopHeaderRow(
                 currentUser = currentUser,
+                currentTeamName = currentTeamName,
                 unreadCount = unreadNotifCount,
+                hasUnreadChat = hasUnreadChat,
+                onChatClick = onChatClick,
                 onNotificationsClick = onNotificationsClick,
                 onMyApplicationsClick = onMyApplicationsClick,
                 onAvatarClick = onSwitchPersona
@@ -252,9 +265,9 @@ fun HomeScreen(
                         }
                     }
 
-                    // 2. شرائح الفلترة (الكل، متاح الآن، مكتمل)
+                    // 2. شرائح الفلترة (الكل، متاح الآن، مكتمل، تم تنفيذه)
                     item {
-                        val filters = listOf("الكل", "متاح الآن", "مكتمل")
+                        val filters = listOf("الكل", "متاح الآن", "مكتمل", "تم تنفيذه")
                         LazyRow(
                             contentPadding = PaddingValues(horizontal = 16.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -396,7 +409,10 @@ fun HomeScreen(
 @Composable
 private fun HomeTopHeaderRow(
     currentUser: User,
+    currentTeamName: String? = null,
     unreadCount: Int,
+    hasUnreadChat: Boolean = false,
+    onChatClick: () -> Unit = {},
     onNotificationsClick: () -> Unit,
     onMyApplicationsClick: () -> Unit,
     onAvatarClick: () -> Unit
@@ -422,13 +438,14 @@ private fun HomeTopHeaderRow(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)
-                        .background(Color.White)
+                        .background(TeamSeatSurfaceColor)
                         .border(1.5.dp, TealPrimary.copy(alpha = 0.35f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = currentUser.avatarEmoji,
-                        fontSize = 22.sp
+                    UserAvatarContent(
+                        avatarEmoji = currentUser.avatarEmoji,
+                        photoBase64 = currentUser.photoBase64,
+                        emojiFontSizeSp = 22f
                     )
                 }
 
@@ -478,6 +495,23 @@ private fun HomeTopHeaderRow(
                     maxLines = 1,
                     softWrap = false
                 )
+                if (!currentTeamName.isNullOrBlank()) {
+                    Surface(
+                        color = SoftTealPill,
+                        shape = RoundedCornerShape(50)
+                    ) {
+                        Text(
+                            text = "فريق: $currentTeamName",
+                            fontFamily = TajawalFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = TealPrimary,
+                            fontSize = 10.5.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+                }
             }
         }
 
@@ -489,7 +523,7 @@ private fun HomeTopHeaderRow(
                 modifier = Modifier
                     .height(36.dp)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(Color.White)
+                    .background(TeamSeatSurfaceColor)
                     .border(1.dp, SearchBorderColor, RoundedCornerShape(18.dp))
                     .bounceClick(onClick = onMyApplicationsClick)
                     .padding(horizontal = 12.dp),
@@ -521,7 +555,32 @@ private fun HomeTopHeaderRow(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color.White)
+                    .background(TeamSeatSurfaceColor)
+                    .border(1.dp, SearchBorderColor, CircleShape)
+                    .bounceClick(onClick = onChatClick),
+                contentAlignment = Alignment.Center
+            ) {
+                BadgedBox(
+                    badge = {
+                        if (hasUnreadChat) {
+                            Badge(containerColor = BadgeRed)
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.Chat,
+                        contentDescription = "شات الفريق",
+                        tint = TealPrimary,
+                        modifier = Modifier.size(19.dp)
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(TeamSeatSurfaceColor)
                     .border(1.dp, SearchBorderColor, CircleShape)
                     .bounceClick(onClick = onNotificationsClick),
                 contentAlignment = Alignment.Center
@@ -564,7 +623,7 @@ private fun HomeSearchBar(onClick: () -> Unit) {
             .fillMaxWidth()
             .height(48.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(Color.White)
+            .background(TeamSeatSurfaceColor)
             .border(1.dp, SearchBorderColor, RoundedCornerShape(14.dp))
             .bounceClick(onClick = onClick)
             .padding(horizontal = 14.dp),
@@ -617,7 +676,7 @@ private fun HomeFilterChip(
     onClick: () -> Unit
 ) {
     val bgColor by animateColorAsState(
-        targetValue = if (isSelected) TealPrimary else Color.White,
+        targetValue = if (isSelected) TealPrimary else TeamSeatSurfaceColor,
         animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
         label = "chipBg"
     )

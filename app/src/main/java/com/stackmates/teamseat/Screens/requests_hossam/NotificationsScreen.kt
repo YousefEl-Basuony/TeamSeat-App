@@ -79,7 +79,7 @@ fun NotificationsScreen(
                             .padding(start = 12.dp, end = 6.dp)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color.White)
+                            .background(TeamSeatSurfaceColor)
                             .border(1.dp, TeamSeatCardBorderTeal, CircleShape)
                             .bounceClick(onClick = onBackClick),
                         contentAlignment = Alignment.Center
@@ -121,7 +121,7 @@ fun NotificationsScreen(
                                 .padding(end = 12.dp)
                                 .height(36.dp)
                                 .clip(RoundedCornerShape(18.dp))
-                                .background(Color.White)
+                                .background(TeamSeatSurfaceColor)
                                 .border(1.dp, TeamSeatCardBorderTeal, RoundedCornerShape(18.dp))
                                 .bounceClick {
                                     for (i in notificationList.indices) {
@@ -228,7 +228,7 @@ fun NotificationsScreen(
                                     modifier = Modifier
                                         .size(40.dp)
                                         .clip(CircleShape)
-                                        .background(Color.White)
+                                        .background(TeamSeatSurfaceColor)
                                         .border(1.dp, TeamSeatCardBorderTeal, CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -266,7 +266,7 @@ fun NotificationsScreen(
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(Color.White)
+                                        .background(TeamSeatSurfaceColor)
                                         .border(1.dp, TeamSeatCardBorderWarm, RoundedCornerShape(10.dp))
                                         .padding(horizontal = 10.dp, vertical = 4.dp)
                                 ) {
@@ -423,7 +423,7 @@ fun NotificationsScreen(
                                         modifier = Modifier
                                             .size(42.dp)
                                             .clip(CircleShape)
-                                            .background(Color.White)
+                                            .background(TeamSeatSurfaceColor)
                                             .border(1.dp, visual.border, CircleShape),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -452,7 +452,7 @@ fun NotificationsScreen(
                                     modifier = Modifier
                                         .height(26.dp)
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(Color.White)
+                                        .background(TeamSeatSurfaceColor)
                                         .border(1.dp, visual.border, RoundedCornerShape(8.dp))
                                         .padding(horizontal = 10.dp),
                                     contentAlignment = Alignment.Center
@@ -529,7 +529,7 @@ fun NotificationsScreen(
                             .fillMaxWidth()
                             .height(48.dp)
                             .clip(RoundedCornerShape(14.dp))
-                            .background(Color.White)
+                            .background(TeamSeatSurfaceColor)
                             .border(1.2.dp, TeamSeatDangerRed.copy(alpha = 0.45f), RoundedCornerShape(14.dp))
                             .bounceClick { showClearSheet = true },
                         contentAlignment = Alignment.Center
@@ -622,7 +622,7 @@ fun NotificationsScreen(
                             .weight(1f)
                             .height(46.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color.White)
+                            .background(TeamSeatSurfaceColor)
                             .border(1.2.dp, TeamSeatCardBorderTeal, RoundedCornerShape(12.dp))
                             .bounceClick { showClearSheet = false },
                         contentAlignment = Alignment.Center

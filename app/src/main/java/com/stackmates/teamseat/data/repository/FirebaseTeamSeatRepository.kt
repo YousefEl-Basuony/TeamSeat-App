@@ -1,6 +1,7 @@
 package com.stackmates.teamseat.data.repository
 
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.stackmates.teamseat.core.model.CalendarEvent
@@ -115,7 +116,11 @@ class FirebaseTeamSeatRepository(
         description: String,
         leaderId: String,
         leaderName: String,
-        seatRoles: List<String>
+        seatRoles: List<String>,
+        supervisorDoctor: String,
+        teachingAssistant: String,
+        githubRepo: String,
+        driveFolder: String
     ): Result<Team> = runCatching {
         val teamId = "team_${System.currentTimeMillis()}"
         val cleanRoles = if (seatRoles.isEmpty()) listOf("Lead Developer", "Developer") else seatRoles
@@ -126,7 +131,11 @@ class FirebaseTeamSeatRepository(
             description = description.ifBlank { "مشروع تعاوني عبر TeamSeat" },
             leaderId = leaderId,
             leaderName = leaderName,
-            totalSeats = cleanRoles.size
+            totalSeats = cleanRoles.size,
+            supervisorDoctor = supervisorDoctor.ifBlank { "د. محمد كاظم" },
+            teachingAssistant = teachingAssistant.ifBlank { "م. شهد أحمد عبدالسلام" },
+            githubRepo = githubRepo.trim(),
+            driveFolder = driveFolder.trim()
         )
 
         val batch = firestore.batch()
@@ -206,7 +215,17 @@ class FirebaseTeamSeatRepository(
                         userId = leaderId,
                         title = "طلب انضمام جديد لفريقك",
                         message = "تقدم $studentName لحجز مقعد ($targetRole) في فريق $projectName.",
-                        type = NotificationType.NEW_REQUEST
+                        type = NotificationType.NEW_REQUEST,
+                        teamId = targetTeamId
+                    )
+                }
+                if (studentId.isNotBlank()) {
+                    sendUserNotification(
+                        userId = studentId,
+                        title = "طلبك قيد الانتظار ⏳",
+                        message = "تم إرسال طلبك لحجز مقعد ($targetRole) في فريق $projectName وهو قيد مراجعة القائد.",
+                        type = NotificationType.NEW_REQUEST,
+                        teamId = targetTeamId
                     )
                 }
             }
@@ -262,7 +281,8 @@ class FirebaseTeamSeatRepository(
                     userId = applicantId,
                     title = "تم قبول طلبك!",
                     message = "أهلاً بك في فريق $projectName! تم تأكيد مقعدك ($roleRequired).",
-                    type = NotificationType.ACCEPTED
+                    type = NotificationType.ACCEPTED,
+                    teamId = teamId
                 )
             }
         }
@@ -402,6 +422,11 @@ class FirebaseTeamSeatRepository(
     }
 
     override fun observeTeamMessages(teamId: String): Flow<List<TeamChatMessage>> = callbackFlow {
+        if (teamId.isBlank()) {
+            trySend(emptyList())
+            awaitClose { }
+            return@callbackFlow
+        }
         val registration = teamsCollection.document(teamId)
             .collection("messages")
             .orderBy("timestampMs", Query.Direction.ASCENDING)
@@ -412,14 +437,20 @@ class FirebaseTeamSeatRepository(
                 }
                 val msgs = snapshot.documents.mapNotNull { doc ->
                     val text = doc.getString("text") ?: return@mapNotNull null
+                    val readByList = (doc.get("readBy") as? List<*>)
+                        ?.filterIsInstance<String>()
+                        ?: emptyList()
                     TeamChatMessage(
                         id = doc.id,
                         teamId = teamId,
                         senderId = doc.getString("senderId") ?: "",
                         senderName = doc.getString("senderName") ?: "عضو",
+                        senderAvatarEmoji = doc.getString("senderAvatarEmoji") ?: "👩‍💻",
+                        senderPhotoBase64 = doc.getString("senderPhotoBase64") ?: "",
                         text = text,
                         timeLabel = doc.getString("timeLabel") ?: "",
-                        timestampMs = doc.getLong("timestampMs") ?: 0L
+                        timestampMs = doc.getLong("timestampMs") ?: 0L,
+                        readBy = readByList
                     )
                 }
                 trySend(msgs)
@@ -431,7 +462,9 @@ class FirebaseTeamSeatRepository(
         teamId: String,
         senderId: String,
         senderName: String,
-        text: String
+        text: String,
+        senderAvatarEmoji: String,
+        senderPhotoBase64: String
     ): Result<Unit> = runCatching {
         val now = System.currentTimeMillis()
         val timeLabel = SimpleDateFormat("hh:mm a", Locale("ar")).format(Date(now))
@@ -439,15 +472,41 @@ class FirebaseTeamSeatRepository(
             "teamId" to teamId,
             "senderId" to senderId,
             "senderName" to senderName,
+            "senderAvatarEmoji" to senderAvatarEmoji,
+            "senderPhotoBase64" to senderPhotoBase64,
             "text" to text.trim(),
             "timeLabel" to timeLabel,
-            "timestampMs" to now
+            "timestampMs" to now,
+            "readBy" to listOf(senderId)
         )
         teamsCollection.document(teamId).collection("messages").add(data).await()
         Unit
     }
 
+    override suspend fun markTeamMessagesRead(teamId: String, readerId: String): Result<Unit> = runCatching {
+        if (teamId.isBlank() || readerId.isBlank()) return@runCatching
+        val snap = teamsCollection.document(teamId).collection("messages").get().await()
+        val batch = firestore.batch()
+        var hasUpdates = false
+        snap.documents.forEach { doc ->
+            val readBy = (doc.get("readBy") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+            if (readerId !in readBy) {
+                batch.update(doc.reference, "readBy", FieldValue.arrayUnion(readerId))
+                hasUpdates = true
+            }
+        }
+        if (hasUpdates) {
+            batch.commit().await()
+        }
+        Unit
+    }
+
     override fun observeTeamEvents(teamId: String): Flow<List<CalendarEvent>> = callbackFlow {
+        if (teamId.isBlank()) {
+            trySend(emptyList())
+            awaitClose { }
+            return@callbackFlow
+        }
         val registration = teamsCollection.document(teamId)
             .collection("events")
             .orderBy("createdAt", Query.Direction.DESCENDING)
@@ -477,7 +536,9 @@ class FirebaseTeamSeatRepository(
         title: String,
         date: String,
         time: String,
-        type: String
+        type: String,
+        addedByName: String,
+        addedByUid: String
     ): Result<Unit> = runCatching {
         val data = hashMapOf(
             "teamId" to teamId,
@@ -485,9 +546,37 @@ class FirebaseTeamSeatRepository(
             "date" to date.trim(),
             "time" to time.trim(),
             "type" to type,
+            "addedByName" to addedByName,
             "createdAt" to System.currentTimeMillis()
         )
         teamsCollection.document(teamId).collection("events").add(data).await()
+
+        runCatching {
+            val teamDoc = teamsCollection.document(teamId).get().await()
+            val projectName = teamDoc.getString("projectName").orEmpty()
+            val leaderId = teamDoc.getString("leaderId").orEmpty()
+            val seatsSnap = seatsCollection
+                .whereEqualTo("teamId", teamId)
+                .whereEqualTo("status", SeatStatus.BOOKED.name)
+                .get()
+                .await()
+
+            val recipientIds = buildSet {
+                if (leaderId.isNotBlank()) add(leaderId)
+                seatsSnap.documents.mapNotNull { it.getString("applicantId") }
+                    .filter { it.isNotBlank() }
+                    .forEach { add(it) }
+            }.filter { it != addedByUid }
+
+            recipientIds.forEach { uid ->
+                sendUserNotification(
+                    userId = uid,
+                    title = "موعد جديد في تقويم الفريق",
+                    message = "أضاف $addedByName موعداً جديداً: «${title.trim()}» (${date.trim()} - ${time.trim()}) في فريق $projectName.",
+                    type = NotificationType.TEAM_LOCKED
+                )
+            }
+        }
         Unit
     }
 
@@ -517,7 +606,8 @@ class FirebaseTeamSeatRepository(
                         message = doc.getString("message") ?: "",
                         timeAgo = doc.getString("timeAgo") ?: "الآن",
                         type = type,
-                        isRead = doc.getBoolean("isRead") ?: false
+                        isRead = doc.getBoolean("isRead") ?: false,
+                        teamId = doc.getString("teamId") ?: ""
                     )
                 }
                 trySend(items)
@@ -553,7 +643,8 @@ class FirebaseTeamSeatRepository(
         userId: String,
         title: String,
         message: String,
-        type: NotificationType
+        type: NotificationType,
+        teamId: String = ""
     ) {
         val now = System.currentTimeMillis()
         val timeLabel = SimpleDateFormat("hh:mm a", Locale("ar")).format(Date(now))
@@ -563,6 +654,7 @@ class FirebaseTeamSeatRepository(
             "timeAgo" to timeLabel,
             "type" to type.name,
             "isRead" to false,
+            "teamId" to teamId,
             "createdAt" to now
         )
         firestore.collection("users")
@@ -592,7 +684,9 @@ class FirebaseTeamSeatRepository(
                         isLeader = doc.getBoolean("isLeader") ?: false,
                         avatarEmoji = doc.getString("avatarEmoji") ?: "👩‍💻",
                         major = doc.getString("major") ?: "علوم حاسب (Computer Science)",
-                        isBanned = doc.getBoolean("isBanned") ?: false
+                        isBanned = doc.getBoolean("isBanned") ?: false,
+                        isAdmin = doc.getBoolean("isAdmin") ?: false,
+                        photoBase64 = doc.getString("photoBase64") ?: ""
                     )
                 }
                 trySend(users)
@@ -600,8 +694,76 @@ class FirebaseTeamSeatRepository(
         awaitClose { registration.remove() }
     }
 
+    override suspend fun updateTeamDetails(
+        teamId: String,
+        supervisorDoctor: String,
+        teachingAssistant: String,
+        githubRepo: String,
+        driveFolder: String,
+        isCompleted: Boolean
+    ): Result<Unit> = runCatching {
+        teamsCollection.document(teamId).update(
+            mapOf(
+                "supervisorDoctor" to supervisorDoctor.trim(),
+                "teachingAssistant" to teachingAssistant.trim(),
+                "githubRepo" to githubRepo.trim(),
+                "driveFolder" to driveFolder.trim(),
+                "isCompleted" to isCompleted
+            )
+        ).await()
+        Unit
+    }
+
+    override suspend fun leaveTeam(teamId: String, memberId: String): Result<Unit> = runCatching {
+        val seatsSnap = seatsCollection
+            .whereEqualTo("teamId", teamId)
+            .whereEqualTo("applicantId", memberId)
+            .get()
+            .await()
+
+        val batch = firestore.batch()
+        seatsSnap.documents.forEach { doc ->
+            batch.update(
+                doc.reference,
+                mapOf(
+                    "status" to SeatStatus.AVAILABLE.name,
+                    "applicantId" to null,
+                    "applicantName" to null,
+                    "applicantNote" to null,
+                    "expiresAt" to null
+                )
+            )
+        }
+        batch.commit().await()
+
+        runCatching {
+            firestore.collection("users").document(memberId)
+                .update("currentTeamId", null)
+                .await()
+            val teamDoc = teamsCollection.document(teamId).get().await()
+            val leaderId = teamDoc.getString("leaderId").orEmpty()
+            val projectName = teamDoc.getString("projectName").orEmpty()
+            val memberDoc = firestore.collection("users").document(memberId).get().await()
+            val memberName = memberDoc.getString("name") ?: "أحد الأعضاء"
+            if (leaderId.isNotBlank() && leaderId != memberId) {
+                sendUserNotification(
+                    userId = leaderId,
+                    title = "مغادرة عضو للفريق",
+                    message = "غادر $memberName فريق $projectName وأصبح مقعده متاحاً من جديد.",
+                    type = NotificationType.REJECTED
+                )
+            }
+        }
+        Unit
+    }
+
     override suspend fun setUserBanned(uid: String, banned: Boolean): Result<Unit> = runCatching {
         firestore.collection("users").document(uid).update("isBanned", banned).await()
+        Unit
+    }
+
+    override suspend fun setUserAdmin(uid: String, isAdmin: Boolean): Result<Unit> = runCatching {
+        firestore.collection("users").document(uid).update("isAdmin", isAdmin).await()
         Unit
     }
 
@@ -622,7 +784,9 @@ class FirebaseTeamSeatRepository(
                 isLeader = doc.getBoolean("isLeader") ?: false,
                 avatarEmoji = doc.getString("avatarEmoji") ?: "👩‍💻",
                 major = doc.getString("major") ?: "علوم حاسب (Computer Science)",
-                isBanned = doc.getBoolean("isBanned") ?: false
+                isBanned = doc.getBoolean("isBanned") ?: false,
+                isAdmin = doc.getBoolean("isAdmin") ?: false,
+                photoBase64 = doc.getString("photoBase64") ?: ""
             )
         }.getOrNull()
     }
@@ -664,6 +828,7 @@ class FirebaseTeamSeatRepository(
             leaderName = getString("leaderName") ?: "",
             totalSeats = (getLong("totalSeats") ?: 6L).toInt(),
             isLocked = getBoolean("isLocked") ?: false,
+            isCompleted = getBoolean("isCompleted") ?: false,
             supervisorDoctor = getString("supervisorDoctor") ?: "د. محمد كاظم",
             teachingAssistant = getString("teachingAssistant") ?: "م. شهد أحمد عبدالسلام",
             githubRepo = getString("githubRepo") ?: "",
@@ -699,6 +864,7 @@ class FirebaseTeamSeatRepository(
         "leaderName" to leaderName,
         "totalSeats" to totalSeats,
         "isLocked" to isLocked,
+        "isCompleted" to isCompleted,
         "supervisorDoctor" to supervisorDoctor,
         "teachingAssistant" to teachingAssistant,
         "githubRepo" to githubRepo,

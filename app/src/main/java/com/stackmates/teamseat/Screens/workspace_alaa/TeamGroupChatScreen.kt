@@ -24,6 +24,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Send
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.DoneAll
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -67,7 +69,9 @@ import com.stackmates.teamseat.ui.components.TeamSeatDividerColor
 import com.stackmates.teamseat.ui.components.TeamSeatPrimaryTeal
 import com.stackmates.teamseat.ui.components.TeamSeatScreenContainer
 import com.stackmates.teamseat.ui.components.TeamSeatSoftTealPill
+import com.stackmates.teamseat.ui.components.TeamSeatSurfaceColor
 import com.stackmates.teamseat.ui.components.TeamSeatTitleDark
+import com.stackmates.teamseat.ui.components.UserAvatarContent
 import com.stackmates.teamseat.ui.components.bounceClick
 
 data class ChatMessage(
@@ -75,7 +79,10 @@ data class ChatMessage(
     val senderName: String,
     val text: String,
     val timestamp: String,
-    val isMe: Boolean
+    val isMe: Boolean,
+    val senderAvatarEmoji: String = "👩‍💻",
+    val senderPhotoBase64: String = "",
+    val isReadByOthers: Boolean = false
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -103,7 +110,10 @@ fun TeamGroupChatScreen(
                 senderName = msg.senderName,
                 text = msg.text,
                 timestamp = msg.timeLabel,
-                isMe = currentUserId.isNotBlank() && msg.senderId == currentUserId
+                isMe = currentUserId.isNotBlank() && msg.senderId == currentUserId,
+                senderAvatarEmoji = msg.senderAvatarEmoji,
+                senderPhotoBase64 = msg.senderPhotoBase64,
+                isReadByOthers = msg.readBy.any { it.isNotBlank() && it != currentUserId }
             )
         } ?: localMessages
     }
@@ -260,56 +270,91 @@ fun TeamGroupChatScreen(
 
 @Composable
 private fun ChatBubble(message: ChatMessage) {
-    Column(
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = if (message.isMe) Alignment.Start else Alignment.End
+        horizontalArrangement = if (message.isMe) Arrangement.Start else Arrangement.End,
+        verticalAlignment = Alignment.Bottom
     ) {
-        if (!message.isMe) {
-            Text(
-                text = message.senderName,
-                fontFamily = TajawalFontFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 11.5.sp,
-                color = TeamSeatPrimaryTeal,
-                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-            )
-        }
-        val bubbleShape = RoundedCornerShape(
-            topStart = 16.dp,
-            topEnd = 16.dp,
-            bottomStart = if (message.isMe) 4.dp else 16.dp,
-            bottomEnd = if (message.isMe) 16.dp else 4.dp
-        )
-        Box(
-            modifier = Modifier
-                .widthIn(max = 285.dp)
-                .clip(bubbleShape)
-                .then(
-                    if (message.isMe) {
-                        Modifier.background(TeamSeatPrimaryTeal)
-                    } else {
-                        Modifier
-                            .background(Brush.verticalGradient(listOf(TeamSeatCardTopTeal, Color.White)))
-                            .border(1.5.dp, TeamSeatCardBorderTeal, bubbleShape)
-                    }
-                )
-                .padding(horizontal = 14.dp, vertical = 10.dp)
+        Column(
+            horizontalAlignment = if (message.isMe) Alignment.Start else Alignment.End
         ) {
-            Column {
+            if (!message.isMe) {
                 Text(
-                    text = message.text,
+                    text = message.senderName,
                     fontFamily = TajawalFontFamily,
-                    color = if (message.isMe) Color.White else TeamSeatTitleDark,
-                    fontSize = 14.sp,
-                    lineHeight = 21.sp
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.5.sp,
+                    color = TeamSeatPrimaryTeal,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = message.timestamp,
-                    fontFamily = TajawalFontFamily,
-                    color = if (message.isMe) TeamSeatSoftTealPill else TeamSeatBodyMuted,
-                    fontSize = 10.5.sp,
-                    modifier = Modifier.align(Alignment.End)
+            }
+            val bubbleShape = RoundedCornerShape(
+                topStart = 16.dp,
+                topEnd = 16.dp,
+                bottomStart = if (message.isMe) 4.dp else 16.dp,
+                bottomEnd = if (message.isMe) 16.dp else 4.dp
+            )
+            Box(
+                modifier = Modifier
+                    .widthIn(max = 270.dp)
+                    .clip(bubbleShape)
+                    .then(
+                        if (message.isMe) {
+                            Modifier.background(TeamSeatPrimaryTeal)
+                        } else {
+                            Modifier
+                                .background(Brush.verticalGradient(listOf(TeamSeatCardTopTeal, TeamSeatSurfaceColor)))
+                                .border(1.5.dp, TeamSeatCardBorderTeal, bubbleShape)
+                        }
+                    )
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+            ) {
+                Column {
+                    Text(
+                        text = message.text,
+                        fontFamily = TajawalFontFamily,
+                        color = if (message.isMe) Color.White else TeamSeatTitleDark,
+                        fontSize = 14.sp,
+                        lineHeight = 21.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.align(Alignment.End),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = message.timestamp,
+                            fontFamily = TajawalFontFamily,
+                            color = if (message.isMe) TeamSeatSoftTealPill else TeamSeatBodyMuted,
+                            fontSize = 10.5.sp
+                        )
+                        if (message.isMe) {
+                            Icon(
+                                imageVector = if (message.isReadByOthers) Icons.Rounded.DoneAll else Icons.Rounded.Check,
+                                contentDescription = if (message.isReadByOthers) "تمت القراءة" else "تم الإرسال",
+                                tint = if (message.isReadByOthers) Color(0xFF80F3E8) else TeamSeatSoftTealPill,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        if (!message.isMe) {
+            Spacer(modifier = Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(TeamSeatSoftTealPill)
+                    .border(1.dp, TeamSeatCardBorderTeal, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                UserAvatarContent(
+                    avatarEmoji = message.senderAvatarEmoji,
+                    photoBase64 = message.senderPhotoBase64,
+                    emojiFontSizeSp = 16f
                 )
             }
         }

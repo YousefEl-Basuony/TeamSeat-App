@@ -30,8 +30,21 @@ interface TeamSeatRepository {
         description: String,
         leaderId: String,
         leaderName: String,
-        seatRoles: List<String>
+        seatRoles: List<String>,
+        supervisorDoctor: String = "د. محمد كاظم",
+        teachingAssistant: String = "م. شهد أحمد عبدالسلام",
+        githubRepo: String = "",
+        driveFolder: String = ""
     ): Result<Team>
+    suspend fun updateTeamDetails(
+        teamId: String,
+        supervisorDoctor: String,
+        teachingAssistant: String,
+        githubRepo: String,
+        driveFolder: String,
+        isCompleted: Boolean
+    ): Result<Unit>
+    suspend fun leaveTeam(teamId: String, memberId: String): Result<Unit>
     suspend fun requestSeatBooking(seatId: String, studentId: String, studentName: String, note: String): Result<Unit>
     suspend fun acceptApplicantBatch(seatId: String, applicantId: String): Result<Unit>
     suspend fun rejectOrCancelSeat(seatId: String): Result<Unit>
@@ -40,15 +53,32 @@ interface TeamSeatRepository {
     suspend fun deleteTeam(teamId: String): Result<Unit>
     suspend fun updateTeamSeats(teamId: String, updatedSeats: List<Seat>): Result<Unit>
     fun observeTeamMessages(teamId: String): Flow<List<TeamChatMessage>>
-    suspend fun sendTeamMessage(teamId: String, senderId: String, senderName: String, text: String): Result<Unit>
+    suspend fun sendTeamMessage(
+        teamId: String,
+        senderId: String,
+        senderName: String,
+        text: String,
+        senderAvatarEmoji: String = "👩‍💻",
+        senderPhotoBase64: String = ""
+    ): Result<Unit>
+    suspend fun markTeamMessagesRead(teamId: String, readerId: String): Result<Unit>
     fun observeTeamEvents(teamId: String): Flow<List<CalendarEvent>>
-    suspend fun addTeamEvent(teamId: String, title: String, date: String, time: String, type: String = "ميتنج"): Result<Unit>
+    suspend fun addTeamEvent(
+        teamId: String,
+        title: String,
+        date: String,
+        time: String,
+        type: String = "ميتنج",
+        addedByName: String = "أحد أعضاء التيم",
+        addedByUid: String = ""
+    ): Result<Unit>
     fun observeUserNotifications(userId: String): Flow<List<NotificationItem>>
     suspend fun markAllNotificationsRead(userId: String): Result<Unit>
     suspend fun clearUserNotifications(userId: String): Result<Unit>
     fun observeAllUsers(): Flow<List<User>>
     suspend fun getUserById(uid: String): User?
     suspend fun setUserBanned(uid: String, banned: Boolean): Result<Unit>
+    suspend fun setUserAdmin(uid: String, isAdmin: Boolean): Result<Unit>
     suspend fun deleteUserRecord(uid: String): Result<Unit>
     suspend fun setTeamLocked(teamId: String, locked: Boolean): Result<Unit>
 }
@@ -103,7 +133,11 @@ class FakeTeamSeatRepository : TeamSeatRepository {
         description: String,
         leaderId: String,
         leaderName: String,
-        seatRoles: List<String>
+        seatRoles: List<String>,
+        supervisorDoctor: String,
+        teachingAssistant: String,
+        githubRepo: String,
+        driveFolder: String
     ): Result<Team> {
         val teamId = "team_${System.currentTimeMillis()}"
         val newTeam = Team(
@@ -113,7 +147,11 @@ class FakeTeamSeatRepository : TeamSeatRepository {
             description = description,
             leaderId = leaderId,
             leaderName = leaderName,
-            totalSeats = seatRoles.size.coerceAtLeast(2)
+            totalSeats = seatRoles.size.coerceAtLeast(2),
+            supervisorDoctor = supervisorDoctor.ifBlank { "د. محمد كاظم" },
+            teachingAssistant = teachingAssistant.ifBlank { "م. شهد أحمد عبدالسلام" },
+            githubRepo = githubRepo,
+            driveFolder = driveFolder
         )
         val newSeats = seatRoles.mapIndexed { index, role ->
             Seat(
@@ -227,19 +265,27 @@ class FakeTeamSeatRepository : TeamSeatRepository {
         teamId: String,
         senderId: String,
         senderName: String,
-        text: String
+        text: String,
+        senderAvatarEmoji: String,
+        senderPhotoBase64: String
     ): Result<Unit> {
         val msg = TeamChatMessage(
             id = "msg_${System.currentTimeMillis()}",
             teamId = teamId,
             senderId = senderId,
             senderName = senderName,
+            senderAvatarEmoji = senderAvatarEmoji,
+            senderPhotoBase64 = senderPhotoBase64,
             text = text,
-            timeLabel = "الآن"
+            timeLabel = "الآن",
+            readBy = listOf(senderId)
         )
         _messages.value = _messages.value + msg
         return Result.success(Unit)
     }
+
+    override suspend fun markTeamMessagesRead(teamId: String, readerId: String): Result<Unit> =
+        Result.success(Unit)
 
     override fun observeTeamEvents(teamId: String): Flow<List<CalendarEvent>> =
         _events.map { list -> list.filter { it.teamId == teamId || it.teamId == MockDataProvider.sampleTeam.teamId } }
@@ -249,7 +295,9 @@ class FakeTeamSeatRepository : TeamSeatRepository {
         title: String,
         date: String,
         time: String,
-        type: String
+        type: String,
+        addedByName: String,
+        addedByUid: String
     ): Result<Unit> {
         val event = CalendarEvent(
             id = "ev_${System.currentTimeMillis()}",
@@ -282,7 +330,20 @@ class FakeTeamSeatRepository : TeamSeatRepository {
         listOf(MockDataProvider.ahmedLeader, MockDataProvider.saraStudent).firstOrNull { it.uid == uid }
             ?: MockDataProvider.saraStudent
 
+    override suspend fun updateTeamDetails(
+        teamId: String,
+        supervisorDoctor: String,
+        teachingAssistant: String,
+        githubRepo: String,
+        driveFolder: String,
+        isCompleted: Boolean
+    ): Result<Unit> = Result.success(Unit)
+
+    override suspend fun leaveTeam(teamId: String, memberId: String): Result<Unit> = Result.success(Unit)
+
     override suspend fun setUserBanned(uid: String, banned: Boolean): Result<Unit> = Result.success(Unit)
+
+    override suspend fun setUserAdmin(uid: String, isAdmin: Boolean): Result<Unit> = Result.success(Unit)
 
     override suspend fun deleteUserRecord(uid: String): Result<Unit> = Result.success(Unit)
 

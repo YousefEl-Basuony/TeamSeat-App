@@ -287,6 +287,7 @@ fun InteractiveSeatMapScreen(
     team: Team,
     seats: List<Seat>,
     isCurrentUserLeader: Boolean,
+    canViewMemberNames: Boolean = isCurrentUserLeader,
     onSeatClick: (String) -> Unit,
     onOpenWorkspaceClick: () -> Unit,
     onReviewRequestsClick: () -> Unit,
@@ -302,12 +303,12 @@ fun InteractiveSeatMapScreen(
                 SeatStatus.BOOKED -> SeatMapStatus.BOOKED
                 SeatStatus.LOCKED -> SeatMapStatus.LOCKED
             },
-            holder = seat.applicantName
+            holder = if (canViewMemberNames) seat.applicantName else null
         )
     }
     InteractiveSeatMapScreen(
         teamName = team.projectName,
-        leaderName = team.leaderName,
+        leaderName = if (canViewMemberNames) team.leaderName else "قائد الفريق",
         seats = mappedSeats,
         onBack = onBackClick,
         onAvailableSeatClick = { mapped -> onSeatClick(mapped.id) }

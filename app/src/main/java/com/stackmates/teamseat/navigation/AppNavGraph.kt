@@ -105,6 +105,10 @@ fun AppNavGraph(
     var draftTeamName by remember { mutableStateOf("") }
     var draftTeamCourse by remember { mutableStateOf("") }
     var draftTeamDesc by remember { mutableStateOf("") }
+    var draftTeamDoctor by remember { mutableStateOf("") }
+    var draftTeamTA by remember { mutableStateOf("") }
+    var draftTeamGithub by remember { mutableStateOf("") }
+    var draftTeamDrive by remember { mutableStateOf("") }
     var draftTeamSeatCount by remember { mutableIntStateOf(6) }
 
     val selectedTeam = remember(teams, selectedTeamId, currentUser) {
@@ -123,6 +127,17 @@ fun AppNavGraph(
     }
     val myTeamSeats by teamRepository.observeTeamSeats(myTeam?.teamId.orEmpty())
         .collectAsState(initial = emptyList())
+    val myTeamMessages by teamRepository.observeTeamMessages(myTeam?.teamId.orEmpty())
+        .collectAsState(initial = emptyList())
+    val myTeamEvents by teamRepository.observeTeamEvents(myTeam?.teamId.orEmpty())
+        .collectAsState(initial = emptyList())
+    var lastSeenChatTimestampMs by remember { mutableStateOf(0L) }
+    var lastSeenCalendarEventId by remember { mutableStateOf<String?>(null) }
+    val hasUnreadChat = myTeam != null && myTeamMessages.any {
+        it.senderId != currentUser?.uid && it.timestampMs > lastSeenChatTimestampMs
+    }
+    val hasUnreadCalendar = myTeam != null && myTeamEvents.isNotEmpty() &&
+        myTeamEvents.firstOrNull()?.id != lastSeenCalendarEventId
 
     NavHost(
         navController = navController,
@@ -142,6 +157,7 @@ fun AppNavGraph(
             TASheetPreviewScreen(
                 team = selectedTeam,
                 seats = seats,
+                isLeader = selectedTeam.leaderId == currentUser?.uid,
                 onLockTeamClick = { navController.navigate(ScreenRoutes.LOCK_TEAM) },
                 onExportPdfClick = {
                     val result = PdfExporter.exportTeamSheetPdf(context, selectedTeam, seats)
@@ -167,7 +183,7 @@ fun AppNavGraph(
             LockTeamDialog(
                 onConfirmLock = {
                     scope.launch {
-                        teamRepository.lockTeam(MockDataProvider.sampleTeam.teamId)
+                        teamRepository.lockTeam(selectedTeam.teamId)
                         navController.popBackStack()
                     }
                 },
@@ -204,6 +220,16 @@ fun AppNavGraph(
                         Toast.makeText(
                             appContext,
                             if (banned) "تم حظر المستخدم" else "تم فك الحظر عن المستخدم",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                },
+                onToggleAdminUser = { uid, isAdmin ->
+                    scope.launch {
+                        teamRepository.setUserAdmin(uid, isAdmin)
+                        Toast.makeText(
+                            appContext,
+                            if (isAdmin) "تمت ترقية المستخدم لأدمن" else "تمت إزالة صلاحية الأدمن",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -414,6 +440,8 @@ fun AppNavGraph(
                 seats = seats,
                 myTeamSeats = myTeamSeats,
                 unreadNotificationsCount = if (appSettings.notificationsEnabled) userNotifications.count { !it.isRead } else 0,
+                hasUnreadChat = hasUnreadChat,
+                hasUnreadCalendar = hasUnreadCalendar,
                 savedAccounts = savedAccounts,
                 appSettings = appSettings,
                 onUpdateSettings = onUpdateAppSettings,
@@ -425,9 +453,23 @@ fun AppNavGraph(
                 onNotificationsClick = { navController.navigate(ScreenRoutes.NOTIFICATIONS) },
                 onMyApplicationsClick = { navController.navigate(ScreenRoutes.MY_APPLICATIONS) },
                 onSwitchPersona = { authRepository.switchDemoPersona() },
-                onOpenCalendarClick = { navController.navigate(ScreenRoutes.TEAM_CALENDAR) },
+                onOpenCalendarClick = {
+                    lastSeenCalendarEventId = myTeamEvents.firstOrNull()?.id
+                    navController.navigate(ScreenRoutes.TEAM_CALENDAR)
+                },
                 onOpenTASheetClick = { navController.navigate(ScreenRoutes.TA_SHEET_PREVIEW) },
-                onOpenChatClick = { navController.navigate(ScreenRoutes.TEAM_GROUP_CHAT) },
+                onOpenChatClick = {
+                    lastSeenChatTimestampMs = System.currentTimeMillis()
+                    navController.navigate(ScreenRoutes.TEAM_GROUP_CHAT)
+                },
+                onHomeChatClick = {
+                    if (myTeam == null) {
+                        Toast.makeText(appContext, "أنت مش في أي تيم حالياً", Toast.LENGTH_SHORT).show()
+                    } else {
+                        lastSeenChatTimestampMs = System.currentTimeMillis()
+                        navController.navigate(ScreenRoutes.TEAM_GROUP_CHAT)
+                    }
+                },
                 onReviewRequestsClick = {
                     myTeam?.teamId?.let { selectedTeamId = it }
                     navController.navigate(ScreenRoutes.REVIEW_APPLICATIONS)
@@ -469,6 +511,46 @@ fun AppNavGraph(
                 onOpenSuperAdminClick = { navController.navigate(ScreenRoutes.SUPER_ADMIN) },
                 onSaveProfileChanges = { role, github, linkedin ->
                     scope.launch { authRepository.updateProfile(role, github, linkedin) }
+                },
+                onUpdateNameClick = { newName ->
+                    scope.launch {
+                        authRepository.updateProfile(
+                            roleTag = currentUser?.roleTag ?: "Android Developer",
+                            githubUrl = currentUser?.githubUrl.orEmpty(),
+                            linkedinUrl = currentUser?.linkedinUrl.orEmpty(),
+                            name = newName
+                        )
+                        Toast.makeText(appContext, "تم تحديث الاسم", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onUpdateAvatarClick = { emoji, photoBase64 ->
+                    scope.launch {
+                        authRepository.updateAvatar(emoji, photoBase64)
+                        Toast.makeText(appContext, "تم تحديث صورة البروفايل", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onLeaveTeamClick = {
+                    myTeam?.let { activeTeam ->
+                        scope.launch {
+                            teamRepository.leaveTeam(activeTeam.teamId, currentUser?.uid.orEmpty())
+                            Toast.makeText(appContext, "تمت مغادرة الفريق", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
+                onUpdateTeamDetailsClick = { doctor, ta, github, drive, completed ->
+                    myTeam?.let { activeTeam ->
+                        scope.launch {
+                            teamRepository.updateTeamDetails(
+                                teamId = activeTeam.teamId,
+                                supervisorDoctor = doctor,
+                                teachingAssistant = ta,
+                                githubRepo = github,
+                                driveFolder = drive,
+                                isCompleted = completed
+                            )
+                            Toast.makeText(appContext, "تم تحديث بيانات المشروع", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 },
                 onSwitchToAccountClick = { account ->
                     if (account.savedPassword.isNotBlank()) {
@@ -555,6 +637,8 @@ fun AppNavGraph(
             TeamDetailsOverviewScreen(
                 team = selectedTeam,
                 seats = seats,
+                canViewMemberNames = selectedTeam.leaderId == currentUser?.uid ||
+                    currentUser?.currentTeamId == selectedTeam.teamId,
                 onOpenSeatMapClick = { navController.navigate(ScreenRoutes.SEAT_MAP) },
                 onBackClick = { navController.popBackStack() }
             )
@@ -603,12 +687,25 @@ fun AppNavGraph(
                 notifications = userNotifications,
                 onNotificationClick = { item ->
                     if (item.type == NotificationType.NEW_REQUEST) {
-                        val leaderTeamId = teams.firstOrNull { it.leaderId == currentUser?.uid }?.teamId
-                            ?: currentUser?.currentTeamId.orEmpty()
-                        if (leaderTeamId.isNotBlank()) {
-                            selectedTeamId = leaderTeamId
+                        val leaderTeam = teams.firstOrNull { it.leaderId == currentUser?.uid }
+                        val isLeaderNotification = leaderTeam != null &&
+                            (item.teamId.isBlank() || item.teamId == leaderTeam.teamId) &&
+                            !item.title.contains("قيد الانتظار")
+                        if (isLeaderNotification) {
+                            selectedTeamId = leaderTeam!!.teamId
+                            navController.navigate(ScreenRoutes.REVIEW_APPLICATIONS)
+                        } else if (item.teamId.isNotBlank()) {
+                            selectedTeamId = item.teamId
+                            navController.navigate(ScreenRoutes.TEAM_DETAILS_OVERVIEW)
                         }
-                        navController.navigate(ScreenRoutes.REVIEW_APPLICATIONS)
+                    } else if (item.type == NotificationType.ACCEPTED) {
+                        val targetTeamId = item.teamId.ifBlank {
+                            currentUser?.currentTeamId.orEmpty().ifBlank { myTeam?.teamId.orEmpty() }
+                        }
+                        if (targetTeamId.isNotBlank()) {
+                            selectedTeamId = targetTeamId
+                            navController.navigate(ScreenRoutes.TEAM_WORKSPACE)
+                        }
                     }
                 },
                 onMarkAllReadClick = {
@@ -633,6 +730,8 @@ fun AppNavGraph(
                 team = selectedTeam,
                 seats = seats,
                 isCurrentUserLeader = currentUser?.uid == selectedTeam.leaderId || currentUser?.isLeader == true,
+                canViewMemberNames = selectedTeam.leaderId == currentUser?.uid ||
+                    currentUser?.currentTeamId == selectedTeam.teamId,
                 onSeatClick = { clickedSeatLabel ->
                     val targetSeat = seats.firstOrNull {
                         it.seatLabel == clickedSeatLabel || it.id == clickedSeatLabel
@@ -657,6 +756,17 @@ fun AppNavGraph(
                     draftTeamSeatCount = seatCount
                     navController.navigate(ScreenRoutes.CREATE_TEAM_SEATS)
                 },
+                onNextWithDetails = { name, course, description, seatCount, doctor, ta, github, drive ->
+                    draftTeamName = name
+                    draftTeamCourse = course
+                    draftTeamDesc = description
+                    draftTeamDoctor = doctor
+                    draftTeamTA = ta
+                    draftTeamGithub = github
+                    draftTeamDrive = drive
+                    draftTeamSeatCount = seatCount
+                    navController.navigate(ScreenRoutes.CREATE_TEAM_SEATS)
+                },
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -674,7 +784,11 @@ fun AppNavGraph(
                             description = draftTeamDesc,
                             leaderId = currentUser?.uid ?: "user_leader",
                             leaderName = currentUser?.name ?: "قائد الفريق",
-                            seatRoles = roles
+                            seatRoles = roles,
+                            supervisorDoctor = draftTeamDoctor,
+                            teachingAssistant = draftTeamTA,
+                            githubRepo = draftTeamGithub,
+                            driveFolder = draftTeamDrive
                         )
                         result.onSuccess { created ->
                             selectedTeamId = created.teamId
@@ -725,9 +839,45 @@ fun AppNavGraph(
             TeamWorkspaceScreen(
                 team = selectedTeam,
                 seats = seats,
-                onOpenCalendarClick = { navController.navigate(ScreenRoutes.TEAM_CALENDAR) },
+                isLeader = selectedTeam.leaderId == currentUser?.uid,
+                pendingRequestsCount = seats.count { it.status == SeatStatus.PENDING },
+                onReviewRequestsClick = { navController.navigate(ScreenRoutes.REVIEW_APPLICATIONS) },
+                onRemoveMemberClick = { seat ->
+                    scope.launch { teamRepository.removeMemberFromTeam(seat.id) }
+                },
+                onDeleteTeamClick = {
+                    scope.launch {
+                        teamRepository.deleteTeam(selectedTeam.teamId)
+                        navController.popBackStack()
+                    }
+                },
+                onLeaveTeamClick = {
+                    scope.launch {
+                        teamRepository.leaveTeam(selectedTeam.teamId, currentUser?.uid.orEmpty())
+                        navController.popBackStack()
+                    }
+                },
+                onUpdateTeamDetailsClick = { doc, ta, github, drive, completed ->
+                    scope.launch {
+                        teamRepository.updateTeamDetails(
+                            teamId = selectedTeam.teamId,
+                            supervisorDoctor = doc,
+                            teachingAssistant = ta,
+                            githubRepo = github,
+                            driveFolder = drive,
+                            isCompleted = completed
+                        )
+                    }
+                },
+                onOpenCalendarClick = {
+                    lastSeenCalendarEventId = myTeamEvents.firstOrNull()?.id
+                    navController.navigate(ScreenRoutes.TEAM_CALENDAR)
+                },
                 onOpenTASheetClick = { navController.navigate(ScreenRoutes.TA_SHEET_PREVIEW) },
-                onOpenChatClick = { navController.navigate(ScreenRoutes.TEAM_GROUP_CHAT) },
+                onOpenChatClick = {
+                    lastSeenChatTimestampMs = System.currentTimeMillis()
+                    navController.navigate(ScreenRoutes.TEAM_GROUP_CHAT)
+                },
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -738,6 +888,12 @@ fun AppNavGraph(
                 ?: MockDataProvider.sampleTeam
             val liveMessages by teamRepository.observeTeamMessages(activeTeam.teamId)
                 .collectAsState(initial = emptyList())
+            LaunchedEffect(activeTeam.teamId, liveMessages.size) {
+                val uid = currentUser?.uid.orEmpty()
+                if (activeTeam.teamId.isNotBlank() && uid.isNotBlank()) {
+                    teamRepository.markTeamMessagesRead(activeTeam.teamId, uid)
+                }
+            }
             TeamGroupChatScreen(
                 team = activeTeam,
                 liveMessages = liveMessages,
@@ -748,7 +904,9 @@ fun AppNavGraph(
                             teamId = activeTeam.teamId,
                             senderId = currentUser?.uid ?: "user_anon",
                             senderName = currentUser?.name ?: "عضو",
-                            text = messageText
+                            text = messageText,
+                            senderAvatarEmoji = currentUser?.avatarEmoji ?: "👩‍💻",
+                            senderPhotoBase64 = currentUser?.photoBase64 ?: ""
                         )
                     }
                 },
@@ -770,7 +928,9 @@ fun AppNavGraph(
                             teamId = activeTeam.teamId,
                             title = title,
                             date = date,
-                            time = time
+                            time = time,
+                            addedByName = currentUser?.name?.ifBlank { "أحد أعضاء التيم" } ?: "أحد أعضاء التيم",
+                            addedByUid = currentUser?.uid.orEmpty()
                         )
                     }
                 },

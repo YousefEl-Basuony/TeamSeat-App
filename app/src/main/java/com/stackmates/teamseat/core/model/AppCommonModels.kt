@@ -13,7 +13,8 @@ data class NotificationItem(
     val message: String,
     val timeAgo: String,
     val type: NotificationType,
-    val isRead: Boolean = false
+    val isRead: Boolean = false,
+    val teamId: String = ""
 )
 
 data class CalendarEvent(
@@ -30,7 +31,10 @@ data class TeamChatMessage(
     val teamId: String = "",
     val senderId: String = "",
     val senderName: String = "",
+    val senderAvatarEmoji: String = "👩‍💻",
+    val senderPhotoBase64: String = "",
     val text: String = "",
     val timeLabel: String = "",
-    val timestampMs: Long = System.currentTimeMillis()
+    val timestampMs: Long = System.currentTimeMillis(),
+    val readBy: List<String> = emptyList()
 )

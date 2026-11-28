@@ -331,7 +331,7 @@ fun StudentPublicProfileSheet(
                                     .fillMaxWidth()
                                     .height(42.dp)
                                     .clip(RoundedCornerShape(10.dp))
-                                    .background(Color.White)
+                                    .background(TeamSeatSurfaceColor)
                                     .border(1.dp, TeamSeatCardBorderTeal, RoundedCornerShape(10.dp))
                                     .bounceClick { onOpenGithubClick(student.githubUrl) }
                                     .padding(horizontal = 12.dp),
@@ -354,6 +354,51 @@ fun StudentPublicProfileSheet(
                                         )
                                         Text(
                                             text = "شوف حساب GitHub",
+                                            fontFamily = TajawalFontFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 12.5.sp,
+                                            color = TeamSeatTitleDark
+                                        )
+                                    }
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Rounded.Launch,
+                                        contentDescription = null,
+                                        tint = TeamSeatPrimaryTeal,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        if (student.linkedinUrl.isNotEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(42.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(TeamSeatSurfaceColor)
+                                    .border(1.dp, TeamSeatCardBorderTeal, RoundedCornerShape(10.dp))
+                                    .bounceClick { onOpenGithubClick(student.linkedinUrl) }
+                                    .padding(horizontal = 12.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Work,
+                                            contentDescription = null,
+                                            tint = Color(0xFF0A66C2),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Text(
+                                            text = "شوف حساب LinkedIn",
                                             fontFamily = TajawalFontFamily,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 12.5.sp,
